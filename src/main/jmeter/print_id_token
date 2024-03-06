@@ -1,0 +1,3 @@
+#!/usr/bin/bash
+
+echo -n $(curl -s "http://metadata/computeMetadata/v1/instance/service-accounts/default/identity?audience=$1" -H "Metadata-Flavor: Google")
