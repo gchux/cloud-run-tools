@@ -33,8 +33,8 @@ RUN curl -L https://dlcdn.apache.org//jmeter/binaries/apache-jmeter-${JMETER_VER
     && java -cp jmeter-plugins-manager-1.9.jar org.jmeterplugins.repository.PluginManagerCMDInstaller \
     && cd /opt/apache-jmeter-${JMETER_VERSION}/bin && ./PluginsManagerCMD.sh install jpgc-casutg,jpgc-fifo,jpgc-json
 
-COPY print_id_token /print_id_token
-COPY test.jmx /test.jmx
+COPY ./src/main/jmeter/print_id_token /print_id_token
+COPY ./src/main/jmeter/test.jmx /test.jmx
 
 ENV PATH $PATH:$JMETER_BIN
 
