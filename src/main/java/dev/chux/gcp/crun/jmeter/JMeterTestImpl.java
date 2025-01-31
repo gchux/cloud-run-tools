@@ -1,15 +1,23 @@
 package dev.chux.gcp.crun.jmeter;
 
 import java.io.OutputStream;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import com.google.inject.Inject;
 import com.google.inject.assistedinject.AssistedInject;
 import com.google.inject.assistedinject.Assisted;
+import com.google.inject.name.Named;
+
+import com.google.common.base.Optional;
+
 import dev.chux.gcp.crun.process.ProcessProvider;
 import dev.chux.gcp.crun.process.ProcessOutput;
 import dev.chux.gcp.crun.process.ProcessOutputFactory;
 
 public class JMeterTestImpl implements JMeterTest {
+
+  private static final String DEFAULT_JMETER_JMX_DIR = "/jmx";
+  private static final String DEFAULT_JMETER_JMX = "test";
 
   private final JMeterTestConfig jMeterTestConfig;
   private final Optional<OutputStream> stream;
@@ -18,17 +26,25 @@ public class JMeterTestImpl implements JMeterTest {
 
   private final AtomicBoolean started;
 
+  @Inject(optional=true)
+  @Named("env.JMETER_JMX_DIR")
+  String jmxDirEnv = null;
+
+  @Inject(optional=true)
+  @Named("jmeter.jmx.dir")
+  String jmxDirProp = null;
+
   @AssistedInject
   public JMeterTestImpl(ProcessOutputFactory processOutputFactory, 
       @Assisted JMeterTestConfig jMeterTestConfig) {
-    this(processOutputFactory, jMeterTestConfig, Optional.empty(), false);
+    this(processOutputFactory, jMeterTestConfig, Optional.absent(), false);
   }
 
   @AssistedInject
   public JMeterTestImpl(ProcessOutputFactory processOutputFactory, 
       @Assisted JMeterTestConfig jMeterTestConfig, 
       @Assisted OutputStream stream) {
-    this(processOutputFactory, jMeterTestConfig, Optional.ofNullable(stream), false);
+    this(processOutputFactory, jMeterTestConfig, Optional.fromNullable(stream), false);
   }
 
   @AssistedInject
@@ -36,7 +52,7 @@ public class JMeterTestImpl implements JMeterTest {
       @Assisted JMeterTestConfig jMeterTestConfig, 
       @Assisted OutputStream stream, 
       @Assisted boolean closeable) {
-    this(processOutputFactory, jMeterTestConfig, Optional.ofNullable(stream), closeable);
+    this(processOutputFactory, jMeterTestConfig, Optional.fromNullable(stream), closeable);
   }
 
   public JMeterTestImpl(ProcessOutputFactory processOutputFactory,
@@ -54,7 +70,7 @@ public class JMeterTestImpl implements JMeterTest {
         "-n", 
         "-l", "/dev/stdout",
         "-j", "/dev/stdout",
-        "-t", "/test.jmx", 
+        "-t", this.getJMX(), 
         "-Jhost=" + this.jMeterTestConfig.host(), 
         "-Jpath=" + this.jMeterTestConfig.path(), 
         "-Jconcurrency=" + Integer.toString(this.jMeterTestConfig.concurrency(), 10), 
@@ -71,6 +87,13 @@ public class JMeterTestImpl implements JMeterTest {
       return this.processOutputFactory.create(this.stream.get(), this.closeable);
     }
     return this.processOutputFactory.create(System.out, /* closeable */ false);
+  }
+
+  private final String getJMX() {
+    return Optional.fromNullable(this.jmxDirEnv)
+      .or(Optional.fromNullable(this.jmxDirProp))
+      .or(DEFAULT_JMETER_JMX_DIR) + "/" +
+      this.jMeterTestConfig.jmx().or(DEFAULT_JMETER_JMX) + ".jmx";
   }
 
 }

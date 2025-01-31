@@ -1,15 +1,28 @@
 package dev.chux.gcp.crun.jmeter;
 
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
+
 public class JMeterTestConfig {
 
+  private final Optional<String> jmx;
   private final String host;
   private final String path;
   private int concurrency = 1;
   private int duration = 1;
   private int rampupTime = 1;
   private int rampupSteps = 1;
-
+  
   public JMeterTestConfig(final String host, final String path) {
+    this(null, host, path);
+  }
+
+  public JMeterTestConfig(final String jmx, final String host, final String path) {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(host), "host is required");
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(path), "path is required");
+
+    this.jmx = Optional.fromNullable(jmx);
     this.host = host;
     this.path = path;
   }
@@ -20,6 +33,10 @@ public class JMeterTestConfig {
 
   public String path() {
     return this.path;
+  }
+
+  public Optional<String> jmx() {
+    return this.jmx;
   }
 
   public int concurrency() {

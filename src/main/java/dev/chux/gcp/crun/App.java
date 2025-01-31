@@ -11,13 +11,13 @@ import java.util.UUID;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
-import dev.chux.gcp.crun.rest.RestAPI;
+import dev.chux.gcp.crun.http.HttpServer;
 
 public class App {
 
     public static void main(String[] args) {
       final Injector injector = Guice.createInjector(new AppModule());
-      injector.getInstance(RestAPI.class).serve(8080);
+      injector.getInstance(HttpServer.class).start();
     }
 
 }

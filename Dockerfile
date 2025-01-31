@@ -7,10 +7,14 @@ COPY pom.xml .
 COPY src src
 
 RUN --mount=type=cache,target=/root/.m2 ./mvnw install -DskipTests
-RUN mkdir -p target/dependency && (cd target/dependency; jar -xf ../app.jar)
+RUN mkdir -p target/dependency
+
+WORKDIR /workspace/app/target/dependency
+
+RUN jar -xf ../app.jar
 
 FROM eclipse-temurin:17
-ARG JMETER_VERSION="5.6.2"
+ARG JMETER_VERSION="5.6.3"
 ENV JMETER_HOME /opt/apache-jmeter-${JMETER_VERSION}
 ENV	JMETER_BIN ${JMETER_HOME}/bin
 VOLUME /tmp
@@ -22,19 +26,30 @@ RUN curl -L https://dlcdn.apache.org//jmeter/binaries/apache-jmeter-${JMETER_VER
     && tar -xvf /tmp/jmeter.tgz -C /opt \
     && rm /tmp/jmeter.tgz \
     && ln -s /opt/apache-jmeter-${JMETER_VERSION} /opt/jmeter \
-    && ln -s /opt/jmeter/bin/jmeter /usr/bin/jmeter \
-    && cd /opt/apache-jmeter-${JMETER_VERSION}/lib \
-    && curl -L -O https://repo1.maven.org/maven2/kg/apc/cmdrunner/2.3/cmdrunner-2.3.jar \
-    && cd /opt/apache-jmeter-${JMETER_VERSION}/lib/ext/ \
-    && curl -L -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-manager/1.9/jmeter-plugins-manager-1.9.jar \
+    && ln -s /opt/jmeter/bin/jmeter /usr/bin/jmeter
+
+WORKDIR /opt/apache-jmeter-${JMETER_VERSION}/lib
+
+RUN curl -L -O https://repo1.maven.org/maven2/kg/apc/cmdrunner/2.3/cmdrunner-2.3.jar
+
+WORKDIR /opt/apache-jmeter-${JMETER_VERSION}/lib/ext/
+
+RUN curl -L -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-manager/1.9/jmeter-plugins-manager-1.9.jar \
     && curl -L -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-casutg/2.10/jmeter-plugins-casutg-2.10.jar \
     && curl -L -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-fifo/0.2/jmeter-plugins-fifo-0.2.jar \
     && curl -L -O https://github.com/QAInsights/validate-thread-group/releases/download/v1.0.1/validatetg-1.0.1.jar \
-    && java -cp jmeter-plugins-manager-1.9.jar org.jmeterplugins.repository.PluginManagerCMDInstaller \
-    && cd /opt/apache-jmeter-${JMETER_VERSION}/bin && ./PluginsManagerCMD.sh install jpgc-casutg,jpgc-fifo,jpgc-json
+    && java -cp jmeter-plugins-manager-1.9.jar org.jmeterplugins.repository.PluginManagerCMDInstaller
+
+WORKDIR /opt/apache-jmeter-${JMETER_VERSION}/bin
+
+RUN ./PluginsManagerCMD.sh install jpgc-casutg,jpgc-fifo,jpgc-json
+
+WORKDIR /
+
+RUN mkdir -p /jmx/ /app_cfg/
 
 COPY ./src/main/jmeter/print_id_token /print_id_token
-COPY ./src/main/jmeter/test.jmx /test.jmx
+COPY ./src/main/jmeter/test.jmx /jmx/test.jmx
 
 ENV PATH $PATH:$JMETER_BIN
 
