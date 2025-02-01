@@ -1,0 +1,13 @@
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    id: "build_jmeter_test_runner"
+    entrypoint: "bash"
+    args:
+      - "docker_build"
+      - "${_JMETER_VERSION}"
+      - "${_REPO_LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_IMAGE_NAME}"
+images:
+  - "${_REPO_LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_IMAGE_NAME}:v${_JMETER_VERSION}"
+tags: ["jmeter-test-runner"]
+options:
+  logging: CLOUD_LOGGING_ONLY
