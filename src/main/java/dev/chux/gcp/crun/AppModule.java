@@ -15,7 +15,11 @@ import dev.chux.gcp.crun.process.ProcessModule;
 import dev.chux.gcp.crun.jmeter.JMeterModule;
 import dev.chux.gcp.crun.http.HttpModule;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 class AppModule extends AbstractModule {
+  private static final Logger logger = LoggerFactory.getLogger(AppModule.class);
 
   private static final String PROPERTIES_FILE = "/jmeter-test-runner.properties";
 
@@ -23,7 +27,7 @@ class AppModule extends AbstractModule {
   private static final String SERVER_PORT_PROP = "server.port";
 
   protected void configure() {
-    Names.bindProperties(binder(), System.getenv());
+    Names.bindProperties(binder(), loadEnvironment());
     Names.bindProperties(binder(), loadProperties(PROPERTIES_FILE));
 
     install(new ProcessModule());
@@ -39,7 +43,12 @@ class AppModule extends AbstractModule {
     for (String key : environment.keySet()) {
       env.put("env." + key, environment.get(key));
     }
-    return env.build();
+
+    final Map<String, String> environmentMap = env.build();
+
+    logger.info("environment: {}", environmentMap);
+
+    return environmentMap;
   }
 
   private final Map<String,String> loadProperties(final String propertiesFile) {
@@ -56,6 +65,9 @@ class AppModule extends AbstractModule {
     }
 
     final Map<String, String> propertiesMap = Maps.fromProperties(properties);
+
+    logger.info("properties: {}", propertiesMap);
+
     return ImmutableMap.copyOf(propertiesMap);
   }
 
