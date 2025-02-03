@@ -9,6 +9,7 @@ import com.google.inject.assistedinject.Assisted;
 import com.google.inject.name.Named;
 
 import com.google.common.base.Optional;
+import com.google.common.base.CharMatcher;
 
 import dev.chux.gcp.crun.process.ProcessProvider;
 import dev.chux.gcp.crun.process.ProcessOutput;
@@ -90,11 +91,11 @@ public class JMeterTestImpl implements JMeterTest {
   }
 
   private final String host() {
-    final String host = this.jMeterTestConfig.host();
+    String host = this.jMeterTestConfig.host();
     if (host.startsWith("https://")) {
-      return host.replaceFirst("^https://", "");
+      host = host.replaceFirst("^https://", "");
     }
-    return host;
+    return CharMatcher.is('/').trimTrailingFrom(host);
   }
 
   private final String path() {
