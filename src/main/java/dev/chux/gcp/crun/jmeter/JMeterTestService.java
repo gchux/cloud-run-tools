@@ -44,7 +44,7 @@ public class JMeterTestService {
 
     Preconditions.checkArgument(!Strings.isNullOrEmpty(host), "host is required");
 
-    final JMeterTestConfig jMeterTestConfig = new JMeterTestConfig(getJMX(jmx), host, path.or("/"))
+    final JMeterTestConfig jMeterTestConfig = new JMeterTestConfig(getJMX(jmx), host, path.orNull())
       .concurrency(concurrency).duration(duration).rampupTime(rampupTime).rampupSteps(rampupSteps);
     
     final JMeterTest jMeterTest = this.jMeterTestFactory

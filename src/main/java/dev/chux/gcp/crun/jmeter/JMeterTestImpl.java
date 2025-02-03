@@ -70,9 +70,9 @@ public class JMeterTestImpl implements JMeterTest {
         "-n", 
         "-l", "/dev/stdout",
         "-j", "/dev/stdout",
-        "-t", this.getJMX(), 
-        "-Jhost=" + this.jMeterTestConfig.host(), 
-        "-Jpath=" + this.jMeterTestConfig.path(), 
+        "-t", this.jmx(), 
+        "-Jhost=" + this.host(), 
+        "-Jpath=" + this.path(), 
         "-Jconcurrency=" + Integer.toString(this.jMeterTestConfig.concurrency(), 10), 
         "-Jduration=" + Integer.toString(this.jMeterTestConfig.duration(), 10), 
         "-Jrampup_time=" + Integer.toString(this.jMeterTestConfig.rampupTime(), 10), 
@@ -89,7 +89,19 @@ public class JMeterTestImpl implements JMeterTest {
     return this.processOutputFactory.create(System.out, /* closeable */ false);
   }
 
-  private final String getJMX() {
+  private final String host() {
+    final String host = this.jMeterTestConfig.host();
+    if (host.startsWith("https://")) {
+      return host.replaceFirst("^https://", "");
+    }
+    return host;
+  }
+
+  private final String path() {
+    return this.jMeterTestConfig.path().or("/");
+  }
+
+  private final String jmx() {
     return Optional.fromNullable(this.jmxDirEnv)
       .or(Optional.fromNullable(this.jmxDirProp))
       .or(DEFAULT_JMETER_JMX_DIR) + "/" +

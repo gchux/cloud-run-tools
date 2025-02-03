@@ -56,10 +56,11 @@ public class RunJMeterTestController implements spark.Route {
     logger.info("starting: {}", testId);
 
     if( output != null && output.equalsIgnoreCase(SYS_OUT) ) {
-      this.jMeterTestService.start(jmx, host, path, concurrency, duration, rampupTime, rampupSteps);
+      this.jMeterTestService.start(jmx, host, path,
+        concurrency, duration, rampupTime, rampupSteps);
     } else {
-      this.jMeterTestService.start(jmx, host, path, concurrency, duration, 
-          rampupTime, rampupSteps, responseOutput, false /* closeable */);
+      this.jMeterTestService.start(jmx, host, path,
+          concurrency, duration, rampupTime, rampupSteps, responseOutput, false /* closeable */);
     }
     
     logger.info("finished: {}", testId);

@@ -8,11 +8,15 @@ public class JMeterTestConfig {
 
   private final Optional<String> jmx;
   private final String host;
-  private final String path;
+  private final Optional<String> path;
   private int concurrency = 1;
   private int duration = 1;
   private int rampupTime = 1;
   private int rampupSteps = 1;
+
+  public JMeterTestConfig(final String host) {
+    this(host, null);
+  }
   
   public JMeterTestConfig(final String host, final String path) {
     this(null, host, path);
@@ -20,18 +24,17 @@ public class JMeterTestConfig {
 
   public JMeterTestConfig(final String jmx, final String host, final String path) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(host), "host is required");
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(path), "path is required");
 
     this.jmx = Optional.fromNullable(jmx);
     this.host = host;
-    this.path = path;
+    this.path = Optional.fromNullable(path);
   }
 
   public String host() {
     return this.host;
   }
 
-  public String path() {
+  public Optional<String> path() {
     return this.path;
   }
 
