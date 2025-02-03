@@ -46,8 +46,9 @@ RUN ./PluginsManagerCMD.sh install jpgc-casutg,jpgc-fifo,jpgc-json
 
 WORKDIR /
 
-RUN mkdir -p /jmx/ /app_cfg/
+RUN mkdir -p /jmx/
 
+COPY ./jmeter-test-runner.properties /jmeter-test-runner.properties
 COPY ./src/main/jmeter/print_id_token /print_id_token
 COPY ./src/main/jmeter/test.jmx /jmx/test.jmx
 

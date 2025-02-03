@@ -17,7 +17,7 @@ import dev.chux.gcp.crun.http.HttpModule;
 
 class AppModule extends AbstractModule {
 
-  private static final String PROPERTIES_FILE = "/app_cfg/jmeter-test.properties";
+  private static final String PROPERTIES_FILE = "/jmeter-test-runner.properties";
 
   private static final String SERVER_PORT_ENV = "PORT";
   private static final String SERVER_PORT_PROP = "server.port";
