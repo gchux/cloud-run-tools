@@ -10,7 +10,7 @@
   </parent>
 
   <groupId>dev.chux.gcp.crun</groupId>
-  <artifactId>process-runner-jmeter</artifactId>
+  <artifactId>process-runner-gcloud</artifactId>
   <version>1.0.0</version>
 
   <packaging>jar</packaging>
@@ -104,7 +104,7 @@
   </dependencies>
 
   <build>
-    <finalName>jmeter</finalName>
+    <finalName>gcloud</finalName>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -126,7 +126,7 @@
 						<configuration>
 							<transformers>
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>dev.chux.gcp.crun.jmeter.JMeterApp</mainClass>
+									<mainClass>dev.chux.gcp.crun.gcloud.GCloudApp</mainClass>
 								</transformer>
 							</transformers>
 							<filters>

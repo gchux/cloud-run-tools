@@ -182,5 +182,14 @@
         <module>jmeter</module>
       </modules>
     </profile>
+    <profile>
+      <id>gcloud</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <modules>
+        <module>gcloud</module>
+      </modules>
+    </profile>
   </profiles>
 </project>
