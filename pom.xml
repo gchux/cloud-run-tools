@@ -135,11 +135,6 @@
         <artifactId>process-runner-rest</artifactId>
         <version>${process-runner.version}</version>
       </dependency>
-      <dependency>
-        <groupId>dev.chux.gcp.crun</groupId>
-        <artifactId>process-runner-jmeter</artifactId>
-        <version>${process-runner.version}</version>
-      </dependency>
     </dependencies>
   </dependencyManagement>
 

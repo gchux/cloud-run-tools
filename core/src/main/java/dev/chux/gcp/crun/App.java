@@ -44,6 +44,10 @@ public class App {
 
   private final Module module;
 
+  public App() {
+    this(null);
+  }
+
   public App(@Nullable final Module module) {
     this.module = module;
   }
