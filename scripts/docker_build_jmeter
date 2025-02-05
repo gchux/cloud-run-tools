@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+# the 1st argument of this script expects the JMETER version
+if [ "${1}" = "" ]
+then
+  echo "Usage: $0 5.6.3 <docker_image_uri>"
+  exit
+fi
+
+# the 2nd argument of this script expects the full container image URI minus the tag
+if [ "${2}" = "" ]
+then
+  echo "Usage: $0 <jmeter.version> <us-docker.pkg.dev/project_id/repo_name/image>"
+  exit
+fi
+
+export JMETER_VERSION="${1}"
+export DOCKER_IMAGE_URI="${2}"
+
+export MAIN_PID=$$
+
+echo "Building Cloud Run JMETER test runner"
+
+docker buildx build \
+  --no-cache \
+  --platform=linux/amd64 \
+  --file="Dockerfile" \
+  --file="Dockerfile.${TARGET}" \
+  --build-arg="JMETER_VERSION=${JMETER_VERSION}" \
+  --label="JMETER_VERSION=${JMETER_VERSION}" \
+  --tag="${DOCKER_IMAGE_URI}:v${JMETER_VERSION}" .
