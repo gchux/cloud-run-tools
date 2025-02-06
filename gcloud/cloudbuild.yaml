@@ -1,0 +1,14 @@
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    id: "build_gcloud_command_executor"
+    entrypoint: "bash"
+    args:
+      - "docker_build"
+      - "gcloud"
+      - "${_GOOGLE_CLOUD_SDK_VERSION}"
+      - "${_REPO_LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_IMAGE_NAME}"
+images:
+  - "${_REPO_LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_IMAGE_NAME}:v${_GOOGLE_CLOUD_SDK_VERSION}"
+tags: ["gcloud-command-executor"]
+options:
+  logging: CLOUD_LOGGING_ONLY

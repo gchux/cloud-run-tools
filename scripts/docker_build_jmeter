@@ -21,10 +21,11 @@ export MAIN_PID=$$
 
 echo "Building Cloud Run JMETER test runner"
 
+set -x
+
 docker buildx build \
   --no-cache \
   --platform=linux/amd64 \
-  --file="Dockerfile" \
   --file="Dockerfile.${TARGET}" \
   --build-arg="JMETER_VERSION=${JMETER_VERSION}" \
   --label="JMETER_VERSION=${JMETER_VERSION}" \

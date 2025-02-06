@@ -4,6 +4,7 @@ steps:
     entrypoint: "bash"
     args:
       - "docker_build"
+      - "jmeter"
       - "${_JMETER_VERSION}"
       - "${_REPO_LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_IMAGE_NAME}"
 images:

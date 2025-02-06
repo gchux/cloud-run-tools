@@ -21,10 +21,28 @@ RUN jar -xf /workspace/app/gcloud/target/gcloud.jar
 
 FROM eclipse-temurin:17
 
+ARG DEPENDENCY=/workspace/app/target/dependency
+ARG GOOGLE_CLOUD_SDK_VERSION='509.0.0'
+
 VOLUME /tmp
 
-ARG DEPENDENCY=/workspace/app/target/dependency
-
 COPY --from=build ${DEPENDENCY} /app
+
+ENV CLOUDSDK_HOME /google-cloud-sdk
+ENV	CLOUDSDK_BIN ${CLUDSDK_HOME}/bin
+
+ENV GOOGLE_CLOUD_SDK_HOME ${CLOUDSDK_HOME}
+ENV	GOOGLE_CLOUD_SDK_BIN ${CLOUDSDK_HOME}/bin
+
+RUN wget -nv -q -P / \
+  "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-${GOOGLE_CLOUD_SDK_VERSION}-linux-x86_64.tar.gz" \
+  && tar -xzf /google-cloud-cli-${GOOGLE_CLOUD_SDK_VERSION}-linux-x86_64.tar.gz -C / \
+  && rm -vf /google-cloud-cli-${GOOGLE_CLOUD_SDK_VERSION}-linux-x86_64.tar.gz \
+  && /google-cloud-sdk/bin/gcloud components update --quiet \
+  && ln -s /google-cloud-sdk/bin/* /usr/bin/ \
+  && echo "export PATH=$PATH:/google-cloud-sdk/bin" >> ~/.bashrc \
+  && export PATH="$PATH:/google-cloud-sdk/bin"
+
+ENV PATH $PATH:${GOOGLE_CLOUD_SDK_BIN}
 
 ENTRYPOINT ["java","-cp","/app","dev.chux.gcp.crun.gcloud.GCloudApp"]

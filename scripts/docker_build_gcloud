@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+# the 1st argument of this script expects the Google Cloud SDK version
+if [ "${1}" = "" ]
+then
+  echo "Usage: $0 509.0.0 <docker_image_uri>"
+  exit
+fi
+
+# the 2nd argument of this script expects the full container image URI minus the tag
+if [ "${2}" = "" ]
+then
+  echo "Usage: $0 <gcloud.version> <us-docker.pkg.dev/project_id/repo_name/image>"
+  exit
+fi
+
+export GOOGLE_CLOUD_SDK_VERSION="${1}"
+export DOCKER_IMAGE_URI="${2}"
+
+export MAIN_PID=$$
+
+echo "Building Cloud Run Google Cloud SDK command executor"
+
+set -x
+
+docker buildx build \
+  --no-cache \
+  --platform=linux/amd64 \
+  --file="Dockerfile.${TARGET}" \
+  --build-arg="GOOGLE_CLOUD_SDK_VERSION=${GOOGLE_CLOUD_SDK_VERSION}" \
+  --label="GOOGLE_CLOUD_SDK_VERSION=${GOOGLE_CLOUD_SDK_VERSION}" \
+  --tag="${DOCKER_IMAGE_URI}:v${GOOGLE_CLOUD_SDK_VERSION}" .
