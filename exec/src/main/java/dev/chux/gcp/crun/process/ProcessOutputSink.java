@@ -10,8 +10,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-class ProcessOutputSink
-    implements ProcessOutput {
+class ProcessOutputSink implements ProcessOutput {
+
     private final OutputStream stream;
     private final boolean closeable;
     private final ByteSink sink;
@@ -23,18 +23,22 @@ class ProcessOutputSink
         this.sink = new Sink(stream);
     }
 
-    public long from(InputStream stream) throws IOException {
+    public long from(final InputStream stream) throws IOException {
         if (this.closeable) {
             return this.sink(stream);
         }
         return this.copy(stream);
     }
 
-    private long copy(InputStream stream) throws IOException {
-        return ByteStreams.copy((InputStream)stream, (OutputStream)this.stream);
+    private long copy(final InputStream stream) throws IOException {
+        // `copy(...)` will not close streams;
+        // see: https://github.com/google/guava/blob/v33.4.0/guava/src/com/google/common/io/ByteStreams.java#L99-L112
+        return ByteStreams.copy((InputStream) stream, (OutputStream) this.stream);
     }
 
-    private long sink(InputStream stream) throws IOException {
+    private long sink(final InputStream stream) throws IOException {
+        // `writeFrom(...)` closes the stream;
+        // see: https://github.com/google/guava/blob/v33.4.0/guava/src/com/google/common/io/ByteSink.java#L118-L120
         return this.sink.writeFrom(stream);
     }
 
@@ -44,7 +48,7 @@ class ProcessOutputSink
 
     private static class Sink extends ByteSink {
 
-        final OutputStream stream;
+        private final OutputStream stream;
 
         private Sink(OutputStream stream) {
             this.stream = stream;

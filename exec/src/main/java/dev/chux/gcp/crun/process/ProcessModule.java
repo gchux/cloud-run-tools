@@ -31,6 +31,11 @@ public class ProcessModule extends AbstractModule {
       .annotatedWith(ProcessConsumer.class)
       .to(ProcessExecutor.class)
       .in(Scopes.SINGLETON);
+
+    bind(new TypeLiteral<Consumer<ManagedProcessProvider>>(){})
+      .annotatedWith(ProcessConsumer.class)
+      .to(ManagedProcessExecutor.class)
+      .in(Scopes.SINGLETON);
   }
 
 }

@@ -1,0 +1,109 @@
+package dev.chux.gcp.crun.gcloud.rest;
+
+import java.util.UUID;
+
+import javax.servlet.ServletOutputStream;
+
+import com.google.inject.Inject;
+
+import com.google.common.base.Optional;
+
+import com.google.gson.Gson;
+
+import spark.Request;
+import spark.Response;
+
+import dev.chux.gcp.crun.rest.Route;
+import dev.chux.gcp.crun.gcloud.GCloudCommandConfig;
+import dev.chux.gcp.crun.gcloud.GCloudService;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static spark.Spark.*;
+import static com.google.common.base.Strings.isNullOrEmpty;
+
+public class RunGCloudCommandController implements Route {
+  private static final Logger logger = LoggerFactory.getLogger(RunGCloudCommandController.class);
+
+  private static final String SYS_OUT = "sys";
+
+  private final Gson gson;
+  private final GCloudService gcloudService;
+
+  @Inject
+  public RunGCloudCommandController(final Gson gson, final GCloudService gcloudService) {
+    this.gson = gson;
+    this.gcloudService = gcloudService;
+  }
+
+  public void register(final String basePath) {
+    path(basePath, () -> {
+      path("/gcloud", () -> {
+        path("/exec", () -> {
+          post("/:namespace", "*/*", this);
+          post("/", "*/*", this);
+        });
+      });
+    });
+  }
+
+  public String endpoint(final String basePath) {
+    return "POST " + basePath + "/gcloud/run/:namespace";
+  }
+
+  public Object handle(final Request request, final Response response) throws Exception {
+    final String executionID = UUID.randomUUID().toString();
+
+    final String rawJSON = request.body();
+    final String namespace = request.params(":namespace");
+    final String output = request.queryParams("output"); 
+    
+    final ServletOutputStream responseOutput = response.raw().getOutputStream();
+
+    response.header("x-gcloud-execution-id", executionID);
+
+    final Optional<GCloudCommandConfig> maybeCmd = this.command(rawJSON);
+    if (!maybeCmd.isPresent()) {
+      halt(404, "command not found");
+      return null;
+    }
+
+    final GCloudCommandConfig cmd = maybeCmd.get();
+
+    if (!isNullOrEmpty(namespace)) {
+      if (!cmd.optionalCommand().isPresent()) {
+        logger.error("command is required when namespace is specified | namespace: {}", namespace);
+        halt(404, "command not found");
+        return null;
+      }
+      // namespace is optional to allow for commands like `gcloud --help`
+      response.header("x-gcloud-namespace", namespace);
+      cmd.namespace(namespace);
+    }
+
+    logger.info("starting: {}", executionID);
+
+    if( isNullOrEmpty(output) ) {
+      this.gcloudService.run(cmd, responseOutput);
+    } else {
+      this.gcloudService.run(cmd);
+    }
+    
+    logger.info("finished: {}", executionID);
+    return null;
+  }
+
+  private final Optional<GCloudCommandConfig> command(final String rawJSON) {
+    try {
+      final GCloudCommandConfig cmd = this.gson.fromJson(rawJSON, GCloudCommandConfig.class);
+      return Optional.fromNullable(cmd);
+    } catch(Exception ex) {
+      ex.printStackTrace(System.err);
+      logger.error("invalid 'gcloud' command: {}", rawJSON);
+      logger.error("failed to parse json", ex);
+    }
+    return Optional.absent();
+  }
+
+}

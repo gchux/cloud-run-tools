@@ -3,6 +3,7 @@ package dev.chux.gcp.crun.rest;
 import java.util.Map;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +13,7 @@ import static spark.Spark.*;
 public class RestAPI {
   private static final Logger logger = LoggerFactory.getLogger(RestAPI.class);
 
-  private static final String BASE_PATH = "/x";
+  static final String BASE_PATH = "";
 
   private final Map<String, Route> routes;
 

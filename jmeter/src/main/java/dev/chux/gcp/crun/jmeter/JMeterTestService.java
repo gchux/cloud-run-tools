@@ -44,7 +44,7 @@ public class JMeterTestService {
 
     Preconditions.checkArgument(!Strings.isNullOrEmpty(host), "host is required");
 
-    final JMeterTestConfig jMeterTestConfig = new JMeterTestConfig(getJMX(jmx), host, path.orNull())
+    final JMeterTestConfig jMeterTestConfig = new JMeterTestConfig(this.jmx(jmx), host, path.orNull())
       .concurrency(concurrency).duration(duration).rampupTime(rampupTime).rampupSteps(rampupSteps);
     
     final JMeterTest jMeterTest = this.jMeterTestFactory
@@ -56,7 +56,7 @@ public class JMeterTestService {
     this.processConsumer.accept(jMeterTest);
   }
 
-  private String getJMX(final Optional<String> jmx) {
+  private String jmx(final Optional<String> jmx) {
     return jmx.or(Optional.fromNullable(jmxEnv)).or(Optional.fromNullable(jmxProp)).orNull();
   }
 

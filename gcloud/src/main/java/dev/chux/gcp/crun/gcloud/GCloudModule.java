@@ -1,4 +1,4 @@
-package dev.chux.gcp.crun.jmeter;
+package dev.chux.gcp.crun.gcloud;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -8,22 +8,24 @@ import com.google.inject.multibindings.MapBinder;
 import dev.chux.gcp.crun.process.ProcessProvider;
 import dev.chux.gcp.crun.process.ProcessOutput;
 import dev.chux.gcp.crun.rest.Route;
-import dev.chux.gcp.crun.jmeter.rest.RunJMeterTestController;
+import dev.chux.gcp.crun.gcloud.rest.RunGCloudCommandController;
 
-public class JMeterModule extends AbstractModule {
+public class GCloudModule extends AbstractModule {
 
   protected void configure() {
     install(new FactoryModuleBuilder()
-        .implement(JMeterTest.class, JMeterTestImpl.class)
-        .build(JMeterTestFactory.class));
+        .implement(GCloudCommand.class, GCloudCommandImpl.class)
+        .build(GCloudCommandFactory.class));
 
-    bind(JMeterTestService.class).in(Scopes.SINGLETON);
+    bind(GCloudFormatSupplier.class).in(Scopes.SINGLETON);
+
+    bind(GCloudService.class).in(Scopes.SINGLETON);
 
     final MapBinder<String, Route> routesBinder =
       MapBinder.newMapBinder(binder(), String.class, Route.class);
 
-    routesBinder.addBinding("run-jmeter-test")
-      .to(RunJMeterTestController.class).in(Scopes.SINGLETON);
+    routesBinder.addBinding("gcloud-command-runner")
+      .to(RunGCloudCommandController.class).in(Scopes.SINGLETON);
   }
 
 }

@@ -27,6 +27,11 @@
 
   <dependencies>
     <dependency>
+      <groupId>ch.vorburger.exec</groupId>
+      <artifactId>exec</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
     </dependency>
