@@ -18,6 +18,9 @@ import dev.chux.gcp.crun.process.ProcessProvider;
 import dev.chux.gcp.crun.process.ProcessOutput;
 import dev.chux.gcp.crun.process.ProcessOutputFactory;
 
+import static com.google.common.base.Optional.absent;
+import static com.google.common.base.Optional.fromNullable;
+
 public class JMeterTestImpl implements JMeterTest {
 
   private static final String DEFAULT_JMETER_JMX_DIR = "/jmx";
@@ -41,14 +44,14 @@ public class JMeterTestImpl implements JMeterTest {
   @AssistedInject
   public JMeterTestImpl(ProcessOutputFactory processOutputFactory, 
       @Assisted JMeterTestConfig jMeterTestConfig) {
-    this(processOutputFactory, jMeterTestConfig, Optional.absent(), false);
+    this(processOutputFactory, jMeterTestConfig, absent(), false);
   }
 
   @AssistedInject
   public JMeterTestImpl(ProcessOutputFactory processOutputFactory, 
       @Assisted JMeterTestConfig jMeterTestConfig, 
       @Assisted OutputStream stream) {
-    this(processOutputFactory, jMeterTestConfig, Optional.fromNullable(stream), false);
+    this(processOutputFactory, jMeterTestConfig, fromNullable(stream), false);
   }
 
   @AssistedInject
@@ -56,7 +59,7 @@ public class JMeterTestImpl implements JMeterTest {
       @Assisted JMeterTestConfig jMeterTestConfig, 
       @Assisted OutputStream stream, 
       @Assisted boolean closeable) {
-    this(processOutputFactory, jMeterTestConfig, Optional.fromNullable(stream), closeable);
+    this(processOutputFactory, jMeterTestConfig, fromNullable(stream), closeable);
   }
 
   public JMeterTestImpl(ProcessOutputFactory processOutputFactory,
@@ -132,8 +135,8 @@ public class JMeterTestImpl implements JMeterTest {
   }
 
   private final String jmx() {
-    return Optional.fromNullable(this.jmxDirEnv)
-      .or(Optional.fromNullable(this.jmxDirProp))
+    return fromNullable(this.jmxDirEnv)
+      .or(fromNullable(this.jmxDirProp))
       .or(DEFAULT_JMETER_JMX_DIR) + "/" +
       this.jMeterTestConfig.jmx()
         .or(DEFAULT_JMETER_JMX) + ".jmx";
