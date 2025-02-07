@@ -34,7 +34,7 @@ public class App {
   private static final Logger logger = LoggerFactory.getLogger(App.class);
 
   private static final String PROPERTIES_FILE_OPTION = "config";
-  private static final String DEFAULT_PROPERTIES_FILE = "/jmeter-test-runner.properties";
+  private static final String DEFAULT_PROPERTIES_FILE = "/process-runner.properties";
 
   private static final Options OPTIONS = new Options();
 

@@ -116,7 +116,7 @@ public class JMeterTestImpl implements JMeterTest {
     return this.setIntProperty(cmd, "concurrency", this.jMeterTestConfig.concurrency())
       .setIntProperty(cmd, "duration", this.jMeterTestConfig.duration())
       .setIntProperty(cmd, "rampup_time", this.jMeterTestConfig.rampupTime())
-      .setIntProperty(cmd, "rampup_time", this.jMeterTestConfig.rampupTime());
+      .setIntProperty(cmd, "rampup_steps", this.jMeterTestConfig.rampupSteps());
   }
 
   private final String host() {

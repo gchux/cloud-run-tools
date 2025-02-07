@@ -15,6 +15,8 @@ import com.google.common.collect.ImmutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+
 class ProcessExecutor implements Consumer<ProcessProvider> {
   private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -25,6 +27,7 @@ class ProcessExecutor implements Consumer<ProcessProvider> {
 
     final ProcessBuilder builder = provider.getBuilder();
     builder.command(fixArguments(builder));
+    logger.info("command: {}", builder.command());
     
     try {
       final Process p = builder.start();
@@ -39,16 +42,19 @@ class ProcessExecutor implements Consumer<ProcessProvider> {
     final List<String> command = builder.command();
 
     if (!IS_OS_WINDOWS) {
-      return ImmutableList.copyOf(command);
+      return command;
     }
 
-    final List<String> result = Lists.newArrayList(command);
-    for (final ListIterator it = result.listIterator(); it.hasNext(); ) {
-      if ("".equals(it.next())) {
-        it.set("\"\"");
+    final ImmutableList.Builder<String> fixedCommand = ImmutableList.builder();
+    for (final ListIterator<String> it = command.listIterator(); it.hasNext(); ) {
+      final String argument = it.next();
+      if (isNullOrEmpty(argument)) {
+        fixedCommand.add("\"\"");
+      } else {
+        fixedCommand.add(argument);
       }
     }
-    return ImmutableList.copyOf(result);
+    return fixedCommand.build();
   }
 
 }

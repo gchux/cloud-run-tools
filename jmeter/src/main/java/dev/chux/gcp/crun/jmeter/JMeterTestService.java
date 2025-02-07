@@ -8,10 +8,11 @@ import com.google.inject.name.Named;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 
 import dev.chux.gcp.crun.process.ProcessModule.ProcessConsumer;
 import dev.chux.gcp.crun.process.ProcessProvider;
+
+import static com.google.common.base.Strings.isNullOrEmpty;
 
 public class JMeterTestService {
 
@@ -42,7 +43,7 @@ public class JMeterTestService {
     final int concurrency, final int duration, final int rampupTime, final int rampupSteps,
       final OutputStream outputStream, final boolean closeableOutputStream) {
 
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(host), "host is required");
+    Preconditions.checkArgument(!isNullOrEmpty(host), "host is required");
 
     final JMeterTestConfig jMeterTestConfig = new JMeterTestConfig(this.jmx(jmx), host, path.orNull())
       .concurrency(concurrency).duration(duration).rampupTime(rampupTime).rampupSteps(rampupSteps);

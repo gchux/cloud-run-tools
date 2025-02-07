@@ -45,4 +45,7 @@ RUN wget -nv -q -P / \
 
 ENV PATH $PATH:${GOOGLE_CLOUD_SDK_BIN}
 
-ENTRYPOINT ["java","-cp","/app","dev.chux.gcp.crun.gcloud.GCloudApp"]
+COPY ./gcloud/gcloud-command-runner.properties /gcloud-command-runner.properties
+COPY ./gcloud/entrypoint.sh /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
