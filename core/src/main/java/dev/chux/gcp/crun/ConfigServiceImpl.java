@@ -46,12 +46,12 @@ public class ConfigServiceImpl implements ConfigService, Provider<ConfigService>
   }
 
   @Override
-  public String getSysProp(final String name) {
+  public String getAppProp(final String name) {
     return this.get(this.properties, name);
   }
 
   @Override
-  public String getSysPropOrDefault(final String name, final String defaultValue) {
+  public String getAppPropOrDefault(final String name, final String defaultValue) {
     return this.getOrDefault(this.properties, name, defaultValue);
   }
   
