@@ -1,12 +1,15 @@
 package dev.chux.gcp.crun.gcloud;
 
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.google.inject.name.Named;
 
 import com.google.common.base.Supplier;
 import com.google.common.base.Optional;
 
-public class GCloudFormatSupplier implements Supplier<String> {
+import static com.google.common.base.Optional.fromNullable;
+
+public class GCloudFormatSupplier implements Provider<String>, Supplier<String> {
 
   private static final String DEFAULT_GCLOUD_FORMAT = "json";
 
@@ -22,16 +25,12 @@ public class GCloudFormatSupplier implements Supplier<String> {
     return optionalEnv().or(optionalProp()).or(DEFAULT_GCLOUD_FORMAT);
   }
 
-  private final Optional<String> optional(final String value) {
-    return Optional.fromNullable(value);
-  }
-
   private final Optional<String> optionalEnv() {
-    return optional(this.gcloudFormatEnv);
+    return fromNullable(this.gcloudFormatEnv);
   }
 
   private final Optional<String> optionalProp() {
-    return optional(this.gcloudFormatProp);
+    return fromNullable(this.gcloudFormatProp);
   }
 
 }

@@ -5,12 +5,12 @@ import java.util.Map;
 import java.io.OutputStream;
 
 import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.name.Named;
 import com.google.inject.assistedinject.AssistedInject;
 import com.google.inject.assistedinject.Assisted;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 
 import ch.vorburger.exec.ManagedProcessBuilder;
 import ch.vorburger.exec.ManagedProcessException;
@@ -23,19 +23,19 @@ public class GCloudCommandImpl implements GCloudCommand {
   private static final String GCLOUD_COMMAND = "gcloud";
 
   private final GCloudCommandConfig gcloudCommandConfig;
-  private final Supplier<String> formatSupplier;
   private final Optional<OutputStream> stream;
+  private final Provider<String> formatProvider;
 
   @AssistedInject
-  public GCloudCommandImpl(GCloudFormatSupplier formatSupplier,
+  public GCloudCommandImpl(@Named("gcloud://format") Provider<String> formatProvider,
     @Assisted GCloudCommandConfig gcloudCommandConfig) {
-    this(formatSupplier, gcloudCommandConfig, null);
+    this(formatProvider, gcloudCommandConfig, null);
   }
 
   @AssistedInject
-  public GCloudCommandImpl(GCloudFormatSupplier formatSupplier,
+  public GCloudCommandImpl(@Named("gcloud://format") Provider<String> formatProvider,
     @Assisted GCloudCommandConfig gcloudCommandConfig, @Assisted OutputStream stream) {
-    this.formatSupplier = Suppliers.memoize(formatSupplier);
+    this.formatProvider = formatProvider;
     this.gcloudCommandConfig = gcloudCommandConfig;
     this.stream = Optional.fromNullable(stream);
   }
@@ -82,7 +82,7 @@ public class GCloudCommandImpl implements GCloudCommand {
 
   private final GCloudCommandImpl setFormat(final ManagedProcessBuilder builder) {
     final Optional<String> format = this.gcloudCommandConfig.optionalFormat();
-    builder.addArgument("--format=", format.or(this.formatSupplier.get()));
+    builder.addArgument("--format=", format.or(this.formatProvider.get()));
     return this;
   }
 

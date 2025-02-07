@@ -4,34 +4,31 @@ import java.io.OutputStream;
 import java.util.function.Consumer;
 
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.google.inject.name.Named;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 
 import dev.chux.gcp.crun.process.ProcessModule.ProcessConsumer;
 import dev.chux.gcp.crun.process.ProcessProvider;
 
+import static com.google.common.base.Optional.fromNullable;
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
 public class JMeterTestService {
 
   private final JMeterTestFactory jMeterTestFactory;
   private final Consumer<ProcessProvider> processConsumer;
-
-  @Inject(optional=true)
-  @Named("env.JMETER_TEST_JMX")
-  String jmxEnv = null;
-
-  @Inject(optional=true)
-  @Named("jmeter.test.jmx")
-  String jmxProp = null;
+  private final Provider<String> jmeterTestProvider;
   
   @Inject
   JMeterTestService(JMeterTestFactory jMeterTestFactory,
-      @ProcessConsumer Consumer<ProcessProvider> processConsumer) {
+    @ProcessConsumer Consumer<ProcessProvider> processConsumer,
+    @Named("jmeter://test.jmx") Provider<String> jmeterTestProvider) {
     this.jMeterTestFactory = jMeterTestFactory;
     this.processConsumer = processConsumer;
+    this.jmeterTestProvider = jmeterTestProvider;
   }
 
   public void start(final Optional<String> jmx, final String host, final Optional<String> path,
@@ -43,22 +40,29 @@ public class JMeterTestService {
     final int concurrency, final int duration, final int rampupTime, final int rampupSteps,
       final OutputStream outputStream, final boolean closeableOutputStream) {
 
-    Preconditions.checkArgument(!isNullOrEmpty(host), "host is required");
+    checkArgument(!isNullOrEmpty(host), "host is required");
 
-    final JMeterTestConfig jMeterTestConfig = new JMeterTestConfig(this.jmx(jmx), host, path.orNull())
+    final JMeterTestConfig config = new JMeterTestConfig(this.jmx(jmx), host, path.orNull())
       .concurrency(concurrency).duration(duration).rampupTime(rampupTime).rampupSteps(rampupSteps);
-    
-    final JMeterTest jMeterTest = this.jMeterTestFactory
-      .createWithOutputStream(jMeterTestConfig, outputStream, closeableOutputStream);
-    this.start(jMeterTest);
+
+    final JMeterTest test = this.newJMeterTest(config, outputStream, closeableOutputStream);
+
+    this.start(test);
   }
 
-  private void start(final JMeterTest jMeterTest) {
+  private final void start(final JMeterTest jMeterTest) {
     this.processConsumer.accept(jMeterTest);
   }
 
-  private String jmx(final Optional<String> jmx) {
-    return jmx.or(Optional.fromNullable(jmxEnv)).or(Optional.fromNullable(jmxProp)).orNull();
+  private final String jmx(final Optional<String> jmx) {
+    return jmx.or(this.jmeterTestProvider.get());
+  }
+
+  private final JMeterTest newJMeterTest(
+    final JMeterTestConfig config, final OutputStream stream, final boolean closeable) {
+    return this.jMeterTestFactory
+      .createWithOutputStream(config, stream, closeable);
+
   }
 
 }

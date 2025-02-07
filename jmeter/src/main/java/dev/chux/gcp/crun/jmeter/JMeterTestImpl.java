@@ -5,9 +5,10 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.name.Named;
 import com.google.inject.assistedinject.AssistedInject;
 import com.google.inject.assistedinject.Assisted;
-import com.google.inject.name.Named;
 
 import com.google.common.base.Optional;
 import com.google.common.base.CharMatcher;
@@ -23,52 +24,59 @@ import static com.google.common.base.Optional.fromNullable;
 
 public class JMeterTestImpl implements JMeterTest {
 
-  private static final String DEFAULT_JMETER_JMX_DIR = "/jmx";
-  private static final String DEFAULT_JMETER_JMX = "test";
+  private static final String JMETER_BIN = "jmeter";
 
   private final JMeterTestConfig jMeterTestConfig;
   private final Optional<OutputStream> stream;
   private final boolean closeable;
   private final ProcessOutputFactory processOutputFactory;
 
+  private final Provider<String> jmeterTestDirProvider;
+  private final Provider<String> jmeterTestProvider;
+
   private final AtomicBoolean started;
 
-  @Inject(optional=true)
-  @Named("env.JMETER_JMX_DIR")
-  String jmxDirEnv = null;
-
-  @Inject(optional=true)
-  @Named("jmeter.jmx.dir")
-  String jmxDirProp = null;
-
   @AssistedInject
   public JMeterTestImpl(ProcessOutputFactory processOutputFactory, 
-      @Assisted JMeterTestConfig jMeterTestConfig) {
-    this(processOutputFactory, jMeterTestConfig, absent(), false);
+    @Named("jmeter://jmx.dir") Provider<String> jmeterTestDirProvider,
+    @Named("jmeter://test.jmx") Provider<String> jmeterTestProvider,
+    @Assisted JMeterTestConfig jMeterTestConfig) {
+    this(processOutputFactory, jmeterTestDirProvider, jmeterTestProvider, jMeterTestConfig, absent(), false);
   }
 
   @AssistedInject
   public JMeterTestImpl(ProcessOutputFactory processOutputFactory, 
-      @Assisted JMeterTestConfig jMeterTestConfig, 
-      @Assisted OutputStream stream) {
-    this(processOutputFactory, jMeterTestConfig, fromNullable(stream), false);
+    @Named("jmeter://jmx.dir") Provider<String> jmeterTestDirProvider,
+    @Named("jmeter://test.jmx") Provider<String> jmeterTestProvider,
+    @Assisted JMeterTestConfig jMeterTestConfig, 
+    @Assisted OutputStream stream) {
+    this(processOutputFactory, jmeterTestDirProvider, jmeterTestProvider, jMeterTestConfig, fromNullable(stream), false);
   }
 
   @AssistedInject
   public JMeterTestImpl(ProcessOutputFactory processOutputFactory, 
-      @Assisted JMeterTestConfig jMeterTestConfig, 
-      @Assisted OutputStream stream, 
-      @Assisted boolean closeable) {
-    this(processOutputFactory, jMeterTestConfig, fromNullable(stream), closeable);
+    @Named("jmeter://jmx.dir") Provider<String> jmeterTestDirProvider,
+    @Named("jmeter://test.jmx") Provider<String> jmeterTestProvider,
+    @Assisted JMeterTestConfig jMeterTestConfig, 
+    @Assisted OutputStream stream, 
+    @Assisted boolean closeable) {
+    this(processOutputFactory, jmeterTestDirProvider, jmeterTestProvider, jMeterTestConfig, fromNullable(stream), closeable);
   }
 
   public JMeterTestImpl(ProcessOutputFactory processOutputFactory,
-      JMeterTestConfig jMeterTestConfig, Optional<OutputStream> stream, boolean closeable) {
+    Provider<String> jmeterTestProvider,
+    Provider<String> jmeterTestDirProvider,
+    JMeterTestConfig jMeterTestConfig,
+    Optional<OutputStream> stream,
+    boolean closeable) {
     this.jMeterTestConfig = jMeterTestConfig;
     this.stream = stream;
     this.closeable = closeable;
     this.processOutputFactory = processOutputFactory;
     this.started = new AtomicBoolean(false);
+
+    this.jmeterTestDirProvider = jmeterTestDirProvider;
+    this.jmeterTestProvider = jmeterTestProvider;
   }
 
   @Override
@@ -87,7 +95,7 @@ public class JMeterTestImpl implements JMeterTest {
   private final List<String> command() {
     final ImmutableList.Builder<String> cmd = ImmutableList.<String>builder();
     this.setHost(cmd
-      .add("jmeter", "-n",
+      .add(JMETER_BIN, "-n",
         "-l", "/dev/stdout",
         "-j", "/dev/stdout",
         "-t", this.jmx()))
@@ -135,11 +143,9 @@ public class JMeterTestImpl implements JMeterTest {
   }
 
   private final String jmx() {
-    return fromNullable(this.jmxDirEnv)
-      .or(fromNullable(this.jmxDirProp))
-      .or(DEFAULT_JMETER_JMX_DIR) + "/" +
+    return this.jmeterTestDirProvider.get() + "/" +
       this.jMeterTestConfig.jmx()
-        .or(DEFAULT_JMETER_JMX) + ".jmx";
+        .or(this.jmeterTestProvider.get()) + ".jmx";
   }
 
 }
