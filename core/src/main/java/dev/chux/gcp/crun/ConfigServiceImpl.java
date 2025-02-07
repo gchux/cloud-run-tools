@@ -4,10 +4,12 @@ import java.util.Map;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import com.google.common.base.Supplier;
 
+@Singleton
 public class ConfigServiceImpl implements ConfigService, Provider<ConfigService>, Supplier<ConfigService> {
 
   private final Map<String, String> environment;

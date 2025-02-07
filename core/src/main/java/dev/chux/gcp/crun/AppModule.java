@@ -8,7 +8,15 @@ import java.util.Properties;
 import com.google.inject.Module;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
+import com.google.inject.Provides;
 import com.google.inject.name.Names;
+
+import com.netflix.governator.guice.BootstrapModule;
+import com.netflix.governator.guice.BootstrapBinder;
+import com.netflix.governator.configuration.SystemConfigurationProvider;
+import com.netflix.governator.configuration.PropertiesConfigurationProvider;
+import com.netflix.governator.configuration.CompositeConfigurationProvider;
+
 
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
@@ -27,7 +35,7 @@ import dev.chux.gcp.crun.http.HttpModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class AppModule extends AbstractModule {
+class AppModule extends AbstractModule implements BootstrapModule {
   private static final Logger logger = LoggerFactory.getLogger(AppModule.class);
 
   private static final TypeLiteral<Map<String, String>> MapTypeStringString = new TypeLiteral<Map<String, String>>() {};
@@ -43,6 +51,8 @@ class AppModule extends AbstractModule {
 
   private static final String SERVER_PORT_ENV = "PORT";
   private static final String SERVER_PORT_PROP = "server.port";
+
+  public void configure(BootstrapBinder binder) {}
 
   protected void configure() {
     Names.bindProperties(binder(), loadEnvironment());

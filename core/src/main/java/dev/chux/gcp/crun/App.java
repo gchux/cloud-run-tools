@@ -13,8 +13,6 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 
 import com.netflix.governator.guice.LifecycleInjector;
 import com.netflix.governator.lifecycle.LifecycleManager;
@@ -29,6 +27,12 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 
 import dev.chux.gcp.crun.http.HttpServer;
+
+import static com.google.common.base.Optional.absent;
+import static com.google.common.base.Optional.fromNullable;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Strings.isNullOrEmpty;
 
 public class App {
   private static final Logger logger = LoggerFactory.getLogger(App.class);
@@ -73,22 +77,22 @@ public class App {
 
   private final Optional<LifecycleManager> getLifecycleManager(@NonNull @CheckForNull final Injector injector) {
     try {
-      final LifecycleManager manager = Preconditions.checkNotNull(injector).getInstance(LifecycleManager.class);
-      return Optional.fromNullable(manager);
+      final LifecycleManager manager = checkNotNull(injector).getInstance(LifecycleManager.class);
+      return fromNullable(manager);
     } catch(final Exception ex) {
       logger.error("nothing provides LifecycleManager", ex);
     }
-    return Optional.absent();
+    return absent();
   }
 
   private final @NonNull Optional<HttpServer> getHttpServer(@NonNull @CheckForNull final Injector injector) {
     try {
-      final HttpServer httpServer = Preconditions.checkNotNull(injector).getInstance(HttpServer.class);
-      return Optional.fromNullable(httpServer);
+      final HttpServer httpServer = checkNotNull(injector).getInstance(HttpServer.class);
+      return fromNullable(httpServer);
     } catch(final Exception ex) {
       logger.error("nothing provides HttpServer", ex);
     }
-    return Optional.absent();
+    return absent();
   }
 
   private final void start(@NonNull final Injector injector) {
@@ -113,7 +117,7 @@ public class App {
   }
 
   private final void startHttpServer(@NonNull @CheckForNull final Injector injector) {
-    final Optional<HttpServer> maybeHttpServer = getHttpServer(Preconditions.checkNotNull(injector));
+    final Optional<HttpServer> maybeHttpServer = getHttpServer(checkNotNull(injector));
 
     if (!maybeHttpServer.isPresent()) {
       // nothing provides HTTP server
@@ -125,28 +129,28 @@ public class App {
   }
 
   private final AppModule newAppModule(@NonNull @CheckForNull final String propertiesFile) {
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(propertiesFile), "missing properties file");
+    checkArgument(!isNullOrEmpty(propertiesFile), "missing properties file");
     return new AppModule(propertiesFile, this.module);
   }
 
   private final @NonNull Injector createInjector(@NonNull @CheckForNull final String propertiesFile) {
     final AppModule appModule = newAppModule(propertiesFile);
-    return LifecycleInjector.builder().withModules(appModule).build().createInjector();
+    return LifecycleInjector.builder().withBootstrapModule(appModule).withModules(appModule).build().createInjector();
   }
 
   private final @NonNull Optional<CommandLine> command(@NonNull @CheckForNull final CommandLineParser parser, final String[] args) {
     try {
-      return Optional.fromNullable(Preconditions.checkNotNull(parser).parse(OPTIONS, args));
+      return fromNullable(checkNotNull(parser).parse(OPTIONS, args));
     } catch (final ParseException ex) {
       logger.error("failed to parse command line", ex);
     }
-    return Optional.absent();
+    return absent();
   }
 
   private final @NonNull String getOptionOrDefault(@NonNull final CommandLine cmdln,
     @NonNull @CheckForNull final String optionName, @NonNull @CheckForNull final String defaultValue) {
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(optionName), "missing option name");
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(defaultValue), "missing default value");
+    checkArgument(!isNullOrEmpty(optionName), "missing option name");
+    checkArgument(!isNullOrEmpty(defaultValue), "missing default value");
     return cmdln.getOptionValue(optionName, defaultValue);
   }
 
