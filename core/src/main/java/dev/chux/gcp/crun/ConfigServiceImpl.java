@@ -14,7 +14,8 @@ public class ConfigServiceImpl implements ConfigService, Provider<ConfigService>
   private final Map<String, String> properties;
 
   @Inject
-  ConfigServiceImpl(@Named("app://environment") Map<String, String> environment,
+  ConfigServiceImpl(
+    @Named("app://environment") Map<String, String> environment,
     @Named("app://properties") Map<String, String> properties
   ) {
     this.environment = environment;
