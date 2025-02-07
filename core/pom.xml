@@ -102,6 +102,10 @@
 
     <dependency>
       <groupId>dev.chux.gcp.crun</groupId>
+      <artifactId>process-runner-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>dev.chux.gcp.crun</groupId>
       <artifactId>process-runner-exec</artifactId>
     </dependency>
     <dependency>

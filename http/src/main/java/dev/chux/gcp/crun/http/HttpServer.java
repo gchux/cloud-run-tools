@@ -3,9 +3,12 @@ package dev.chux.gcp.crun.http;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import com.netflix.governator.annotations.Configuration;
+
 import com.google.common.base.Optional;
 import com.google.common.primitives.Ints;
 
+import dev.chux.gcp.crun.ConfigService;
 import dev.chux.gcp.crun.rest.RestAPI;
 
 import org.slf4j.Logger;
@@ -17,18 +20,20 @@ public class HttpServer {
   private static final int DEFAULT_SERVER_PORT = 8080;
 
   private final RestAPI restAPI;
+  private final Optional<Integer> serverPortEnv;
+  private final Optional<Integer> serverPortProp;
 
-  @Inject(optional=true)
-  @Named("env.PORT")
-  String serverPortEnv = null;
+  @Configuration("env.Port")
+  private int _serverPortEnv;
 
-  @Inject(optional=true)
-  @Named("server.port")
-  String serverPortProp = null;
+  @Configuration("server.port")
+  private int _serverPortProp;
 
   @Inject
-  HttpServer(final RestAPI restAPI) {
+  HttpServer(final ConfigService configService, final RestAPI restAPI) {
     this.restAPI = restAPI;
+    this.serverPortEnv = this.getServerPortEnv(configService);
+    this.serverPortProp = this.getServerPortProp(configService);
   }
   
   public void start() {
@@ -38,17 +43,16 @@ public class HttpServer {
     this.restAPI.serve(serverPort);
   }
 
-  private int getServerPort() {
-    final Optional<Integer> serverPortEnv = this.parseServerPort(this.serverPortEnv);
-    final Optional<Integer> serverPortProp = this.parseServerPort(this.serverPortProp);
-    return serverPortEnv.or(serverPortProp).or(DEFAULT_SERVER_PORT);
+  private final int getServerPort() {
+    return this.serverPortEnv.or(this.serverPortProp).or(DEFAULT_SERVER_PORT);
   }
 
-  private Optional<Integer> parseServerPort(final String serverPort) {
-    if (serverPort == null) {
-      return Optional.absent();
-    }
-    return Optional.fromNullable(Ints.tryParse(serverPort));
+  private final Optional<Integer> getServerPortEnv(final ConfigService configService) {
+    return configService.getIntEnvVar("env.PORT");
+  }
+
+  private final Optional<Integer> getServerPortProp(final ConfigService configService) {
+    return configService.getIntAppProp("server.port");
   }
 
 }

@@ -7,7 +7,16 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
+import com.google.common.primitives.Ints;
+import com.google.common.primitives.Longs;
+import com.google.common.primitives.Doubles;
+
+import static com.google.common.base.Optional.absent;
+import static com.google.common.base.Optional.fromNullable;
+import static com.google.common.base.Strings.emptyToNull;
+import static com.google.common.base.Strings.isNullOrEmpty;
 
 @Singleton
 public class ConfigServiceImpl implements ConfigService, Provider<ConfigService>, Supplier<ConfigService> {
@@ -30,16 +39,69 @@ public class ConfigServiceImpl implements ConfigService, Provider<ConfigService>
   }
 
   private final String getOrDefault(final Map<String, String> container, final String key, final String defaultValue) {
-    return container.getOrDefault(key, defaultValue);
+    return emptyToNull(container.getOrDefault(key, defaultValue));
   }
 
   private final String get(final Map<String, String> container, final String key) {
-    return container.get(key);
+    return emptyToNull(container.get(key));
+  }
+
+  private final Optional<Integer> parseIntValue(final String value) {
+    if (isNullOrEmpty(value)) {
+      return absent();
+    }
+    return fromNullable(Ints.tryParse(value, 10));
+  }
+
+  private final Optional<Long> parseLongValue(final String value) {
+    if (isNullOrEmpty(value)) {
+      return absent();
+    }
+    return fromNullable(Longs.tryParse(value, 10));
+  }
+
+  private final Optional<Double> parseDoubleValue(final String value) {
+    if (isNullOrEmpty(value)) {
+      return absent();
+    }
+    return fromNullable(Doubles.tryParse(value));
+  }
+
+  private final Optional<Boolean> parseBooleanValue(final String value) {
+    if (isNullOrEmpty(value)) {
+      return absent();
+    }
+    return Optional.of(Boolean.parseBoolean(value));
   }
 
   @Override
   public String getEnvVar(final String name) {
     return this.get(this.environment, "env." + name);
+  }
+
+  @Override
+  public Optional<Integer> getIntEnvVar(final String name) {
+    return this.parseIntValue(this.getEnvVar(name));
+  }
+
+  @Override
+  public Optional<Long> getLongEnvVar(final String name) {
+    return this.parseLongValue(this.getEnvVar(name));
+  }
+
+  @Override
+  public Optional<Double> getDoubleEnvVar(final String name) {
+    return this.parseDoubleValue(this.getEnvVar(name));
+  }
+
+  @Override
+  public Optional<Boolean> getBooleanEnvVar(final String name) {
+    return this.parseBooleanValue(this.getEnvVar(name));
+  }
+
+  @Override
+  public Optional<String> getOptionalEnvVar(final String name) {
+    return fromNullable(this.getEnvVar(name));
   }
 
   @Override
@@ -50,6 +112,31 @@ public class ConfigServiceImpl implements ConfigService, Provider<ConfigService>
   @Override
   public String getAppProp(final String name) {
     return this.get(this.properties, name);
+  }
+
+  @Override
+  public Optional<Integer> getIntAppProp(final String name) {
+    return this.parseIntValue(this.getAppProp(name));
+  }
+
+  @Override
+  public Optional<Long> getLongAppProp(final String name) {
+    return this.parseLongValue(this.getAppProp(name));
+  }
+
+  @Override
+  public Optional<Double> getDoubleAppProp(final String name) {
+    return this.parseDoubleValue(this.getAppProp(name));
+  }
+
+  @Override
+  public Optional<Boolean> getBooleanAppProp(final String name) {
+    return this.parseBooleanValue(this.getAppProp(name));
+  }
+
+  @Override
+  public Optional<String> getOptionalAppProp(final String name) {
+    return fromNullable(this.getAppProp(name));
   }
 
   @Override

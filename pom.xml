@@ -18,6 +18,7 @@
   </properties>
 
   <modules>
+    <module>api</module>
     <module>exec</module>
     <module>rest</module>
     <module>http</module>
@@ -121,6 +122,11 @@
         <version>4.8.6</version>
       </dependency>
 
+      <dependency>
+        <groupId>dev.chux.gcp.crun</groupId>
+        <artifactId>process-runner-api</artifactId>
+        <version>${process-runner.version}</version>
+      </dependency>
       <dependency>
         <groupId>dev.chux.gcp.crun</groupId>
         <artifactId>process-runner-core</artifactId>

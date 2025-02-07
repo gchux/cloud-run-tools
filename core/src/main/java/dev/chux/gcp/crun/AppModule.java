@@ -19,7 +19,6 @@ import com.netflix.governator.configuration.CompositeConfigurationProvider;
 
 
 import com.google.common.base.Optional;
-import com.google.common.base.Strings;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.collect.ImmutableMap;
@@ -35,6 +34,10 @@ import dev.chux.gcp.crun.http.HttpModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.google.common.base.Optional.absent;
+import static com.google.common.base.Optional.fromNullable;
+import static com.google.common.base.Strings.isNullOrEmpty;
+
 class AppModule extends AbstractModule implements BootstrapModule {
   private static final Logger logger = LoggerFactory.getLogger(AppModule.class);
 
@@ -43,20 +46,40 @@ class AppModule extends AbstractModule implements BootstrapModule {
   private final String propertiesFile;
   private final Optional<Module> module;
 
+  private final Map<String, String> environmentMap;
+  private final Map<String, String> propertiesMap;
+
   AppModule(@NonNull @CheckForNull final String propertiesFile, @Nullable Module module) {
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(propertiesFile), "full path to properties file is required");
+    Preconditions.checkArgument(!isNullOrEmpty(propertiesFile), "full path to properties file is required");
     this.propertiesFile = propertiesFile;
-    this.module = Optional.fromNullable(module);
+    this.module = fromNullable(module);
+
+    this.environmentMap = loadEnvironment();
+    this.propertiesMap = loadProperties(this.propertiesFile);
   }
 
   private static final String SERVER_PORT_ENV = "PORT";
   private static final String SERVER_PORT_PROP = "server.port";
 
-  public void configure(BootstrapBinder binder) {}
+  public void configure(final BootstrapBinder binder) {
+    final PropertiesConfigurationProvider environmentProvider =
+      newPropertiesProvider(this.environmentMap, absent());
+    final PropertiesConfigurationProvider propertiesProvider =
+      newPropertiesProvider(this.propertiesMap, Optional.of(this.environmentMap));
+    final SystemConfigurationProvider systemPropertiesProvider = new SystemConfigurationProvider(this.environmentMap);
+
+    final CompositeConfigurationProvider compositeConfigProvider =
+      new CompositeConfigurationProvider(systemPropertiesProvider, environmentProvider, propertiesProvider);
+
+    binder.bindConfigurationProvider().toInstance(compositeConfigProvider);
+  }
 
   protected void configure() {
-    Names.bindProperties(binder(), loadEnvironment());
-    Names.bindProperties(binder(), loadProperties(this.propertiesFile));
+    Names.bindProperties(binder(), this.environmentMap);
+    bindConfiguration("app://environment", this.environmentMap);
+
+    Names.bindProperties(binder(), this.propertiesMap);
+    bindConfiguration("app://properties", this.propertiesMap);
 
     bind(ConfigService.class).to(ConfigServiceImpl.class).asEagerSingleton();
 
@@ -67,6 +90,17 @@ class AppModule extends AbstractModule implements BootstrapModule {
     if (this.module.isPresent()) {
       install(this.module.get());
     }
+  }
+
+  private final PropertiesConfigurationProvider newPropertiesProvider(
+    final Map<String, String> map, final Optional<Map<String, String>> variables) {
+    final Properties properties = new Properties();
+    properties.putAll(map);
+
+    if (variables.isPresent()) {
+      return new PropertiesConfigurationProvider(properties, variables.get());
+    }
+    return new PropertiesConfigurationProvider(properties);
   }
 
   private final void bindConfiguration(final String key, final Map<String, String> config) {
@@ -84,8 +118,6 @@ class AppModule extends AbstractModule implements BootstrapModule {
     final Map<String, String> environmentMap = env.build();
 
     logger.info("environment: {}", environmentMap);
-
-    bindConfiguration("app://environment", environmentMap);
 
     return environmentMap;
   }
@@ -107,8 +139,6 @@ class AppModule extends AbstractModule implements BootstrapModule {
     propertiesMap = ImmutableMap.<String, String>copyOf(propertiesMap);
 
     logger.info("properties: {}", propertiesMap);
-
-    bindConfiguration("app://properties", propertiesMap);
 
     return propertiesMap;
   }

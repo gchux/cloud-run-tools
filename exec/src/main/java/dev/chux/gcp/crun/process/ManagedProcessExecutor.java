@@ -18,7 +18,8 @@ class ManagedProcessExecutor implements Consumer<ManagedProcessProvider> {
 
     try {
       final ManagedProcessBuilder builder = provider.getBuilder()
-        .setDestroyOnShutdown(true).setConsoleBufferMaxLines(0);
+        .setDestroyOnShutdown(true)
+        .setConsoleBufferMaxLines(0);
       final ManagedProcess p = builder.build();
       p.start();
       p.waitForExit();
