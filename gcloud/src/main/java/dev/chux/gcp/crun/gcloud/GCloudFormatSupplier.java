@@ -21,6 +21,7 @@ public class GCloudFormatSupplier implements Provider<String>, Supplier<String> 
   @Named("gcloud.format")
   String gcloudFormatProp = null;
 
+  @Override
   public String get() {
     return optionalEnv().or(optionalProp()).or(DEFAULT_GCLOUD_FORMAT);
   }

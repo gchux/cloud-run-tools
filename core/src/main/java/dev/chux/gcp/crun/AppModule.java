@@ -5,9 +5,10 @@ import java.io.FileInputStream;
 import java.util.Map;
 import java.util.Properties;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.name.Names;
 import com.google.inject.Module;
+import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
+import com.google.inject.name.Names;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
@@ -29,6 +30,8 @@ import org.slf4j.LoggerFactory;
 class AppModule extends AbstractModule {
   private static final Logger logger = LoggerFactory.getLogger(AppModule.class);
 
+  private static final TypeLiteral<Map<String, String>> MapTypeStringString = new TypeLiteral<Map<String, String>>() {};
+
   private final String propertiesFile;
   private final Optional<Module> module;
 
@@ -45,6 +48,8 @@ class AppModule extends AbstractModule {
     Names.bindProperties(binder(), loadEnvironment());
     Names.bindProperties(binder(), loadProperties(this.propertiesFile));
 
+    bind(ConfigService.class).to(ConfigServiceImpl.class).asEagerSingleton();
+
     install(new ProcessModule());
     install(new RestModule());
     install(new HttpModule());
@@ -52,6 +57,10 @@ class AppModule extends AbstractModule {
     if (this.module.isPresent()) {
       install(this.module.get());
     }
+  }
+
+  private final void bindConfiguration(final String key, final Map<String, String> config) {
+    bind(MapTypeStringString).annotatedWith(Names.named(key)).toInstance(config);
   }
 
   private final Map<String, String> loadEnvironment() {
@@ -65,6 +74,8 @@ class AppModule extends AbstractModule {
     final Map<String, String> environmentMap = env.build();
 
     logger.info("environment: {}", environmentMap);
+
+    bindConfiguration("app://environment", environmentMap);
 
     return environmentMap;
   }
@@ -82,11 +93,14 @@ class AppModule extends AbstractModule {
       return ImmutableMap.of();
     }
 
-    final Map<String, String> propertiesMap = Maps.<String, String>fromProperties(properties);
+    Map<String, String> propertiesMap = Maps.<String, String>fromProperties(properties);
+    propertiesMap = ImmutableMap.<String, String>copyOf(propertiesMap);
 
     logger.info("properties: {}", propertiesMap);
 
-    return ImmutableMap.<String, String>copyOf(propertiesMap);
+    bindConfiguration("app://properties", propertiesMap);
+
+    return propertiesMap;
   }
 
   private static final void ensureKey(final Map<String, String> map,
