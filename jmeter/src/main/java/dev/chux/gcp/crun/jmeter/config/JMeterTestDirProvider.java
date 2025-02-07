@@ -21,6 +21,7 @@ public class JMeterTestDirProvider implements Provider<String>, Supplier<String>
   @Named("jmeter.jmx.dir")
   String jmxDirProp = null;
 
+  @Override
   public String get() {
     return optionalEnv().or(optionalProp()).or(DEFAULT_JMETER_JMX_DIR);
   }

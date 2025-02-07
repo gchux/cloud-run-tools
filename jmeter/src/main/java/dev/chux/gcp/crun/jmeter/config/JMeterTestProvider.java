@@ -21,6 +21,7 @@ public class JMeterTestProvider implements Provider<String>, Supplier<String> {
   @Named("jmeter.test.jmx")
   String jmxProp = null;
 
+  @Override
   public String get() {
     return optionalEnv().or(optionalProp()).or(DEFAULT_JMETER_TEST);
   }
