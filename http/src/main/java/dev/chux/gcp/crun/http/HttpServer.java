@@ -17,7 +17,10 @@ import org.slf4j.LoggerFactory;
 public class HttpServer {
   private static final Logger logger = LoggerFactory.getLogger(HttpServer.class);
 
-  private static final int DEFAULT_SERVER_PORT = 8080;
+  private static final String ENV__SERVER_PORT = "";
+  private static final String PROPERTY__SERVER_PORT = "";
+
+  private static final int DEFAULT__SERVER_PORT = 8080;
 
   private final RestAPI restAPI;
   private final Optional<Integer> serverPortEnv;
@@ -39,20 +42,20 @@ public class HttpServer {
   public void start() {
     final int serverPort = this.getServerPort();
     logger.info("serving at port: [env:{}][prop:{}][default:{}]  => {}",
-      this.serverPortEnv, this.serverPortProp, DEFAULT_SERVER_PORT, serverPort);
+      this.serverPortEnv, this.serverPortProp, DEFAULT__SERVER_PORT, serverPort);
     this.restAPI.serve(serverPort);
   }
 
   private final int getServerPort() {
-    return this.serverPortEnv.or(this.serverPortProp).or(DEFAULT_SERVER_PORT);
+    return this.serverPortEnv.or(this.serverPortProp).or(DEFAULT__SERVER_PORT);
   }
 
   private final Optional<Integer> getServerPortEnv(final ConfigService configService) {
-    return configService.getIntEnvVar("env.PORT");
+    return configService.getIntEnvVar(ENV__SERVER_PORT);
   }
 
   private final Optional<Integer> getServerPortProp(final ConfigService configService) {
-    return configService.getIntAppProp("server.port");
+    return configService.getIntAppProp(PROPERTY__SERVER_PORT);
   }
 
 }
