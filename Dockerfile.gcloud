@@ -5,6 +5,7 @@ COPY mvnw .
 COPY .mvn .mvn
 COPY pom.xml .
 
+COPY api api
 COPY core core
 COPY exec exec
 COPY rest rest
