@@ -23,8 +23,7 @@ public class ImmediateTermination extends AbstractSocketFaultHandler {
 
   @Override
   protected void handle(final Socket socket) throws Exception {
-    logger.info("closing connection from: {}", socket.getRemoteSocketAddress());
-    socket.close();
+    super.close(socket);
   }
 
 }

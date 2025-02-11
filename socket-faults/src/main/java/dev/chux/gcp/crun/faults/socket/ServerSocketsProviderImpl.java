@@ -3,7 +3,6 @@ package dev.chux.gcp.crun.faults.socket;
 import java.util.Map;
 import java.util.Set;
 import java.net.ServerSocket;
-import javax.annotation.PostConstruct;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -20,39 +19,33 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Optional.fromNullable;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Throwables.getStackTraceAsString;
 
 public class ServerSocketsProviderImpl implements ServerSocketsProvider {
   private static final Logger logger = LoggerFactory.getLogger(ServerSocketsProviderImpl.class);
 
-  private final ConfigService configService;
-  private final Set<String> socketNames;
-
-  private Map<String, ServerSocket> serverSockets;
+  private final Map<String, ServerSocket> serverSockets;
 
   @Inject
   public ServerSocketsProviderImpl(final ConfigService configService,
     @Named("socket-faults://names") final Set<String> socketNames) {
-    this.configService = configService;
-    this.socketNames = socketNames;
+    this.serverSockets = this.createServerSockets(configService, socketNames);
+    checkState(this.serverSockets.size() == socketNames.size(), "incimplete sockets");
   }
 
-  @PostConstruct
-  void createSockets() {
+  private Map<String, ServerSocket> createServerSockets(final ConfigService configService, final Set<String> socketNames) {
     final ImmutableMap.Builder<String, ServerSocket> sockets = ImmutableMap.<String, ServerSocket>builder();
-    for(final String socketName : this.socketNames) {
-      final Optional<Integer> port = this.getSocketPort(socketName);
-      if (port.isPresent()) {
-        this.addSocket(sockets, socketName, port.get());
-      } else {
-        logger.warn("port not found for server socket '{}'", socketName);
-      }
+    for(final String socketName : socketNames) {
+      final Optional<Integer> port = this.getSocketPort(configService, socketName);
+      checkState(port.isPresent(), "undefined port for socket: ", socketName);
+      this.addSocket(sockets, socketName, port.get());
     }
-    this.serverSockets = sockets.build();
+    return sockets.build();
   }
 
-  private Optional<Integer> getSocketPort(final String socketName) {
-    return this.configService.getIntAppProp("faults.socket." + socketName + ".port");
+  private Optional<Integer> getSocketPort(final ConfigService configService, final String socketName) {
+    return configService.getIntAppProp("faults.socket." + socketName + ".port");
   }
 
   private void addSocket(final ImmutableMap.Builder<String, ServerSocket> sockets, final String name, final Integer port) {
