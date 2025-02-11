@@ -13,12 +13,12 @@ COPY http http
 
 COPY faults faults
 
-RUN --mount=type=cache,target=/root/.m2 ./mvnw -Pgcloud clean install -DskipTests
+RUN --mount=type=cache,target=/root/.m2 ./mvnw -Pfaults clean install -DskipTests
 RUN mkdir -p target/dependency
 
 WORKDIR /workspace/app/target/dependency
 
-RUN jar -xf /workspace/app/gcloud/target/gcloud.jar
+RUN jar -xf /workspace/app/faults/target/faults.jar
 
 FROM eclipse-temurin:17
 

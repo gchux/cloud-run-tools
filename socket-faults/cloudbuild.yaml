@@ -1,0 +1,14 @@
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    id: "build_socket_faults_generator"
+    entrypoint: "bash"
+    args:
+      - "docker_build"
+      - "socket-faults"
+      - "${_SOCKET_FAULTS_VERSION}"
+      - "${_REPO_LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_IMAGE_NAME}"
+images:
+  - "${_REPO_LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_IMAGE_NAME}:v${_SOCKET_FAULTS_VERSION}"
+tags: ["socket-faults-generator"]
+options:
+  logging: CLOUD_LOGGING_ONLY
