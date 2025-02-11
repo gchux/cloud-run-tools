@@ -46,8 +46,12 @@ public class App {
 
   private final Optional<Module> module;
 
-  public static App newApp(@NonNull final Module module) {
-    return new App(Optional.of(module));
+  public static App newApp() {
+    return new App(absent());
+  }
+
+  public static App newApp(@Nullable final Module module) {
+    return new App(fromNullable(module));
   }
 
   public static App newRestApp() {
