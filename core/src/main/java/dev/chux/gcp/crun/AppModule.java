@@ -26,9 +26,7 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 
-import dev.chux.gcp.crun.rest.RestModule;
 import dev.chux.gcp.crun.process.ProcessModule;
-import dev.chux.gcp.crun.http.HttpModule;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,8 +83,6 @@ class AppModule extends AbstractModule implements BootstrapModule {
     bind(ConfigService.class).to(ConfigServiceImpl.class).asEagerSingleton();
 
     install(new ProcessModule());
-    install(new RestModule());
-    install(new HttpModule());
 
     if (this.module.isPresent()) {
       install(this.module.get());

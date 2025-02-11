@@ -1,8 +1,11 @@
 package dev.chux.gcp.crun;
 
+import java.util.function.Consumer;
+
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.google.inject.util.Modules;
 
 import com.google.common.base.Optional;
 
@@ -18,12 +21,15 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 
+import dev.chux.gcp.crun.http.HttpModule;
 import dev.chux.gcp.crun.http.HttpServer;
+import dev.chux.gcp.crun.rest.RestModule;
 
 import static com.google.common.base.Optional.absent;
 import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Throwables.getStackTraceAsString;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
 public class App {
@@ -40,19 +46,32 @@ public class App {
 
   private final Optional<Module> module;
 
-  public static App newApp() {
-    return new App(absent());
+  public static App newApp(@NonNull final Module module) {
+    return new App(Optional.of(module));
   }
 
-  public static App newApp(@Nullable final Module module) {
-    return new App(fromNullable(module));
+  public static App newRestApp() {
+    return newRestApp(null);
   }
 
-  private App(@Nullable final Optional<Module> module) {
-    this.module = module;
+  public static App newRestApp(@Nullable final Module module) {
+    final Module coreModule = Modules.combine(new RestModule(), new HttpModule());
+    return new App(coreModule, fromNullable(module));
   }
 
-  public void run(final String[] args) {
+  private App(@CheckForNull final Module coreModule, final Optional<Module> appModule) {
+    if(appModule.isPresent()) {
+      this.module = Optional.of(Modules.combine(checkNotNull(coreModule), appModule.get()));
+    } else {
+      this.module = Optional.of(coreModule);
+    }
+  }
+
+  private App(final Optional<Module> appModule) {
+    this.module = appModule;
+  }
+
+  private Injector initialize(final String[] args) {
     final CommandLineParser parser = new DefaultParser();
     final Optional<CommandLine> maybeCmdln = command(parser, args);
 
@@ -66,9 +85,22 @@ public class App {
     final String propertiesFile = getPropertiesFile(cmdln);
     logger.info("using properties file: {}", propertiesFile);
     
-    final Injector injector = createInjector(propertiesFile);
-    
-    start(injector);
+    return createInjector(propertiesFile);
+  }
+
+  public void run(final Consumer<Injector> action, final String[] args) {
+    start(args, action);
+  }
+
+  public void runRestAPI(final String[] args) {
+    final App app = this;
+    start(args, (final Injector injector) -> {
+      try {
+        app.startHttpServer(injector);
+      } catch(final Exception ex) {
+        logger.error("failed to start HttpServer: {}", getStackTraceAsString(ex));
+      }
+    });
   }
 
   private final Optional<LifecycleManager> getLifecycleManager(@NonNull @CheckForNull final Injector injector) {
@@ -76,7 +108,7 @@ public class App {
       final LifecycleManager manager = checkNotNull(injector).getInstance(LifecycleManager.class);
       return fromNullable(manager);
     } catch(final Exception ex) {
-      logger.error("nothing provides LifecycleManager", ex);
+      logger.error("nothing provides LifecycleManager: {}", getStackTraceAsString(ex));
     }
     return absent();
   }
@@ -86,12 +118,14 @@ public class App {
       final HttpServer httpServer = checkNotNull(injector).getInstance(HttpServer.class);
       return fromNullable(httpServer);
     } catch(final Exception ex) {
-      logger.error("nothing provides HttpServer", ex);
+      logger.error("nothing provides HttpServer: {}", getStackTraceAsString(ex));
     }
     return absent();
   }
 
-  private final void start(@NonNull final Injector injector) {
+  private final void start(@CheckForNull final String[] args, final Consumer<Injector> action) {
+    final Injector injector = initialize(checkNotNull(args));
+
     final Optional<LifecycleManager> maybeManager = getLifecycleManager(injector);
 
     if (!maybeManager.isPresent()) {
@@ -103,11 +137,12 @@ public class App {
 
     try {
       manager.start();
-      startHttpServer(injector);
     } catch(Exception ex) {
-      logger.error("failed to start HttpServer", ex);
+      logger.error("failed to start HttpServer: {}", getStackTraceAsString(ex));
       return;
     }
+
+    checkNotNull(action).accept(injector);
 
     manager.close();
   }
@@ -138,7 +173,7 @@ public class App {
     try {
       return fromNullable(checkNotNull(parser).parse(OPTIONS, args));
     } catch (final ParseException ex) {
-      logger.error("failed to parse command line", ex);
+      logger.error("failed to parse command line: {}", getStackTraceAsString(ex));
     }
     return absent();
   }
