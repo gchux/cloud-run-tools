@@ -1,12 +1,12 @@
 package dev.chux.gcp.crun.gcloud;
 
-import static dev.chux.gcp.crun.App.newRestApp;
+import static dev.chux.gcp.crun.RestApp.of;
 
 public class GCloudApp {
 
   public static void main(final String[] args) {
     final GCloudModule gcloudModule = new GCloudModule();
-    newRestApp(gcloudModule).runRestAPI(args);
+    of(gcloudModule).run(args);
   }
 
 }
