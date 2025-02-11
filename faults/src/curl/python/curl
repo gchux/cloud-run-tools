@@ -47,12 +47,13 @@ class Curl:
     def __printRequest(self, method: str = "GET", headers: Dict[str, str] = {}) -> None:
         print(f"* Request: {method} {self.url}\n\nRequest Headers:")
         self.__printHeaders(headers)
-        print(f"\n* Request Body:\n\t", self.data_raw)
+        print("\n* Request Body:\n\t", self.data_raw)
 
     def __printResponse(self, response: requests.Response):
-        print(f"\n* Response Headers:")
+        print(f"\n* Response: {response.status_code}")
+        print("\n* Response Headers:")
         self.__printHeaders(response.headers)
-        print(f"\n* Response Body:")
+        print("\n* Response Body:")
         print("\t", response.text)
 
     def __doRequest(
