@@ -14,13 +14,13 @@ import dev.chux.gcp.crun.faults.socket.ServerSocketsProvider;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Throwables.getStackTraceAsString;
 
-public class ResetAfterHttpRequestLine extends AbstractSocketFaultHandler {
-  private static final Logger logger = LoggerFactory.getLogger(ResetAfterHttpRequestLine.class);
+public class ResetAfterHttpRequestHeaders extends AbstractSocketFaultHandler {
+  private static final Logger logger = LoggerFactory.getLogger(ResetAfterHttpRequestHeaders.class);
 
-  static final String SOCKET_NAME = "reset-after-http-request-line";
+  static final String SOCKET_NAME = "reset-after-http-request-headers";
 
   @Inject
-  public ResetAfterHttpRequestLine(
+  public ResetAfterHttpRequestHeaders(
     final ServerSocketsProvider serverSocketsProvider
   ) {
     super(SOCKET_NAME, serverSocketsProvider);
@@ -35,12 +35,19 @@ public class ResetAfterHttpRequestLine extends AbstractSocketFaultHandler {
 
     if (isNullOrEmpty(httpRequestLine)) {
       logger.warn("missing HTTP request line: {}", address);
-    } else {
-      logger.info("got HTTP request line '{}' from: {}", httpRequestLine, address);
+      super.close(socket);
+      return;
     }
 
+    logger.info("got HTTP request line '{}' from: {}", httpRequestLine, address);
+
+    String header;
+    while (!isNullOrEmpty(header = in.readLine())) {
+      logger.info("got HTTP header '{}' from: {}", header, address);
+    }
     super.close(socket);
   }
 
 }
+
 

@@ -12,7 +12,7 @@ import dev.chux.gcp.crun.faults.socket.ServerSocketsProvider;
 public class ImmediateTermination extends AbstractSocketFaultHandler {
   private static final Logger logger = LoggerFactory.getLogger(ImmediateTermination.class);
 
-  public static final String SOCKET_NAME = "immediate-termination";
+  static final String SOCKET_NAME = "immediate-termination";
 
   @Inject
   public ImmediateTermination(

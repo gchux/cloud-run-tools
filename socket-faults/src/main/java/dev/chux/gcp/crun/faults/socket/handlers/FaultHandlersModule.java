@@ -15,13 +15,17 @@ public class FaultHandlersModule extends AbstractModule {
       binder(), String.class, SocketFaultHandler.class, Names.named("socket-faults://handlers"));
 
 
-    handlersBinder.addBinding("immediate-termination")
+    handlersBinder.addBinding(ImmediateTermination.SOCKET_NAME)
       .to(ImmediateTermination.class).asEagerSingleton();
-    socketNames.addBinding().toInstance("immediate-termination");
+    socketNames.addBinding().toInstance(ImmediateTermination.SOCKET_NAME);
 
-    handlersBinder.addBinding("reset-after-http-request-line")
+    handlersBinder.addBinding(ResetAfterHttpRequestLine.SOCKET_NAME)
       .to(ResetAfterHttpRequestLine.class).asEagerSingleton();
-    socketNames.addBinding().toInstance("reset-after-http-request-line");
+    socketNames.addBinding().toInstance(ResetAfterHttpRequestLine.SOCKET_NAME);
+
+    handlersBinder.addBinding(ResetAfterHttpRequestHeaders.SOCKET_NAME)
+      .to(ResetAfterHttpRequestHeaders.class).asEagerSingleton();
+    socketNames.addBinding().toInstance(ResetAfterHttpRequestHeaders.SOCKET_NAME);
   }
 
 }
