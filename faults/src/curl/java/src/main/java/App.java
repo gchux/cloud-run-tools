@@ -1,18 +1,26 @@
 package dev.chux.gcp.crun.curl;
 
+import java.util.List;
+import java.util.Map;
+
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublisher;
+import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandler;
+import java.net.http.HttpResponse.BodyHandlers;
 import java.net.URI;
+
 import java.time.Duration;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableMap;
 
 import org.apache.commons.cli.*;
 
 import static java.net.http.HttpRequest.BodyPublishers.noBody;
-import static java.net.http.HttpRequest.BodyPublishers.ofString;
 
 import static com.google.common.base.Optional.absent;
 import static com.google.common.base.Optional.fromNullable;
@@ -27,6 +35,8 @@ public final class App {
   private static final String OPTION_DATA_RAW = "data-raw";
 
   private static final Options OPTIONS = new Options();
+
+  private static final Splitter headersSplitter = Splitter.on(':').trimResults();
 
   static {
     OPTIONS.addOption("X", OPTION_REQUEST, true, "HTTP method to be used");
@@ -58,18 +68,54 @@ public final class App {
     }
 
     final String method = method(cmdln);
-    final BodyPublisher body = body(cmdln);
+    final String data = data(cmdln);
+    final BodyPublisher body = body(data);
+    final Map<String, String> headers = headers(cmdln);
 
     final HttpClient client = newHttpClient();
-    final HttpRequest request = newHttpRequest(url, method, body);
+    final HttpRequest request = newHttpRequest(url, method, headers, body);
+
+    logRequest(request, data);
 
     exec(client, request);
   }
 
+  private static final void logHeader(final String name, final List<String> value) {
+      System.out.print("\t- Header[");
+      System.out.print(name);
+      System.out.print("]=");
+      System.out.println(value);
+  }
+
+  private static final void logHeaders(final Map<String, List<String>> headers) {
+    for(final Map.Entry<String, List<String>> header : headers.entrySet()) {
+      logHeader(header.getKey(), header.getValue());
+    }
+  }
+
+  private static final void logRequest(final HttpRequest request, final String body) {
+    System.out.print("\n* Request: ");
+    System.out.println(request.method());  
+    System.out.println("\n* Request Headers:");
+    logHeaders(request.headers().map());
+    System.out.print("\n* Request Body:\n\t");
+    System.out.println(body);
+  }
+
+  private static final void logResponse(final HttpResponse<String> response) {
+    System.out.print("\n* Response: ");
+    System.out.println(response.statusCode());  
+    System.out.println("\n* Response Headers:");
+    logHeaders(response.headers().map());
+    System.out.print("\n* Response Body:\n\t");
+    System.out.println(response.body());
+  }
+
   private static final void exec(final HttpClient client, final HttpRequest request) {
     try {
-      final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-      System.out.println(response.body());  
+      final BodyHandler<String> handler = BodyHandlers.ofString();
+      final HttpResponse<String> response = client.send(request, handler);
+      logResponse(response);
     } catch(Exception ex) {
       ex.printStackTrace(System.err);
     }
@@ -81,16 +127,25 @@ public final class App {
       .build();
   }
 
-  private static final HttpRequest newHttpRequest(final String url, final String method, final BodyPublisher body) {
-    return HttpRequest.newBuilder()
+  private static final HttpRequest newHttpRequest(
+    final String url,
+    final String method,
+    final Map<String, String> headers,
+    final BodyPublisher body
+  ) {
+    final HttpRequest.Builder builder = HttpRequest.newBuilder()
       .uri(URI.create(url))
       .timeout(Duration.ofMinutes(2))
-      .method(method, body).build();
+      .method(method, body);
+    return setHeaders(builder, headers).build();
+  }
+
+  private static final BodyPublisher body(final String data) {
+    return isNullOrEmpty(data)? noBody() : BodyPublishers.ofString(data);
   }
 
   private static final BodyPublisher body(final CommandLine cmdln) {
-    final String data = data(cmdln);
-    return isNullOrEmpty(data)? noBody() : ofString(data);
+    return body(data(cmdln));
   }
 
   private static final Optional<CommandLine> command(final CommandLineParser parser, final String[] args) {
@@ -124,8 +179,32 @@ public final class App {
     return option(cmdln, OPTION_DATA_RAW);
   }
 
-  private static final String[] headers(final CommandLine cmdln) {
-    return options(cmdln, OPTION_HEADER);
+  private static final HttpRequest.Builder setHeaders(final HttpRequest.Builder builder, final Map<String, String> headers) {
+    for(final Map.Entry<String, String> header : headers.entrySet()) {
+      builder.header(header.getKey(), header.getValue());
+    }
+    return builder;
+  }
+
+  private static final void setHeader(final ImmutableMap.Builder<String, String> headers, final String rawHeader) {
+    final List<String> parts = headersSplitter.splitToList(rawHeader);
+    if (parts.size() != 2) {
+      return;
+    }
+    headers.put(parts.get(0), parts.get(1));
+  }
+
+  private static final Map<String, String> headers(final CommandLine cmdln) {
+    final String[] headers = options(cmdln, OPTION_HEADER);
+    if (headers == null) {
+      return ImmutableMap.of();
+    }
+
+    final ImmutableMap.Builder<String, String> headersMap = ImmutableMap.<String, String>builder();
+    for(final String header : headers) {
+      setHeader(headersMap, header);
+    }
+    return headersMap.build();
   }
 
   private static final String URL(final CommandLine cmdln) {
