@@ -200,6 +200,7 @@
         </dependencies>
       </dependencyManagement>
     </profile>
+
     <profile>
       <id>gcloud</id>
       <activation>
@@ -213,6 +214,25 @@
           <dependency>
             <groupId>dev.chux.gcp.crun</groupId>
             <artifactId>process-runner-gcloud</artifactId>
+            <version>${process-runner.version}</version>
+          </dependency>
+        </dependencies>
+      </dependencyManagement>
+    </profile>
+
+    <profile>
+      <id>faults</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <modules>
+        <module>faults</module>
+      </modules>
+      <dependencyManagement>
+        <dependencies>
+          <dependency>
+            <groupId>dev.chux.gcp.crun</groupId>
+            <artifactId>process-runner-faults</artifactId>
             <version>${process-runner.version}</version>
           </dependency>
         </dependencies>

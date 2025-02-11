@@ -46,13 +46,17 @@ public class App {
     OPTIONS.addOption("c", PROPERTIES_FILE_OPTION, true, "full path to properties file");
   }
 
-  private final Module module;
+  private final Optional<Module> module;
 
-  public App() {
-    this(null);
+  public static App newApp() {
+    return new App(absent());
   }
 
-  public App(@Nullable final Module module) {
+  public static App newApp(@Nullable final Module module) {
+    return new App(fromNullable(module));
+  }
+
+  private App(@Nullable final Optional<Module> module) {
     this.module = module;
   }
 

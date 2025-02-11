@@ -26,7 +26,7 @@ set -x
 docker buildx build \
   --no-cache \
   --platform=linux/amd64 \
-  --file="Dockerfile.${TARGET}" \
+  --file="./gcloud/Dockerfile" \
   --build-arg="GOOGLE_CLOUD_SDK_VERSION=${GOOGLE_CLOUD_SDK_VERSION}" \
   --label="GOOGLE_CLOUD_SDK_VERSION=${GOOGLE_CLOUD_SDK_VERSION}" \
   --tag="${DOCKER_IMAGE_URI}:v${GOOGLE_CLOUD_SDK_VERSION}" .

@@ -1,0 +1,14 @@
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    id: "build_faults_generator"
+    entrypoint: "bash"
+    args:
+      - "docker_build"
+      - "faults"
+      - "${_FAULTS_VERSION}"
+      - "${_REPO_LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_IMAGE_NAME}"
+images:
+  - "${_REPO_LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_IMAGE_NAME}:v${_FAULTS_VERSION}"
+tags: ["faults-generator"]
+options:
+  logging: CLOUD_LOGGING_ONLY

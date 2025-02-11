@@ -1,13 +1,12 @@
 package dev.chux.gcp.crun.jmeter;
 
-import dev.chux.gcp.crun.App;
+import static dev.chux.gcp.crun.App.newApp;
 
 public class JMeterApp {
 
   public static void main(final String[] args) {
     final JMeterModule jMeterModule = new JMeterModule();
-    final App app = new App(jMeterModule);
-    app.run(args);
+    newApp(jMeterModule).run(args);
   }
 
 }

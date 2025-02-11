@@ -19,7 +19,6 @@ import com.netflix.governator.configuration.CompositeConfigurationProvider;
 
 
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.collect.ImmutableMap;
 
@@ -36,6 +35,8 @@ import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Optional.absent;
 import static com.google.common.base.Optional.fromNullable;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
 class AppModule extends AbstractModule implements BootstrapModule {
@@ -49,10 +50,10 @@ class AppModule extends AbstractModule implements BootstrapModule {
   private final Map<String, String> environmentMap;
   private final Map<String, String> propertiesMap;
 
-  AppModule(@NonNull @CheckForNull final String propertiesFile, @Nullable Module module) {
-    Preconditions.checkArgument(!isNullOrEmpty(propertiesFile), "full path to properties file is required");
+  AppModule(@NonNull @CheckForNull final String propertiesFile, @CheckForNull Optional<Module> module) {
+    checkArgument(!isNullOrEmpty(propertiesFile), "full path to properties file is required");
     this.propertiesFile = propertiesFile;
-    this.module = fromNullable(module);
+    this.module = checkNotNull(module, "optional module is required");
 
     this.environmentMap = loadEnvironment();
     this.propertiesMap = loadProperties(this.propertiesFile);
