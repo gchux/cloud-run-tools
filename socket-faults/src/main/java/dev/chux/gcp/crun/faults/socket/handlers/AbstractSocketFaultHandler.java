@@ -3,6 +3,8 @@ package dev.chux.gcp.crun.faults.socket.handlers;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -14,6 +16,7 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.ObservableEmitter;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.observables.ConnectableObservable;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
@@ -36,9 +39,12 @@ abstract class AbstractSocketFaultHandler implements SocketFaultHandler {
 
   private final String socketName;
   private final ServerSocket serverSocket;
-  private final Observable<Socket> socketObservable;
+  private final ConnectableObservable<Socket> socketObservable;
   private final AtomicBoolean isActive;
   private final AtomicReference<Disposable> disposable;
+  private final CountDownLatch completeSignal;
+
+  private Disposable _disposable;
 
   public AbstractSocketFaultHandler(
     final String socketName,
@@ -47,12 +53,16 @@ abstract class AbstractSocketFaultHandler implements SocketFaultHandler {
     this.socketName = socketName;
     this.serverSocket = this.getServerSocket(serverSocketsProvider);
     this.socketObservable = this.newSocketObservable();
-    this.isActive = new AtomicBoolean(true);
+    this.isActive = new AtomicBoolean(false);
     this.disposable = new AtomicReference(null);
+    this.completeSignal = new CountDownLatch(1);
   }
 
-  private final Observable<Socket> newSocketObservable() {
-    return Observable.create(this).observeOn(Schedulers.io()).subscribeOn(Schedulers.computation());
+  private final ConnectableObservable<Socket> newSocketObservable() {
+    return Observable.create(this)
+      .observeOn(Schedulers.io())
+      .subscribeOn(Schedulers.computation())
+      .publish();
   }
 
   private final ServerSocket getServerSocket(final ServerSocketsProvider serverSocketsProvider) {
@@ -62,24 +72,55 @@ abstract class AbstractSocketFaultHandler implements SocketFaultHandler {
   }
 
   @Override
-  public void start() {
-    this.socketObservable.subscribe(this);
-    logger.info("socket handler started: {}", this.get());
-  }
-
-  @Override
-  public boolean stop() {
-    final boolean stopped = this.isActive.compareAndSet(true, false);
-    checkNotNull(this.disposable.get()).dispose();
-    if (stopped) {
-      logger.info("socket handler stopped: {}", this.get());
+  public Boolean start() {
+    if (!this.isActive.compareAndSet(false, true)) {
+      logger.warn("socket handler already started: {}", this.get());
+      return Boolean.FALSE;
     }
-    return stopped;
+    
+    this._disposable = this.socketObservable.connect();
+    this.socketObservable.subscribe(this);
+    
+    logger.info("socket handler started: {}", this.get());
+
+    return Boolean.TRUE;
   }
 
   @Override
-  public boolean isActive() {
-    return this.isActive.get();
+  public Boolean stop(final CountDownLatch stopSignal) {
+    if (!this.isActive.compareAndSet(true, false)) {
+      logger.warn("socket handler already stopped: {}", this.get());
+      return Boolean.FALSE;
+    }
+
+    this.closeServerSocket();
+
+    try {
+      this.completeSignal.await(3L, TimeUnit.SECONDS);
+    } catch(final Exception ex) {
+      logger.error("'{}': {}", this.get(), getStackTraceAsString(ex));
+    }
+
+    checkNotNull(this._disposable).dispose();
+
+    stopSignal.countDown();
+
+    logger.info("socket handler stopped: {}", this.get());
+
+    return Boolean.TRUE;
+  }
+
+  private void closeServerSocket() {
+    try {
+      this.serverSocket.close();
+    } catch(final Exception ex) {
+      logger.error("'{}': {}", this.get(), getStackTraceAsString(ex));
+    }
+  }
+
+  @Override
+  public Boolean isActive() {
+    return Boolean.valueOf(this.isActive.get());
   }
 
   @Override
@@ -95,10 +136,9 @@ abstract class AbstractSocketFaultHandler implements SocketFaultHandler {
       try {
         emitter.onNext(this.serverSocket.accept());
       } catch(final Exception ex) {
-        emitter.onError(ex);
+        logger.error("'{}': {}", this.get(), getStackTraceAsString(ex));
       }
     }
-    logger.info("socket handler complete: {}", this.get());
     emitter.onComplete();
   }
 
@@ -118,7 +158,11 @@ abstract class AbstractSocketFaultHandler implements SocketFaultHandler {
   }
 
   @Override
-  public void onComplete() {}
+  public void onComplete() {
+    checkNotNull(this.disposable.get()).dispose();
+    logger.info("socket handler complete: {}", this.get());
+    this.completeSignal.countDown(); 
+  }
 
   @Override
   public void onSubscribe(final Disposable disposable) {
