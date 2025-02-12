@@ -50,8 +50,8 @@ COPY faults/src/curl/python/requirements.txt .
 
 RUN python3 -m venv /curl/python
 ENV PATH="/curl/python/bin:${PATH}"
-RUN pip install --no-cache-dir -U -r requirements.txt \
-  && rm -vf /curl/python/bin/python*
+RUN pip install --no-cache-dir -U -r requirements.txt
+RUN rm -vf /curl/python/bin/python*
 
 FROM golang:1.23-alpine3.20 AS curl_golang_build
 
