@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 if [[ -z "${FAULTS_CONFIG}" ]]; then
-  export FAULTS_CONFIG='/faults-command-runner.properties'
+  export FAULTS_CONFIG='/faults-generator.properties'
 fi
 
 set -x

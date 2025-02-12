@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import sys
 import traceback
 from typing import Dict, List, Optional, Union
