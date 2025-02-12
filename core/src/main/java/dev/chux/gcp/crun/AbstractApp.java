@@ -4,6 +4,7 @@ import java.util.function.Consumer;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
@@ -22,6 +23,7 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 
+import dev.chux.gcp.crun.annotations.MainThread;
 import dev.chux.gcp.crun.http.HttpModule;
 import dev.chux.gcp.crun.http.HttpServer;
 import dev.chux.gcp.crun.rest.RestModule;
@@ -40,6 +42,8 @@ abstract class AbstractApp implements Supplier<Optional<Module>> {
   private static final String DEFAULT_PROPERTIES_FILE = "/process-runner.properties";
 
   private static final Options OPTIONS = new Options();
+
+  private static final Key<AppMainThread> APP_MAIN_THREAD_KEY = Key.get(AppMainThread.class, MainThread.class);
 
   static {
     OPTIONS.addOption("c", PROPERTIES_FILE_OPTION, true, "full path to properties file");
@@ -80,6 +84,10 @@ abstract class AbstractApp implements Supplier<Optional<Module>> {
     logger.info("using properties file: {}", propertiesFile);
     
     return createInjector(propertiesFile);
+  }
+
+  protected final Optional<AppMainThread> getAppMainThread(final Injector injector) {
+    return fromNullable(injector.getInstance(APP_MAIN_THREAD_KEY));
   }
 
   protected final Optional<LifecycleManager> getLifecycleManager(@NonNull @CheckForNull final Injector injector) {

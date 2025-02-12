@@ -10,18 +10,21 @@ import javax.annotation.PostConstruct;
 import java.util.concurrent.CountDownLatch;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import dev.chux.gcp.crun.AppMainThread;
 import dev.chux.gcp.crun.faults.socket.handlers.SocketFaultHandler;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Throwables.getStackTraceAsString;
 
-final class SocketFaultsMainThread extends Thread {
+@Singleton
+final class SocketFaultsMainThread implements AppMainThread {
 
   private static final Logger logger = LoggerFactory.getLogger(SocketFaultsMainThread.class);
   
@@ -40,7 +43,6 @@ final class SocketFaultsMainThread extends Thread {
     this.doneSignal = new CountDownLatch(1);
     this.socketNames = socketNames;
     this.socketHandlers = socketHandlers;
-    Runtime.getRuntime().addShutdownHook(this);
   }
 
   @PostConstruct
@@ -53,6 +55,7 @@ final class SocketFaultsMainThread extends Thread {
     logger.info("started {} socket handlers", this.startedSocketHandlers);
   }
 
+  @Override
   public void run() {
     final CountDownLatch stopSignal = newStopSignal();
     for(final String socketName : this.socketNames) {
@@ -63,7 +66,15 @@ final class SocketFaultsMainThread extends Thread {
     } catch(final Exception ex) {
       logger.error("{}", getStackTraceAsString(ex));
     }
+
     this.doneSignal.countDown();
+  }
+
+  @Override
+  public int await() throws InterruptedException {
+    this.doneSignal.await();
+    logger.info("socket faults generator module terminated");
+    return 0;
   }
 
   private CountDownLatch newStopSignal() {
@@ -80,10 +91,6 @@ final class SocketFaultsMainThread extends Thread {
     final SocketFaultHandler handler = this.socketHandlers.get(socketName);
     logger.info("stopping socket handler '{}': {}", socketName, handler);
     return checkNotNull(handler, "handler not found:", socketName).stop(stopSignal);
-  }
-
-  void await() throws InterruptedException {
-    this.doneSignal.await();
   }
   
 }

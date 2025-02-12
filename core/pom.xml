@@ -107,6 +107,10 @@
     </dependency>
     <dependency>
       <groupId>dev.chux.gcp.crun</groupId>
+      <artifactId>process-runner-annotations</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>dev.chux.gcp.crun</groupId>
       <artifactId>process-runner-exec</artifactId>
     </dependency>
     <dependency>

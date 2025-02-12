@@ -78,8 +78,8 @@ abstract class AbstractSocketFaultHandler implements SocketFaultHandler {
       return Boolean.FALSE;
     }
     
-    this._disposable = this.socketObservable.connect();
     this.socketObservable.subscribe(this);
+    this._disposable = this.socketObservable.connect();
     
     logger.info("socket handler started: {}", this.get());
 

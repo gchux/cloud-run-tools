@@ -12,10 +12,10 @@ import com.google.inject.multibindings.MapBinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import dev.chux.gcp.crun.AppMainThread;
+import dev.chux.gcp.crun.annotations.MainThread;
 import dev.chux.gcp.crun.faults.socket.handlers.FaultHandlersModule;
 import dev.chux.gcp.crun.faults.socket.handlers.SocketFaultHandler;
-
-import static com.google.common.base.Throwables.getStackTraceAsString;
 
 public class SocketFaultsModule extends AbstractModule implements Consumer<Injector> {
   private static final Logger logger = LoggerFactory.getLogger(SocketFaultsModule.class);
@@ -23,7 +23,7 @@ public class SocketFaultsModule extends AbstractModule implements Consumer<Injec
   SocketFaultsModule() {}
 
   protected void configure() {
-    bind(SocketFaultsMainThread.class).asEagerSingleton();
+    bind(AppMainThread.class).annotatedWith(MainThread.class).to(SocketFaultsMainThread.class).asEagerSingleton();
 
     Multibinder.newSetBinder(binder(), String.class, Names.named("socket-faults://names"));
     MapBinder.newMapBinder(binder(), String.class, SocketFaultHandler.class, Names.named("socket-faults://handlers"));
@@ -35,14 +35,7 @@ public class SocketFaultsModule extends AbstractModule implements Consumer<Injec
 
   @Override
   public void accept(final Injector injector) {
-    try {
-      logger.info("socket faults generator module started");
-      final SocketFaultsMainThread mainThread = injector.getInstance(SocketFaultsMainThread.class);
-      mainThread.await();
-      logger.info("socket faults generator module terminated");
-    } catch(final Exception ex) {
-      logger.error("failed to start app: {}", getStackTraceAsString(ex));
-    }
+    logger.info("socket faults generator module started");
   }
 
 }
