@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
-cd /curl/nodejs
+cd /x/curl/nodejs
 exec node ./curl.js "${@:1}"

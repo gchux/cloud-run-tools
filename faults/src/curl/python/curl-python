@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
-export PATH="/curl/python/bin:${PATH}"
-cd /curl/python
+export PATH="/x/curl/python/bin:${PATH}"
+cd /x/curl/python
 exec python3 ./curl.py "${@:1}"

@@ -43,15 +43,15 @@ RUN npm install
 
 FROM python:3.12.9-alpine3.20 AS curl_python_build
 
-WORKDIR /curl/python
+WORKDIR /x/curl/python
 
 COPY faults/src/curl/python/curl.py .
 COPY faults/src/curl/python/requirements.txt .
 
-RUN python3 -m venv /curl/python
-ENV PATH="/curl/python/bin:${PATH}"
+RUN python3 -m venv /x/curl/python
+ENV PATH="/x/curl/python/bin:${PATH}"
 RUN pip install --no-cache-dir -U -r requirements.txt
-RUN rm -vf /curl/python/bin/python*
+RUN rm -vf /x/curl/python/bin/python*
 
 FROM golang:1.23-alpine3.20 AS curl_golang_build
 
@@ -70,26 +70,26 @@ ARG DEPENDENCY=/workspace/app/target/dependency
 
 VOLUME /tmp
 
-COPY --from=build ${DEPENDENCY} /app
+COPY --from=build ${DEPENDENCY} /x/rest_app
 
-RUN apk add --update --no-cache bash nodejs python3=3.12.9-r0
+RUN apk add --update --no-cache bash curl nodejs python3=3.12.9-r0
 
-COPY --from=curl_java_build /curl/java/target/curl.jar /curl/java/curl.jar
-COPY faults/src/curl/java/curl-java /curl_java
+COPY --from=curl_java_build /curl/java/target/curl.jar /x/curl/java/curl.jar
+COPY faults/src/curl/java/curl-java /x/curl_java
 
-COPY --from=curl_nodejs_build /curl/nodejs /curl/nodejs
-COPY faults/src/curl/nodejs/curl-nodejs /curl_nodejs
+COPY --from=curl_nodejs_build /curl/nodejs /x/curl/nodejs
+COPY faults/src/curl/nodejs/curl-nodejs /x/curl_nodejs
 
-COPY --from=curl_python_build /curl/python /curl/python
-COPY faults/src/curl/python/curl-python /curl_python
-RUN ln -s "$(which python3.12)" /curl/python/bin/python \
-  && ln -s "$(which python3.12)" /curl/python/bin/python3 \
-  && ln -s "$(which python3.12)" /curl/python/bin/python3.12
+COPY --from=curl_python_build /x/curl/python /x/curl/python
+COPY faults/src/curl/python/curl-python /x/curl_python
+RUN ln -s "$(which python3.12)" /x/curl/python/bin/python \
+  && ln -s "$(which python3.12)" /x/curl/python/bin/python3 \
+  && ln -s "$(which python3.12)" /x/curl/python/bin/python3.12
 
-COPY --from=curl_golang_build /curl/golang /curl/golang
-COPY faults/src/curl/golang/curl-golang /curl_golang
+COPY --from=curl_golang_build /curl/golang /x/curl/golang
+COPY faults/src/curl/golang/curl-golang /x/curl_golang
 
-COPY ./faults/faults-generator.properties /faults-generator.properties
+COPY ./faults/faults-generator.properties /x/faults-generator.properties
 COPY ./faults/entrypoint.sh /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
