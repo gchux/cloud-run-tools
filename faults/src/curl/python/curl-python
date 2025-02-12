@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+cd /curl/python
+exec ./bin/python ./curl.py "${@:1}"

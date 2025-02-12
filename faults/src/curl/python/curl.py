@@ -77,7 +77,7 @@ class Curl:
 
 def main(
     url: str,
-    method: Optional[str] = typer.Option("--request", "-X"),
+    method: Annotated[Optional[str], typer.Option("--request", "-X")] = "GET",
     header: Annotated[Optional[List[str]], typer.Option("--header", "-H")] = [],
     data_raw: Annotated[Optional[str], typer.Option("--data-raw")] = None,
 ):

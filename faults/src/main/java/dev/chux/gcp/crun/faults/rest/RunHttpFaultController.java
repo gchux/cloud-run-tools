@@ -60,6 +60,7 @@ public class RunHttpFaultController implements Route {
     logger.info("runtime: {} | fault: {}", runtime, fault);
 
     logger.info("finished: {}", executionID);
+
     return null;
   }
 

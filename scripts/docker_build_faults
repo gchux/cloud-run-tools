@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+# the 1st argument of this script expects the Google Cloud SDK version
+if [ "${1}" = "" ]
+then
+  echo "Usage: $0 1.0.0 <docker_image_uri>"
+  exit
+fi
+
+# the 2nd argument of this script expects the full container image URI minus the tag
+if [ "${2}" = "" ]
+then
+  echo "Usage: $0 <faults.version> <us-docker.pkg.dev/project_id/repo_name/image>"
+  exit
+fi
+
+export FAULTS_VERSION="${1}"
+export DOCKER_IMAGE_URI="${2}"
+
+export MAIN_PID=$$
+
+echo "Building Cloud Run faults generator"
+
+set -x
+
+docker buildx build \
+  --no-cache \
+  --platform=linux/amd64 \
+  --file="./faults/Dockerfile" \
+  --label="FAULTS_VERSION=${FAULTS_VERSION}" \
+  --tag="${DOCKER_IMAGE_URI}:v${FAULTS_VERSION}" .
