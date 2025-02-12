@@ -55,9 +55,9 @@ FROM golang:1.23-alpine3.20 AS curl_golang_build
 
 WORKDIR /workspace/curl
 
-COPY faults/src/curl/go/curl.go .
-COPY faults/src/curl/go/go.mod .
-COPY faults/src/curl/go/go.sum .
+COPY faults/src/curl/golang/curl.go .
+COPY faults/src/curl/golang/go.mod .
+COPY faults/src/curl/golang/go.sum .
 
 RUN go build -a -v -o curl curl.go
 
@@ -81,7 +81,7 @@ COPY --from=curl_python_build /workspace/curl /curl/python
 COPY faults/src/curl/python/curl-python /curl-python
 
 COPY --from=curl_golang_build /workspace/curl /curl/golang
-COPY faults/src/curl/go/curl-golang /curl-golang
+COPY faults/src/curl/golang/curl-golang /curl-golang
 
 COPY ./faults/faults-generator.properties /faults-generator.properties
 COPY ./faults/entrypoint.sh /entrypoint.sh
