@@ -34,17 +34,21 @@ public final class App {
   private static final String OPTION_HEADER = "header";
   private static final String OPTION_DATA_RAW = "data-raw";
 
+  // must match: https://curl.se/docs/manpage.html
   private static final Options OPTIONS = new Options();
 
   private static final Splitter headersSplitter = Splitter.on(':').trimResults();
 
   static {
+    // https://curl.se/docs/manpage.html#-X
     OPTIONS.addOption("X", OPTION_REQUEST, true, "HTTP method to be used");
 
+    // https://curl.se/docs/manpage.html#-H
     final Option option = new Option("H", "header", true, "HTTP request metadata; headets to be sent");
     option.setArgs(Option.UNLIMITED_VALUES);
     OPTIONS.addOption(option);
     
+    // https://curl.se/docs/manpage.html#--data-raw
     OPTIONS.addOption(OPTION_DATA_RAW, true, "data to be sent in the HTTP request payload");
   }
 

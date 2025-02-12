@@ -82,9 +82,13 @@ const newCurl = function (program) {
   return new Curl(curl);
 }
 
+// must match: https://curl.se/docs/manpage.html
 program
+  // https://curl.se/docs/manpage.html#-X
   .option('-X, --request', 'HTTP method to be used', [])
+  // https://curl.se/docs/manpage.html#-H
   .option('-H, --header <value...>', 'HTTP request metadata; headets to be sent', [])
+  // https://curl.se/docs/manpage.html#--data-raw
   .option('--data-raw', 'data to be sent in the HTTP request payload', [])
   .argument('<string>', 'URL');
 

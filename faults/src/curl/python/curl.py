@@ -73,10 +73,14 @@ class Curl:
         self.__printResponse(response)
 
 
+# must match: https://curl.se/docs/manpage.html
 def main(
     url: str,
+    # https://curl.se/docs/manpage.html#-X
     method: Annotated[Optional[str], typer.Option("--request", "-X")] = "GET",
+    # https://curl.se/docs/manpage.html#-H
     header: Annotated[Optional[List[str]], typer.Option("--header", "-H")] = [],
+    # https://curl.se/docs/manpage.html#--data-raw
     data_raw: Annotated[Optional[str], typer.Option("--data-raw")] = None,
 ):
     curl = Curl(url, method, header, data_raw)
