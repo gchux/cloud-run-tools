@@ -18,8 +18,8 @@ import ch.vorburger.exec.ManagedProcessBuilder;
 import ch.vorburger.exec.ManagedProcessException;
 
 import dev.chux.gcp.crun.model.HttpRequest;
-import dev.chux.gcp.crun.faults.bin.Binary;
-import dev.chux.gcp.crun.faults.bin.CurlFactory;
+import dev.chux.gcp.crun.faults.binary.Binary;
+import dev.chux.gcp.crun.faults.binary.CurlFactory;
 import dev.chux.gcp.crun.process.ManagedProcessProvider;
 
 import org.slf4j.Logger;

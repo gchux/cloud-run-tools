@@ -11,7 +11,7 @@ import dev.chux.gcp.crun.process.ProcessOutput;
 
 import dev.chux.gcp.crun.rest.Route;
 
-import dev.chux.gcp.crun.faults.bin.BinaryModule;
+import dev.chux.gcp.crun.faults.binary.BinaryModule;
 import dev.chux.gcp.crun.faults.command.FaultCommand;
 import dev.chux.gcp.crun.faults.command.FaultCommandFactory;
 import dev.chux.gcp.crun.faults.command.HttpRequestCommand;

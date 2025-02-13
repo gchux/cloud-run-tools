@@ -1,4 +1,4 @@
-package dev.chux.gcp.crun.faults.bin;
+package dev.chux.gcp.crun.faults.binary;
 
 import java.io.OutputStream;
 
