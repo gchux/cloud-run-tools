@@ -26,6 +26,6 @@ set -x
 docker buildx build \
   --no-cache \
   --platform=linux/amd64 \
-  --file="./faults/Dockerfile" \
+  --file="./echo-server/Dockerfile" \
   --label="ECHO_SERVER_VERSION=${ECHO_SERVER_VERSION}" \
   --tag="${DOCKER_IMAGE_URI}:v${ECHO_SERVER_VERSION}" .

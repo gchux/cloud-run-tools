@@ -20,7 +20,7 @@ RUN mkdir -p target/dependency
 
 WORKDIR /workspace/app/target/dependency
 
-RUN jar -xf /workspace/app/echo-server/target/faults.jar
+RUN jar -xf /workspace/app/echo-server/target/echo-server.jar
 
 FROM eclipse-temurin:17-alpine-3.20
 
