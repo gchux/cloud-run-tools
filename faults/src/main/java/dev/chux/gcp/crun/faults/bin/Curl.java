@@ -3,6 +3,8 @@ package dev.chux.gcp.crun.faults.bin;
 import java.io.OutputStream;
 
 import com.google.inject.Inject;
+import com.google.inject.assistedinject.AssistedInject;
+import com.google.inject.assistedinject.Assisted;
 
 import com.google.common.base.Optional;
 
@@ -14,15 +16,37 @@ import dev.chux.gcp.crun.ConfigService;
 import dev.chux.gcp.crun.model.HttpRequest;
 import dev.chux.gcp.crun.process.ManagedProcessProvider;
 
+import static com.google.common.base.Optional.absent;
+import static com.google.common.base.Optional.fromNullable;
+
 class Curl {
 
-  private static abstract class AbstractCurl extends AbstractBinary<HttpRequest> {
+  static abstract class AbstractCurl 
+    extends AbstractBinary<HttpRequest>
+    implements ManagedProcessProvider {
+
+    private final Optional<HttpRequest> request;
+    private final Optional<OutputStream> stdout;
+    private final Optional<OutputStream> stderr;
 
     protected AbstractCurl(
       final ConfigService configService,
       final String binary
     ) {
+      this(configService, binary, null, absent(), absent());
+    }
+
+    protected AbstractCurl(
+      final ConfigService configService,
+      final String binary,
+       HttpRequest request,
+       Optional<OutputStream> stdout,
+       Optional<OutputStream> stderr
+    ) {
       super(configService, "curl." + binary);
+      this.request = fromNullable(request);
+      this.stdout = stdout;
+      this.stderr = stderr;
     }
 
     protected final ManagedProcessBuilder newCurlCommandBuilder(
@@ -49,17 +73,6 @@ class Curl {
       return this;
     }
 
-  }
-
-  static class Java extends AbstractCurl {
-
-    @Inject
-    public Java(
-      final ConfigService configService
-    ) {
-      super(configService, "java");
-    }
-
     @Override
     public ManagedProcessBuilder getBuilder(
       final HttpRequest request,
@@ -67,86 +80,128 @@ class Curl {
       final Optional<OutputStream> stderr
     ) throws ManagedProcessException {
       return newCurlCommandBuilder(request, stdout, stderr);
+    }
+
+    @Override
+    public ManagedProcessBuilder getBuilder() throws ManagedProcessException {
+      return this.getBuilder(this.request.get(), this.stdout, this.stderr);
+    }
+
+  }
+
+  static class Java extends AbstractCurl {
+
+    private static final String BINARY = "java";
+
+    @Inject
+    public Java(
+      final ConfigService configService
+    ) {
+      super(configService, BINARY);
+    }
+
+    @AssistedInject
+    public Java(
+      final ConfigService configService,
+      @Assisted HttpRequest request,
+      @Assisted("stdout") Optional<OutputStream> stdout,
+      @Assisted("stderr") Optional<OutputStream> stderr
+    ) {
+      super(configService, BINARY, request, stdout, stderr);
     }
 
   }
 
   static class Python extends AbstractCurl {
 
+    private static final String BINARY = "python";
+
     @Inject
     public Python(
       final ConfigService configService
     ) {
-      super(configService, "python");
+      super(configService, BINARY);
     }
 
-    @Override
-    public ManagedProcessBuilder getBuilder(
-      final HttpRequest request,
-      final Optional<OutputStream> stdout,
-      final Optional<OutputStream> stderr
-    ) throws ManagedProcessException {
-      return newCurlCommandBuilder(request, stdout, stderr);
+    @AssistedInject
+    public Python(
+      final ConfigService configService,
+      @Assisted HttpRequest request,
+      @Assisted("stdout") Optional<OutputStream> stdout,
+      @Assisted("stderr") Optional<OutputStream> stderr
+    ) {
+      super(configService, BINARY, request, stdout, stderr);
     }
 
   }
 
   static class NodeJS extends AbstractCurl {
 
+    private static final String BINARY = "nodejs";
+
     @Inject
     public NodeJS(
       final ConfigService configService
     ) {
-      super(configService, "nodejs");
+      super(configService, BINARY);
     }
 
-    @Override
-    public ManagedProcessBuilder getBuilder(
-      final HttpRequest request,
-      final Optional<OutputStream> stdout,
-      final Optional<OutputStream> stderr
-    ) throws ManagedProcessException {
-      return newCurlCommandBuilder(request, stdout, stderr);
+    @AssistedInject
+    public NodeJS(
+      final ConfigService configService,
+      @Assisted HttpRequest request,
+      @Assisted("stdout") Optional<OutputStream> stdout,
+      @Assisted("stderr") Optional<OutputStream> stderr
+    ) {
+      super(configService, BINARY, request, stdout, stderr);
     }
 
   }
 
   static class Golang extends AbstractCurl {
 
+    private static final String BINARY = "golang";
+
     @Inject
     public Golang(
       final ConfigService configService
     ) {
-      super(configService, "golang");
+      super(configService, BINARY);
     }
 
-    @Override
-    public ManagedProcessBuilder getBuilder(
-      final HttpRequest request,
-      final Optional<OutputStream> stdout,
-      final Optional<OutputStream> stderr
-    ) throws ManagedProcessException {
-      return newCurlCommandBuilder(request, stdout, stderr);
+    @AssistedInject
+    public Golang(
+      final ConfigService configService,
+      final String binary,
+      @Assisted HttpRequest request,
+      @Assisted("stdout") Optional<OutputStream> stdout,
+      @Assisted("stderr") Optional<OutputStream> stderr
+    ) {
+      super(configService, BINARY, request, stdout, stderr);
     }
 
   }
 
   static class Linux extends AbstractCurl {
 
+    private static final String BINARY = "linux";
+
     @Inject
     public Linux(
       final ConfigService configService
     ) {
-      super(configService, "linux");
+      super(configService, BINARY);
     }
 
-    @Override
-    public ManagedProcessBuilder getBuilder(
-      final HttpRequest request,
-      final Optional<OutputStream> stdout,
-      final Optional<OutputStream> stderr
-    ) throws ManagedProcessException {
-      return newCurlCommandBuilder(request, stdout, stderr);
+    @AssistedInject
+    public Linux(
+      final ConfigService configService,
+      final String binary,
+      @Assisted HttpRequest request,
+      @Assisted("stdout") Optional<OutputStream> stdout,
+      @Assisted("stderr") Optional<OutputStream> stderr
+    ) {
+      super(configService, BINARY, request, stdout, stderr);
     }
 
   }

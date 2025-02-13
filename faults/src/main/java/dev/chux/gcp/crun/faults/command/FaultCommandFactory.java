@@ -13,7 +13,8 @@ public interface FaultCommandFactory {
 
   @Named("faults://commands/httpRequest")
   public FaultCommand newHttpRequestCommand(
-    final HttpRequest httpRequest,
+    final HttpRequest request,
+    @Assisted("runtime") final Optional<String> runtime,
     @Assisted("stdout") final Optional<OutputStream> stdout,
     @Assisted("stderr") final Optional<OutputStream> stderr
   );

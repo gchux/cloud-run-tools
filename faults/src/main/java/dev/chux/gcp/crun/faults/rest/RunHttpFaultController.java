@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import static spark.Spark.*;
 import static com.google.common.base.Optional.absent;
 import static com.google.common.base.Optional.fromNullable;
+import static com.google.common.base.Strings.emptyToNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Throwables.getStackTraceAsString;
 
@@ -48,6 +49,7 @@ public class RunHttpFaultController implements Route {
     path(basePath, () -> {
       path("/faults", () -> {
         path("/http", () -> {
+          post("/", "*/*", this);
           post("/:runtime", "*/*", this); 
         });
       });
@@ -68,7 +70,7 @@ public class RunHttpFaultController implements Route {
       return null;
     }
 
-    final String runtime = request.params(":runtime");
+    final String runtime = emptyToNull(request.params(":runtime"));
 
     logger.info("starting: {}", executionID);
 
@@ -76,7 +78,7 @@ public class RunHttpFaultController implements Route {
 
     final Optional<OutputStream> output = Optional.of(response.raw().getOutputStream());
 
-    this.faultsService.runHttpRequest(httpRequest.get(), output, output);
+    this.faultsService.runHttpRequest(httpRequest.get(), fromNullable(runtime), output, output);
 
     logger.info("finished: {}", executionID);
 
