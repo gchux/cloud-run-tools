@@ -29,7 +29,6 @@ class ManagedMultiProcessExecutor implements Consumer<ManagedMultiProcessProvide
 
   private final void execute(final Collection<ManagedProcessProvider> providers) {
     for(final ManagedProcessProvider provider : providers) {
-      logger.info("provider: {}", provider);
       this.processConsumer.accept(provider);
     }
   }
