@@ -92,6 +92,11 @@
       <groupId>com.github.spotbugs</groupId>
       <artifactId>spotbugs-annotations</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>dev.chux.gcp.crun</groupId>
+      <artifactId>process-runner-api</artifactId>
+    </dependency>
   </dependencies>
 
   <build>

@@ -3,7 +3,6 @@ package dev.chux.gcp.crun.faults.binary;
 import java.io.OutputStream;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
 
 import ch.vorburger.exec.ManagedProcessBuilder;
 
@@ -13,7 +12,7 @@ import static com.google.common.base.Optional.absent;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
-abstract class AbstractBinary<T> implements Binary<T>, Supplier<String> {
+public abstract class AbstractBinary<T> implements Binary<T> {
 
   private final String binary;
   private final Optional<String> flagSeparator;
@@ -24,6 +23,11 @@ abstract class AbstractBinary<T> implements Binary<T>, Supplier<String> {
   ) {
     this.binary = this.getBinary(configService, binary);
     this.flagSeparator = this.getFlagSeparator(configService, binary);
+  }
+
+  @Override()
+  public String get() {
+    return this.binary;
   }
 
   private final String getFlagSeparatorKey(final String binary) {
@@ -98,11 +102,6 @@ abstract class AbstractBinary<T> implements Binary<T>, Supplier<String> {
       builder.addStdErr(stream.get());
     }
     return this;
-  }
-
-  @Override()
-  public String get() {
-    return this.binary;
   }
 
 }

@@ -17,9 +17,10 @@ import ch.vorburger.exec.ManagedProcess;
 import ch.vorburger.exec.ManagedProcessBuilder;
 import ch.vorburger.exec.ManagedProcessException;
 
-import dev.chux.gcp.crun.model.HttpRequest;
-import dev.chux.gcp.crun.faults.binary.Binary;
+import dev.chux.gcp.crun.faults.binary.AbstractBinary;
 import dev.chux.gcp.crun.faults.binary.CurlFactory;
+import dev.chux.gcp.crun.faults.binary.CurlModule;
+import dev.chux.gcp.crun.model.HttpRequest;
 import dev.chux.gcp.crun.process.ManagedProcessProvider;
 
 import org.slf4j.Logger;
@@ -34,10 +35,12 @@ public class HttpRequestCommand implements FaultCommand<HttpRequest> {
 
   private static final Logger logger = LoggerFactory.getLogger(HttpRequestCommand.class);
 
+  final static String NAMESPACE = CommandModule.NAMESPACE + "/http/request";
+
   private static final String DEFAULT_RUNTIME = "linux";
 
   private final CurlFactory curlFactory;
-  private final Map<String, Binary<HttpRequest>> curlBinaries;
+  private final Map<String, AbstractBinary<HttpRequest>> curlBinaries;
   private final HttpRequest request;
   private final Optional<String> runtime;
   private final Optional<OutputStream> stdout, stderr;
@@ -45,11 +48,13 @@ public class HttpRequestCommand implements FaultCommand<HttpRequest> {
   @AssistedInject
   public HttpRequestCommand(
     final CurlFactory curlFactory,
-    final @Named("faults://binaries/curl") Map<String, Binary<HttpRequest>> curlBinaries,
-    final @Assisted HttpRequest request,
-    final @Assisted("runtime") Optional<String> runtime,
-    final @Assisted("stdout") Optional<OutputStream> stdout,
-    final @Assisted("stderr") Optional<OutputStream> stderr
+    // @Named("faults://binaries/curl")
+    @Named(CurlModule.NAMESPACE)
+    final Map<String, AbstractBinary<HttpRequest>> curlBinaries,
+    @Assisted final HttpRequest request,
+    @Assisted("runtime") final Optional<String> runtime,
+    @Assisted("stdout") final Optional<OutputStream> stdout,
+    @Assisted("stderr") final Optional<OutputStream> stderr
   ) {
     this.curlFactory = curlFactory;
     this.curlBinaries = curlBinaries;
@@ -82,11 +87,11 @@ public class HttpRequestCommand implements FaultCommand<HttpRequest> {
   } 
 
   private final String runtime() {
-    return this.runtime.or(DEFAULT_RUNTIME);
+    return "/" + this.runtime.or(DEFAULT_RUNTIME);
   }
 
   private final String runtimeID() {
-    return "faults://binaries/curl/" + runtime();
+    return CurlModule.NAMESPACE + runtime();
   }
 
 }

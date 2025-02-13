@@ -91,6 +91,8 @@ class Curl {
 
   static class Java extends AbstractCurl {
 
+    public static final String NAMESPACE = CurlModule.NAMESPACE + "/java";
+
     private static final String BINARY = "java";
 
     @Inject
@@ -113,6 +115,8 @@ class Curl {
   }
 
   static class Python extends AbstractCurl {
+
+    public static final String NAMESPACE = CurlModule.NAMESPACE + "/python";
 
     private static final String BINARY = "python";
 
@@ -137,6 +141,8 @@ class Curl {
 
   static class NodeJS extends AbstractCurl {
 
+    public static final String NAMESPACE = CurlModule.NAMESPACE + "/nodejs";
+
     private static final String BINARY = "nodejs";
 
     @Inject
@@ -159,6 +165,8 @@ class Curl {
   }
 
   static class Golang extends AbstractCurl {
+
+    public static final String NAMESPACE = CurlModule.NAMESPACE + "/golang";
 
     private static final String BINARY = "golang";
 
@@ -183,6 +191,8 @@ class Curl {
   }
 
   static class Linux extends AbstractCurl {
+
+    public static final String NAMESPACE = CurlModule.NAMESPACE + "/linux";
 
     private static final String BINARY = "linux";
 

@@ -4,6 +4,8 @@ import com.google.inject.AbstractModule;
 
 public class BinaryModule extends AbstractModule {
 
+  public static final String NAMESPACE = "faults://binaries";
+
   protected void configure() {
 
     install(new CurlModule());
