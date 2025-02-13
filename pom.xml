@@ -20,6 +20,7 @@
   <modules>
     <module>api</module>
     <module>annotations</module>
+    <module>model</module>
     <module>exec</module>
     <module>rest</module>
     <module>http</module>
@@ -133,6 +134,11 @@
       <dependency>
         <groupId>dev.chux.gcp.crun</groupId>
         <artifactId>process-runner-annotations</artifactId>
+        <version>${process-runner.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>dev.chux.gcp.crun</groupId>
+        <artifactId>process-runner-model</artifactId>
         <version>${process-runner.version}</version>
       </dependency>
       <dependency>

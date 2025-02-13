@@ -41,6 +41,11 @@
       <artifactId>guava</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+    </dependency>
+    
     <!-- dependency injection -->
     <dependency>
       <groupId>com.google.inject</groupId>
@@ -98,15 +103,19 @@
 
     <dependency>
       <groupId>dev.chux.gcp.crun</groupId>
+      <artifactId>process-runner-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>dev.chux.gcp.crun</groupId>
+      <artifactId>process-runner-model</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>dev.chux.gcp.crun</groupId>
       <artifactId>process-runner-exec</artifactId>
     </dependency>
     <dependency>
       <groupId>dev.chux.gcp.crun</groupId>
       <artifactId>process-runner-rest</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>dev.chux.gcp.crun</groupId>
-      <artifactId>process-runner-core</artifactId>
     </dependency>
   </dependencies>
 
