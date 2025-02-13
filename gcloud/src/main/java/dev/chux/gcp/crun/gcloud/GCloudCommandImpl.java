@@ -53,6 +53,10 @@ public class GCloudCommandImpl implements GCloudCommand {
     return builder;
   } 
 
+  private final String defaultFormat() {
+    return this.formatProvider.get();
+  }
+
   private final ManagedProcessBuilder newGCloudCommandBuilder() throws ManagedProcessException {
     return new ManagedProcessBuilder(GCLOUD_COMMAND);
   }
@@ -82,7 +86,7 @@ public class GCloudCommandImpl implements GCloudCommand {
 
   private final GCloudCommandImpl setFormat(final ManagedProcessBuilder builder) {
     final Optional<String> format = this.gcloudCommandConfig.optionalFormat();
-    builder.addArgument("--format=", format.or(this.formatProvider.get()));
+    builder.addArgument("--format=", format.or(this.defaultFormat()));
     return this;
   }
 

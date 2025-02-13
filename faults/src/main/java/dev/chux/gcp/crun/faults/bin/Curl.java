@@ -71,6 +71,66 @@ class Curl {
 
   }
 
+  static class Python extends AbstractCurl {
+
+    @Inject
+    public Python(
+      final ConfigService configService
+    ) {
+      super(configService, "python");
+    }
+
+    @Override
+    public ManagedProcessBuilder getBuilder(
+      final HttpRequest request,
+      final Optional<OutputStream> stdout,
+      final Optional<OutputStream> stderr
+    ) throws ManagedProcessException {
+      return newCurlCommandBuilder(request, stdout, stderr);
+    }
+
+  }
+
+  static class NodeJS extends AbstractCurl {
+
+    @Inject
+    public NodeJS(
+      final ConfigService configService
+    ) {
+      super(configService, "nodejs");
+    }
+
+    @Override
+    public ManagedProcessBuilder getBuilder(
+      final HttpRequest request,
+      final Optional<OutputStream> stdout,
+      final Optional<OutputStream> stderr
+    ) throws ManagedProcessException {
+      return newCurlCommandBuilder(request, stdout, stderr);
+    }
+
+  }
+
+  static class Golang extends AbstractCurl {
+
+    @Inject
+    public Golang(
+      final ConfigService configService
+    ) {
+      super(configService, "golang");
+    }
+
+    @Override
+    public ManagedProcessBuilder getBuilder(
+      final HttpRequest request,
+      final Optional<OutputStream> stdout,
+      final Optional<OutputStream> stderr
+    ) throws ManagedProcessException {
+      return newCurlCommandBuilder(request, stdout, stderr);
+    }
+
+  }
+
   static class Linux extends AbstractCurl {
 
     @Inject

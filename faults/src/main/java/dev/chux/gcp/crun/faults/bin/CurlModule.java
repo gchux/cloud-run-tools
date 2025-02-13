@@ -22,6 +22,9 @@ public class CurlModule extends AbstractModule {
 
       curl.addBinding("faults://binaries/curl/linux").to(Curl.Linux.class).in(Scopes.SINGLETON);
       curl.addBinding("faults://binaries/curl/java").to(Curl.Java.class).in(Scopes.SINGLETON);
+      curl.addBinding("faults://binaries/curl/python").to(Curl.Python.class).in(Scopes.SINGLETON);
+      curl.addBinding("faults://binaries/curl/nodejs").to(Curl.NodeJS.class).in(Scopes.SINGLETON);
+      curl.addBinding("faults://binaries/curl/golang").to(Curl.Golang.class).in(Scopes.SINGLETON);
   }
 
 }
