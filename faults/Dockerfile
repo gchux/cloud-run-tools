@@ -6,6 +6,8 @@ COPY .mvn .mvn
 COPY pom.xml .
 
 COPY api api
+COPY annotations annotations
+COPY model model
 COPY core core
 COPY exec exec
 COPY rest rest
