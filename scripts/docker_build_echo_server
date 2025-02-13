@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# the 1st argument of this script expects the faults generator version
+# the 1st argument of this script expects the Echo Server version
 if [ "${1}" = "" ]
 then
   echo "Usage: $0 1.0.0 <docker_image_uri>"
@@ -14,12 +14,12 @@ then
   exit
 fi
 
-export FAULTS_VERSION="${1}"
+export ECHO_SERVER_VERSION="${1}"
 export DOCKER_IMAGE_URI="${2}"
 
 export MAIN_PID=$$
 
-echo "Building Cloud Run faults generator"
+echo "Building Cloud Run echo server"
 
 set -x
 
@@ -27,5 +27,5 @@ docker buildx build \
   --no-cache \
   --platform=linux/amd64 \
   --file="./faults/Dockerfile" \
-  --label="FAULTS_VERSION=${FAULTS_VERSION}" \
-  --tag="${DOCKER_IMAGE_URI}:v${FAULTS_VERSION}" .
+  --label="ECHO_SERVER_VERSION=${ECHO_SERVER_VERSION}" \
+  --tag="${DOCKER_IMAGE_URI}:v${ECHO_SERVER_VERSION}" .

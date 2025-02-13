@@ -81,7 +81,7 @@ public class RunHttpFaultController implements Route {
   }
 
   public Object handle(final Request request, final Response response) throws Exception {
-  final String executionID = UUID.randomUUID().toString();
+    final String executionID = UUID.randomUUID().toString();
 
     final String rawBody = request.body();
     final Optional<HttpRequest> httpRequest = this.httpRequest(rawBody);
@@ -91,7 +91,7 @@ public class RunHttpFaultController implements Route {
     }
 
     final Optional<String> runtime = this.runtime(request);
-    if (runtime.isPresent() && !this.isAllowedRuntime(runtime.get())) {
+    if (!this.isAllowedRuntime(runtime)) {
       halt(404, "invalid runtime: " + runtime.get());
       return null;
     }
@@ -109,8 +109,8 @@ public class RunHttpFaultController implements Route {
     return httpRequest.get().toString();
   }
 
-  private final boolean isAllowedRuntime(final String runtime) {
-    return this.allowedRuntimes.contains(runtime);
+  private final boolean isAllowedRuntime(final Optional<String> runtime) {
+    return !runtime.isPresent() || this.allowedRuntimes.contains(runtime.get());
   }
 
   private final Optional<String> runtime(final Request request) {

@@ -269,5 +269,24 @@
         </dependencies>
       </dependencyManagement>
     </profile>
+
+    <profile>
+      <id>echo_server</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <modules>
+        <module>echo-server</module>
+      </modules>
+      <dependencyManagement>
+        <dependencies>
+          <dependency>
+            <groupId>dev.chux.gcp.crun</groupId>
+            <artifactId>echo-server</artifactId>
+            <version>${process-runner.version}</version>
+          </dependency>
+        </dependencies>
+      </dependencyManagement>
+    </profile>
   </profiles>
 </project>

@@ -1,0 +1,14 @@
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    id: "build_echo_server"
+    entrypoint: "bash"
+    args:
+      - "docker_build"
+      - "echo_server"
+      - "${_ECHO_SERVER_VERSION}"
+      - "${_REPO_LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_IMAGE_NAME}"
+images:
+  - "${_REPO_LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_IMAGE_NAME}:v${_ECHO_SERVER_VERSION}"
+tags: ["echo-server"]
+options:
+  logging: CLOUD_LOGGING_ONLY
