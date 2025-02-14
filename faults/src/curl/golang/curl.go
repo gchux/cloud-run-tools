@@ -122,7 +122,7 @@ func (c *curl) printRequest(url *string, request *http.Request) {
 }
 
 func (c *curl) printResponse(response *http.Response) {
-	fmt.Fprintf(os.Stdout, "* Response: %d\n", response.StatusCode)
+	fmt.Fprintf(os.Stdout, "\n* Response: %d\n", response.StatusCode)
 	fmt.Fprint(os.Stdout, "\n* Response Hedaers:\n")
 	c.printHeaders(response.Header)
 	fmt.Fprint(os.Stdout, "\n* Response Body:\n\t")

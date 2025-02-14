@@ -55,7 +55,7 @@ public class HttpRequest {
   }
   
   public Optional<String> optionalData() {
-    return fromNullable(emptyToNull(this.data));
+    return fromNullable(this.data());
   }
 
   public Map<String, String> headers() {

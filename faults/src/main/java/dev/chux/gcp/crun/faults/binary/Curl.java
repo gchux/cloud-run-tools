@@ -56,6 +56,7 @@ class Curl {
     ) throws ManagedProcessException {
       final ManagedProcessBuilder builder = new ManagedProcessBuilder(get());
       setMethod(builder, request)
+        .setData(builder, request)
         .addArgument(builder, request.url())
         .addStdOut(builder, stdout)
         .addStdErr(builder, stderr);
@@ -69,6 +70,17 @@ class Curl {
       final Optional<String> method = request.optionalMethod();
       if (method.isPresent()) {
         addFlag(builder, "--request", method.get());
+      }
+      return this;
+    }
+
+    protected final AbstractCurl setData(
+      final ManagedProcessBuilder builder,
+      final HttpRequest request
+    ) {
+      final Optional<String> data = request.optionalData();
+      if (data.isPresent()) {
+        addFlag(builder, "--data-raw", data.get());
       }
       return this;
     }

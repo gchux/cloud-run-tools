@@ -31,8 +31,10 @@ class Curl {
   }
 
   #logRequest(method, headers) {
-    console.log(`* Request: ${method.toUpperCase()} ${this.curl.url}"`);
+    console.log(`* Request: ${method.toUpperCase()} ${this.curl.url}`);
     this.#logHeaders(true, headers)
+    console.log("\n * Request Body: ");
+    console.log("\t", this.curl.data);
   }
 
   #logResponse(response) {
@@ -61,7 +63,8 @@ class Curl {
     const response = axios({
       method: method,
       url: this.curl.url,
-      headers: headers
+      headers: headers,
+      data: this.curl.data,
     });
 
     this.#handleResponse(response);
@@ -73,10 +76,13 @@ const newCurl = function (program) {
   const args = program.args;
   const opts = program.opts()
 
+  console.log(opts);
+
   const curl = {
     url: args[0],
-    method: opts['method'] || "GET",
+    method: opts['request'] || "GET",
     headers: opts['header'] || [],
+    data: opts['dataRaw'] || "",
   };
 
   return new Curl(curl);
@@ -85,11 +91,11 @@ const newCurl = function (program) {
 // must match: https://curl.se/docs/manpage.html
 program
   // https://curl.se/docs/manpage.html#-X
-  .option('-X, --request <string>', 'HTTP method to be used', [])
+  .option('-X, --request <string>', 'HTTP method to be used', "")
   // https://curl.se/docs/manpage.html#-H
   .option('-H, --header <value...>', 'HTTP request metadata; headets to be sent', [])
   // https://curl.se/docs/manpage.html#--data-raw
-  .option('--data-raw <string>', 'data to be sent in the HTTP request payload', [])
+  .option('-D --data-raw <string>', 'data to be sent in the HTTP request payload', "")
   .argument('<string>', 'URL');
 
 program.parse(process.argv);

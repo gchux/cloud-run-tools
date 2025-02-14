@@ -49,7 +49,7 @@ public final class App {
     OPTIONS.addOption(option);
     
     // https://curl.se/docs/manpage.html#--data-raw
-    OPTIONS.addOption(OPTION_DATA_RAW, true, "data to be sent in the HTTP request payload");
+    OPTIONS.addOption(OPTION_DATA_RAW, OPTION_DATA_RAW, true, "data to be sent in the HTTP request payload");
   }
 
   public static void main(final String[] args) {
