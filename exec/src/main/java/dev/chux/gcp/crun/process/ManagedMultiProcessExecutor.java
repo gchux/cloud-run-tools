@@ -41,7 +41,8 @@ class ManagedMultiProcessExecutor implements Consumer<ManagedMultiProcessProvide
     Observable.fromIterable(providers)
       .observeOn(Schedulers.io())
       .map(this.processMapper)
-      .blockingForEach((ManagedProcessExecution execution) -> {
+      .subscribeOn(Schedulers.computation())
+      .blockingForEach((final ManagedProcessExecution execution) -> {
         logger.info("{} => {}", execution.provider(), execution.exitCode());
       });
   }
