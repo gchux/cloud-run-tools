@@ -68,6 +68,7 @@ public class RunHttpFaultController implements Route {
 
   public void register(final String root) {
     path(root, () -> {
+      post("/http", "*/*", this);
       path("/http", () -> {
         post("/", "*/*", this);
         post("/:runtime", "*/*", this); 
