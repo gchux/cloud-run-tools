@@ -13,7 +13,7 @@ import dev.chux.gcp.crun.process.ManagedProcessProvider;
 public interface CurlFactory {
 
   // @Named("faults://binaries/curl/linux")
-  @Named(Curl.Linux.NAMESPACE)
+  @Named(Curl.Linux.KEY)
   public ManagedProcessProvider newCurlLinux(
     final HttpRequest request,
     @Assisted("stdout") final Optional<OutputStream> stdout,
@@ -21,7 +21,7 @@ public interface CurlFactory {
   );
 
   // @Named("faults://binaries/curl/java")
-  @Named(Curl.Java.NAMESPACE)
+  @Named(Curl.Java.KEY)
   public ManagedProcessProvider newCurlJava(
     final HttpRequest request,
     @Assisted("stdout") final Optional<OutputStream> stdout,
@@ -29,7 +29,7 @@ public interface CurlFactory {
   );
 
   // @Named("faults://binaries/curl/python")
-  @Named(Curl.Python.NAMESPACE)
+  @Named(Curl.Python.KEY)
   public ManagedProcessProvider newCurlPython(
     final HttpRequest request,
     @Assisted("stdout") final Optional<OutputStream> stdout,
@@ -37,7 +37,7 @@ public interface CurlFactory {
   );
 
   // @Named("faults://binaries/curl/nodejs")
-  @Named(Curl.NodeJS.NAMESPACE)
+  @Named(Curl.NodeJS.KEY)
   public ManagedProcessProvider newCurlNodeJS(
     final HttpRequest request,
     @Assisted("stdout") final Optional<OutputStream> stdout,
@@ -45,7 +45,7 @@ public interface CurlFactory {
   );
 
   // @Named("faults://binaries/curl/golang")
-  @Named(Curl.Golang.NAMESPACE)
+  @Named(Curl.Golang.KEY)
   public ManagedProcessProvider newCurlGolang(
     final HttpRequest request,
     @Assisted("stdout") final Optional<OutputStream> stdout,

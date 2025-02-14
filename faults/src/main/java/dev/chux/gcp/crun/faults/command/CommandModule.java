@@ -14,7 +14,7 @@ public class CommandModule extends AbstractModule {
 
     builder.implement(
       FaultCommand.class,
-      Names.named(HttpRequestCommand.NAMESPACE),
+      Names.named(HttpRequestCommand.KEY),
       HttpRequestCommand.class
     );
 

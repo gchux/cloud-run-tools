@@ -11,6 +11,7 @@ import com.google.inject.name.Named;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import com.google.common.primitives.Doubles;
@@ -52,7 +53,10 @@ public class ConfigServiceImpl implements ConfigService, Provider<ConfigService>
 
   private final List<String> getMultivalued(final Map<String, String> container, final String key) {
     final String value = getOrDefault(container, key, "");
-    return multivalued.splitToList(value);
+    if (isNullOrEmpty(value)) {
+      return ImmutableList.of();
+    }
+    return ImmutableList.copyOf(multivalued.splitToList(value));
   }
 
   private final Optional<Integer> parseIntValue(final String value) {

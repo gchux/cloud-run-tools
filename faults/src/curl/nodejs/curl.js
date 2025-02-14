@@ -54,20 +54,23 @@ class Curl {
       });
   }
 
-  exec() {
+  async exec() {
     const method = this.#method();
     const headers = this.#headers();
 
     this.#logRequest(method, headers)
 
-    const response = axios({
-      method: method,
-      url: this.curl.url,
-      headers: headers,
-      data: this.curl.data,
-    });
-
-    this.#handleResponse(response);
+    try {
+      const response = await axios({
+        method: method,
+        url: this.curl.url,
+        headers: headers,
+        data: this.curl.data,
+      });
+      this.#logResponse(response);
+    } catch (ex) {
+      console.error(ex);
+    }
   }
 
 }

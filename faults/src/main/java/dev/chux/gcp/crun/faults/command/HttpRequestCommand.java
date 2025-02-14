@@ -35,7 +35,7 @@ public class HttpRequestCommand implements FaultCommand<HttpRequest> {
 
   private static final Logger logger = LoggerFactory.getLogger(HttpRequestCommand.class);
 
-  final static String NAMESPACE = CommandModule.NAMESPACE + "/http/request";
+  final static String KEY = CommandModule.NAMESPACE + "/http/request";
 
   private static final String DEFAULT_RUNTIME = "linux";
 

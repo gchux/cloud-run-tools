@@ -12,7 +12,7 @@ import dev.chux.gcp.crun.model.HttpRequest;
 public interface FaultCommandFactory {
 
   // @Named("faults://commands/http/request")
-  @Named(HttpRequestCommand.NAMESPACE)
+  @Named(HttpRequestCommand.KEY)
   public FaultCommand newHttpRequestCommand(
     final HttpRequest request,
     @Assisted("runtime") final Optional<String> runtime,

@@ -20,27 +20,27 @@ public class CurlModule extends AbstractModule {
     builder
       .implement(
         ManagedProcessProvider.class,
-        Names.named(Curl.Linux.NAMESPACE),
+        Names.named(Curl.Linux.KEY),
         Curl.Linux.class
       )
       .implement(
         ManagedProcessProvider.class,
-        Names.named(Curl.Java.NAMESPACE),
+        Names.named(Curl.Java.KEY),
         Curl.Java.class
       )
       .implement(
         ManagedProcessProvider.class,
-        Names.named(Curl.Python.NAMESPACE),
+        Names.named(Curl.Python.KEY),
         Curl.Python.class
       )
       .implement(
         ManagedProcessProvider.class,
-        Names.named(Curl.NodeJS.NAMESPACE),
+        Names.named(Curl.NodeJS.KEY),
         Curl.NodeJS.class
       )
       .implement(
         ManagedProcessProvider.class,
-        Names.named(Curl.Golang.NAMESPACE),
+        Names.named(Curl.Golang.KEY),
         Curl.Golang.class
       );
 
@@ -53,11 +53,11 @@ public class CurlModule extends AbstractModule {
       .newMapBinder(binder(), keyType, valueType, Names.named(NAMESPACE));
 
       // SINGLETON factories for curl managed process builder
-      curl.addBinding(Curl.Linux.NAMESPACE).to(Curl.Linux.class).in(Scopes.SINGLETON);
-      curl.addBinding(Curl.Java.NAMESPACE).to(Curl.Java.class).in(Scopes.SINGLETON);
-      curl.addBinding(Curl.Python.NAMESPACE).to(Curl.Python.class).in(Scopes.SINGLETON);
-      curl.addBinding(Curl.NodeJS.NAMESPACE).to(Curl.NodeJS.class).in(Scopes.SINGLETON);
-      curl.addBinding(Curl.Golang.NAMESPACE).to(Curl.Golang.class).in(Scopes.SINGLETON);
+      curl.addBinding(Curl.Linux.KEY).to(Curl.Linux.class).in(Scopes.SINGLETON);
+      curl.addBinding(Curl.Java.KEY).to(Curl.Java.class).in(Scopes.SINGLETON);
+      curl.addBinding(Curl.Python.KEY).to(Curl.Python.class).in(Scopes.SINGLETON);
+      curl.addBinding(Curl.NodeJS.KEY).to(Curl.NodeJS.class).in(Scopes.SINGLETON);
+      curl.addBinding(Curl.Golang.KEY).to(Curl.Golang.class).in(Scopes.SINGLETON);
   }
 
 }

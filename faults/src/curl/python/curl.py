@@ -33,7 +33,7 @@ class Curl:
         for cmdHeader in cmdHeaders:
             parts = cmdHeader.split(":", 2)
             if len(parts) == 2:
-                headers[parts[0].strip()] = headers[parts[1].strip()]
+                headers[parts[0].strip()] = parts[1].strip()
         return headers
 
     def __printHeaders(
