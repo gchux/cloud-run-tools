@@ -15,7 +15,7 @@ public class RestModule extends AbstractModule {
     final MapBinder<String, Route> routesBinder =
       MapBinder.newMapBinder(binder(), String.class, Route.class);
 
-    routesBinder.addBinding(RunHttpFaultController.NAMESPACE)
+    routesBinder.addBinding(RunHttpFaultController.KEY)
       .to(RunHttpFaultController.class).in(Scopes.SINGLETON);
   }
 

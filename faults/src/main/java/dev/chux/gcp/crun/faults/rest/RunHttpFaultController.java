@@ -41,7 +41,7 @@ public class RunHttpFaultController implements Route {
 
   private static final String SYS_OUT = "sys";
 
-  public static final String NAMESPACE = RestModule.NAMESPACE + "/http/request";
+  public static final String KEY = RestModule.NAMESPACE + "/http/request";
 
   private final Gson gson;
   private final FaultsService faultsService;
@@ -95,6 +95,8 @@ public class RunHttpFaultController implements Route {
       halt(404, "invalid runtime: " + runtime.get());
       return null;
     }
+
+    response.header("x-faults-execution-id", executionID);
 
     logger.info("starting: {}", executionID);
 
