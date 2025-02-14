@@ -11,9 +11,10 @@ import com.google.common.base.Optional;
 import dev.chux.gcp.crun.faults.command.FaultCommand;
 import dev.chux.gcp.crun.faults.command.FaultCommandFactory;
 import dev.chux.gcp.crun.model.HttpRequest;
-import dev.chux.gcp.crun.process.ProcessModule.ProcessConsumer;
 import dev.chux.gcp.crun.process.ManagedProcessProvider;
 import dev.chux.gcp.crun.process.ManagedMultiProcessProvider;
+import dev.chux.gcp.crun.process.ProcessModule.ProcessConsumer;
+import dev.chux.gcp.crun.process.ProcessModule.MultiProcessConsumer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -27,7 +28,7 @@ public class FaultsService {
   FaultsService(
     FaultCommandFactory faultCommandFactory,
     @ProcessConsumer Consumer<ManagedProcessProvider> processConsumer,
-    @ProcessConsumer Consumer<ManagedMultiProcessProvider> multiProcessConsumer) {
+    @MultiProcessConsumer Consumer<ManagedMultiProcessProvider> multiProcessConsumer) {
     this.faultCommandFactory = faultCommandFactory;
     this.processConsumer = processConsumer;
     this.multiProcessConsumer = multiProcessConsumer;

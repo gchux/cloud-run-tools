@@ -30,10 +30,24 @@ public class ProcessModule extends AbstractModule {
   @Qualifier @BindingAnnotation
   public @interface MultiProcessConsumer {}
 
+  @Target({ FIELD, PARAMETER, METHOD })
+  @Retention(RUNTIME)
+  @Qualifier @BindingAnnotation
+  public @interface ProcessMapper {}
+
   protected void configure() {
     install(new FactoryModuleBuilder()
         .implement(ProcessOutput.class, ProcessOutputSink.class)
         .build(ProcessOutputFactory.class));
+
+    bind(new TypeLiteral<
+        io.reactivex.rxjava3.functions.Function<
+          ManagedProcessProvider, ManagedProcessExecution
+        >
+      >(){})
+      .annotatedWith(ProcessMapper.class)
+      .to(ManagedProcessMapper.class)
+      .in(Scopes.SINGLETON);
 
     bind(new TypeLiteral<Consumer<ProcessProvider>>(){})
       .annotatedWith(ProcessConsumer.class)
@@ -55,7 +69,7 @@ public class ProcessModule extends AbstractModule {
     bind(ManagedMultiProcessExecutor.class).in(Scopes.SINGLETON);
 
     bind(new TypeLiteral<Consumer<ManagedMultiProcessProvider>>(){})
-      .annotatedWith(ProcessConsumer.class)
+      .annotatedWith(MultiProcessConsumer.class)
       .to(ManagedMultiProcessExecutor.class)
       .in(Scopes.SINGLETON);
   }
