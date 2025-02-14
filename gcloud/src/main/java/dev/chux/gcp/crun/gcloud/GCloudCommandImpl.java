@@ -47,9 +47,10 @@ public class GCloudCommandImpl implements GCloudCommand {
       .setGroups(builder)
       .setCommand(builder)
       .setFlags(builder)
-      .setArguments(builder)
       .setFormat(builder)
-      .addOutput(builder);
+      .setArguments(
+        builder.addArgument("--quiet")
+      ).addOutput(builder);
     return builder;
   } 
 
