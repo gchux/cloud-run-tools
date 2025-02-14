@@ -91,12 +91,12 @@ func (c *curl) url(
 
 func (c *curl) data(
 	cmd *cli.Command,
-) *bytes.Buffer {
+) (string, *bytes.Buffer) {
 	if data := cmd.String("data-raw"); data == "" {
-		return bytes.NewBuffer([]byte{})
+		return "", bytes.NewBuffer([]byte{})
 	} else {
 		cleanData := strings.TrimSpace(data)
-		return bytes.NewBuffer([]byte(cleanData))
+		return cleanData, bytes.NewBuffer([]byte(cleanData))
 	}
 }
 
@@ -113,12 +113,11 @@ func (c *curl) printBody(body io.ReadCloser) {
 	fmt.Fprintln(os.Stdout, "")
 }
 
-func (c *curl) printRequest(url *string, request *http.Request) {
+func (c *curl) printRequest(url *string, request *http.Request, payload *string) {
 	fmt.Fprintf(os.Stdout, "* Request: %s %s\n", request.Method, *url)
 	fmt.Fprint(os.Stdout, "\n* Request Hedaers:\n")
 	c.printHeaders(request.Header)
-	fmt.Fprint(os.Stdout, "\n* Request Body:\n\t")
-	c.printBody(request.Body)
+	fmt.Fprintf(os.Stdout, "\n* Request Body:\n\t%s\n", *payload)
 }
 
 func (c *curl) printResponse(response *http.Response) {
@@ -138,9 +137,11 @@ func (c *curl) Exec(ctx context.Context, cmd *cli.Command) error {
 	method := c.method(cmd)
 
 	var request *http.Request
-	if data := c.data(cmd); data.Len() == 0 {
+	payload := ""
+	if dataStr, data := c.data(cmd); dataStr == "" {
 		request, err = http.NewRequestWithContext(ctx, method, url, nil)
 	} else {
+		payload = dataStr
 		request, err = http.NewRequestWithContext(ctx, method, url, data)
 	}
 
@@ -150,7 +151,7 @@ func (c *curl) Exec(ctx context.Context, cmd *cli.Command) error {
 
 	c.setHeaders(cmd, request)
 
-	c.printRequest(&url, request)
+	c.printRequest(&url, request, &payload)
 
 	client := &http.Client{}
 	if response, err := client.Do(request); err != nil {
