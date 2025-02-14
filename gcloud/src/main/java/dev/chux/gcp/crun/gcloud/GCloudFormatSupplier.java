@@ -13,12 +13,14 @@ public class GCloudFormatSupplier implements Provider<String>, Supplier<String> 
 
   private static final String DEFAULT_GCLOUD_FORMAT = "json";
 
+  public static final String KEY = GCloudModule.NAMESPACE + "/output/format";
+
   @Inject(optional=true)
-  @Named("env.GCLOUD_FORMAT")
+  @Named("env.GCLOUD_OUTPUT_FORMAT")
   String gcloudFormatEnv = null;
 
   @Inject(optional=true)
-  @Named("gcloud.format")
+  @Named("gcloud.output.format")
   String gcloudFormatProp = null;
 
   @Override

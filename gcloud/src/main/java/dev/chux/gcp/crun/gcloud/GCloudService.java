@@ -16,8 +16,10 @@ public class GCloudService {
   private final Consumer<ManagedProcessProvider> processConsumer;
   
   @Inject
-  GCloudService(GCloudCommandFactory gcloudCommandFactory,
-      @ProcessConsumer Consumer<ManagedProcessProvider> processConsumer) {
+  GCloudService(
+    GCloudCommandFactory gcloudCommandFactory,
+    @ProcessConsumer Consumer<ManagedProcessProvider> processConsumer
+  ) {
     this.gcloudCommandFactory = gcloudCommandFactory;
     this.processConsumer = processConsumer;
   }

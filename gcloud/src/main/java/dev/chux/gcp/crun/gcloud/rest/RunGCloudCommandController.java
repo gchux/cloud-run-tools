@@ -28,6 +28,8 @@ public class RunGCloudCommandController implements Route {
 
   private static final String SYS_OUT = "sys";
 
+  public static final String KEY = RestModule.NAMESPACE + "/exec";
+
   private final Gson gson;
   private final GCloudService gcloudService;
 
@@ -37,19 +39,17 @@ public class RunGCloudCommandController implements Route {
     this.gcloudService = gcloudService;
   }
 
-  public void register(final String basePath) {
-    path(basePath, () -> {
-      path("/gcloud", () -> {
-        path("/exec", () -> {
-          post("/:namespace", "*/*", this);
-          post("/", "*/*", this);
-        });
+  public void register(final String root) {
+    path(root, () -> {
+      post("/exec", "*/*", this);
+      path("/exec", () -> {
+        post("/:namespace", "*/*", this);
       });
     });
   }
 
-  public String endpoint(final String basePath) {
-    return "POST " + basePath + "/gcloud/run/:namespace";
+  public String endpoint(final String root) {
+    return "POST " + root + "/exec[/optional:namespace]";
   }
 
   public Object handle(final Request request, final Response response) throws Exception {
@@ -72,11 +72,6 @@ public class RunGCloudCommandController implements Route {
     final GCloudCommandConfig cmd = maybeCmd.get();
 
     if (!isNullOrEmpty(namespace)) {
-      if (!cmd.optionalCommand().isPresent()) {
-        logger.error("command is required when namespace is specified | namespace: {}", namespace);
-        halt(404, "command not found");
-        return null;
-      }
       // namespace is optional to allow for commands like `gcloud --help`
       response.header("x-gcloud-namespace", namespace);
       cmd.namespace(namespace);

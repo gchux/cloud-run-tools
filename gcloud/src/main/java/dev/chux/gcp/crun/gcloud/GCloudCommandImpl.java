@@ -27,14 +27,19 @@ public class GCloudCommandImpl implements GCloudCommand {
   private final Provider<String> formatProvider;
 
   @AssistedInject
-  public GCloudCommandImpl(@Named("gcloud://format") Provider<String> formatProvider,
-    @Assisted GCloudCommandConfig gcloudCommandConfig) {
+  public GCloudCommandImpl(
+    @Named(GCloudFormatSupplier.KEY) Provider<String> formatProvider,
+    @Assisted GCloudCommandConfig gcloudCommandConfig
+  ) {
     this(formatProvider, gcloudCommandConfig, null);
   }
 
   @AssistedInject
-  public GCloudCommandImpl(@Named("gcloud://format") Provider<String> formatProvider,
-    @Assisted GCloudCommandConfig gcloudCommandConfig, @Assisted OutputStream stream) {
+  public GCloudCommandImpl(
+    @Named(GCloudFormatSupplier.KEY) Provider<String> formatProvider,
+    @Assisted GCloudCommandConfig gcloudCommandConfig,
+    @Assisted OutputStream stream
+  ) {
     this.formatProvider = formatProvider;
     this.gcloudCommandConfig = gcloudCommandConfig;
     this.stream = Optional.fromNullable(stream);
@@ -71,10 +76,10 @@ public class GCloudCommandImpl implements GCloudCommand {
   }
   
   private final GCloudCommandImpl setCommand(final ManagedProcessBuilder builder) {
-    final Optional<String> namespace = this.gcloudCommandConfig.optionalNamespace();
     final String command = this.gcloudCommandConfig.command();
-    checkArgument(namespace.isPresent() && !isNullOrEmpty(command), "command is required");
-    builder.addArgument(command);
+    if (!isNullOrEmpty(command)) {
+      builder.addArgument(command);
+    }
     return this;
   }
 

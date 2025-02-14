@@ -4,32 +4,28 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.google.inject.name.Names;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
-import com.google.inject.multibindings.MapBinder;
 
-import dev.chux.gcp.crun.process.ProcessProvider;
-import dev.chux.gcp.crun.process.ProcessOutput;
-import dev.chux.gcp.crun.rest.Route;
-import dev.chux.gcp.crun.gcloud.rest.RunGCloudCommandController;
+import dev.chux.gcp.crun.gcloud.rest.RestModule;
 
 public class GCloudModule extends AbstractModule {
+
+  public static final String NAMESPACE = "gcloud://cli";
 
   protected void configure() {
     bind(GCloudFormatSupplier.class).in(Scopes.SINGLETON);
     bind(String.class)
-      .annotatedWith(Names.named("gcloud://format"))
+      .annotatedWith(Names.named(GCloudFormatSupplier.KEY))
       .toProvider(GCloudFormatSupplier.class);
 
-    install(new FactoryModuleBuilder()
-        .implement(GCloudCommand.class, GCloudCommandImpl.class)
-        .build(GCloudCommandFactory.class));
+    final FactoryModuleBuilder builder = new FactoryModuleBuilder();
+
+    builder.implement(GCloudCommand.class, GCloudCommandImpl.class);
+
+    install(builder.build(GCloudCommandFactory.class));
 
     bind(GCloudService.class).in(Scopes.SINGLETON);
 
-    final MapBinder<String, Route> routesBinder =
-      MapBinder.newMapBinder(binder(), String.class, Route.class);
-
-    routesBinder.addBinding("gcloud-command-runner")
-      .to(RunGCloudCommandController.class).in(Scopes.SINGLETON);
+    install(new RestModule());
   }
 
 }
