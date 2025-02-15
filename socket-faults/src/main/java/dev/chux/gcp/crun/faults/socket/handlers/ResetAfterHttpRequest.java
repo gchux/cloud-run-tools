@@ -14,13 +14,13 @@ import dev.chux.gcp.crun.faults.socket.ServerSocketsProvider;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Throwables.getStackTraceAsString;
 
-public class ResetAfterHttpRequestHeaders extends AbstractSocketFaultHandler {
-  private static final Logger logger = LoggerFactory.getLogger(ResetAfterHttpRequestHeaders.class);
+public class ResetAfterHttpRequest extends AbstractSocketFaultHandler {
+  private static final Logger logger = LoggerFactory.getLogger(ResetAfterHttpRequest.class);
 
-  static final String SOCKET_NAME = "reset-after-http-request-headers";
+  static final String SOCKET_NAME = "reset-after-http-request";
 
   @Inject
-  public ResetAfterHttpRequestHeaders(
+  public ResetAfterHttpRequest(
     final ServerSocketsProvider serverSocketsProvider
   ) {
     super(SOCKET_NAME, serverSocketsProvider);
@@ -29,11 +29,8 @@ public class ResetAfterHttpRequestHeaders extends AbstractSocketFaultHandler {
   @Override
   protected void handle(final Socket socket) throws Exception {
     final BufferedReader in = super.newBufferedReader(socket);
-    super.consumeHttpRequestLine(socket, in);
-    super.consumeHttpRequestHeaders(socket, in);
+    super.consumeHttpRequest(socket, in);
     super.close(socket);
   }
 
 }
-
-

@@ -26,6 +26,18 @@ public class FaultHandlersModule extends AbstractModule {
     handlersBinder.addBinding(ResetAfterHttpRequestHeaders.SOCKET_NAME)
       .to(ResetAfterHttpRequestHeaders.class).asEagerSingleton();
     socketNames.addBinding().toInstance(ResetAfterHttpRequestHeaders.SOCKET_NAME);
+
+    handlersBinder.addBinding(ResetAfterHttpRequest.SOCKET_NAME)
+      .to(ResetAfterHttpRequest.class).asEagerSingleton();
+    socketNames.addBinding().toInstance(ResetAfterHttpRequest.SOCKET_NAME);
+
+    handlersBinder.addBinding(ResetAfterHttpResponseLine.SOCKET_NAME)
+      .to(ResetAfterHttpResponseLine.class).asEagerSingleton();
+    socketNames.addBinding().toInstance(ResetAfterHttpResponseLine.SOCKET_NAME);
+
+    handlersBinder.addBinding(ResetIncompleteHttpResponse.SOCKET_NAME)
+      .to(ResetIncompleteHttpResponse.class).asEagerSingleton();
+    socketNames.addBinding().toInstance(ResetIncompleteHttpResponse.SOCKET_NAME);
   }
 
 }

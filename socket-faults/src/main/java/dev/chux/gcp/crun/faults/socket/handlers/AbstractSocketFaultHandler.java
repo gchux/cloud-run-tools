@@ -1,7 +1,10 @@
 package dev.chux.gcp.crun.faults.socket.handlers;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -18,6 +21,8 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.observables.ConnectableObservable;
 
+import com.google.common.io.ByteStreams;
+import com.google.common.io.CharStreams;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
@@ -28,9 +33,13 @@ import org.slf4j.LoggerFactory;
 import dev.chux.gcp.crun.faults.socket.ServerSocketsProvider;
 import dev.chux.gcp.crun.faults.socket.handlers.SocketFaultHandler;
 
+import static com.google.common.base.Optional.absent;
+import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Strings.emptyToNull;
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Throwables.getStackTraceAsString;
 
 abstract class AbstractSocketFaultHandler implements SocketFaultHandler {
@@ -180,16 +189,109 @@ abstract class AbstractSocketFaultHandler implements SocketFaultHandler {
   }
 
   protected final BufferedReader newBufferedReader(final Socket socket) throws Exception {
-    return new BufferedReader(new InputStreamReader(socket.getInputStream()));
+    return new BufferedReader(new InputStreamReader(socket.getInputStream()), 1);
   }
 
-  protected final void close(final Socket socket) throws Exception {
-    logger.info("closing connection for handler '{}': {}", this.get(), socket.getRemoteSocketAddress());
-    socket.close();
+  protected final BufferedWriter newBufferedWriter(final Socket socket) throws Exception {
+    return new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()), 1);
   }
 
   protected final SocketAddress getRemoteAddress(final Socket socket) throws Exception {
     return socket.getRemoteSocketAddress();
+  }
+
+  protected final void close(final Socket socket) throws Exception {
+    logger.info("closing connection for handler '{}': {}", this.get(), getRemoteAddress(socket));
+    socket.close();
+  }
+
+  protected final Optional<String> consumeHttpRequestLine(final Socket socket, final BufferedReader in) throws Exception {
+    final String httpRequestLine = in.readLine();
+    if (isNullOrEmpty(httpRequestLine)) {
+      logger.warn("missing HTTP request line: {}", getRemoteAddress(socket));
+      return absent();
+    }
+    logger.info("got HTTP request line '{}' from: {}", httpRequestLine, getRemoteAddress(socket));
+    return fromNullable(emptyToNull(httpRequestLine));
+  }
+
+  protected final int consumeHttpRequestHeaders(final Socket socket, final BufferedReader in) throws Exception {
+    String header;
+    int contentLength = 0;
+    while (!isNullOrEmpty(header = in.readLine())) {
+      if (header.toLowerCase().startsWith("content-length:")) {
+        contentLength = Integer.parseInt(header.split(":\s?", 2)[1], 10);
+      }
+      logger.info("got HTTP request header '{}' from: {}", header, getRemoteAddress(socket));
+    }
+    logger.info("got HTTP 'Content-Length: {}' from: {}", contentLength, getRemoteAddress(socket));
+    return contentLength;
+  }
+
+  protected final void consumeHttpRequestPayload(
+    final Socket socket,
+    final BufferedReader in,
+    final int contentLength
+  ) throws Exception {
+    final StringBuilder data = new StringBuilder();
+    int character;
+    int index = 0;
+    while((index < contentLength) && in.ready() && ((character = in.read()) != -1)) {
+      data.append((char) character);
+      index += 1;
+    }
+    logger.info("got HTTP request payload '{}' from: {}", data, getRemoteAddress(socket));
+  }
+
+  protected final void consumeHttpRequest(final Socket socket, final BufferedReader in) throws Exception {
+    this.consumeHttpRequestLine(socket, in);
+    final int contentLength = this.consumeHttpRequestHeaders(socket, in);
+    this.consumeHttpRequestPayload(socket, in, contentLength);
+  }
+
+  protected final void writeHttpResponseLine(
+    final Socket socket,
+    final BufferedWriter out,
+    final int code,
+    final String status
+  ) throws Exception {
+    out.append("HTTP/1.1 ")
+      .append(Integer.toString(code, 10))
+      .append(" ")
+      .append(status);
+    out.newLine();
+  }
+
+  protected final void sendHttpResponseLine(
+    final Socket socket,
+    final BufferedWriter out,
+    final int code,
+    final String status
+  ) throws Exception {
+    this.writeHttpResponseLine(socket, out, code, status);
+    out.flush();
+  }
+
+  protected final void writeHttpResponseHeader(
+    final Socket socket,
+    final BufferedWriter out,
+    final String name,
+    final String value
+  ) throws Exception {
+    out.append(name)
+      .append(": ")
+      .append(value);
+    out.newLine();
+  }
+
+  protected final void sendHttpResponseHeader(
+    final Socket socket,
+    final BufferedWriter out,
+    final String name,
+    final String value
+  ) throws Exception {
+    this.writeHttpResponseHeader(socket, out, name, value);
+    out.flush();
   }
 
 }

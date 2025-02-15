@@ -1,6 +1,8 @@
 package dev.chux.gcp.crun.faults.socket.handlers;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+
 import java.net.Socket;
 import java.net.SocketAddress;
 
@@ -14,13 +16,13 @@ import dev.chux.gcp.crun.faults.socket.ServerSocketsProvider;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Throwables.getStackTraceAsString;
 
-public class ResetAfterHttpRequestHeaders extends AbstractSocketFaultHandler {
-  private static final Logger logger = LoggerFactory.getLogger(ResetAfterHttpRequestHeaders.class);
+public class ResetIncompleteHttpResponse extends AbstractSocketFaultHandler {
+  private static final Logger logger = LoggerFactory.getLogger(ResetAfterHttpRequest.class);
 
-  static final String SOCKET_NAME = "reset-after-http-request-headers";
+  static final String SOCKET_NAME = "reset-incomplete-http-response";
 
   @Inject
-  public ResetAfterHttpRequestHeaders(
+  public ResetIncompleteHttpResponse(
     final ServerSocketsProvider serverSocketsProvider
   ) {
     super(SOCKET_NAME, serverSocketsProvider);
@@ -29,11 +31,13 @@ public class ResetAfterHttpRequestHeaders extends AbstractSocketFaultHandler {
   @Override
   protected void handle(final Socket socket) throws Exception {
     final BufferedReader in = super.newBufferedReader(socket);
-    super.consumeHttpRequestLine(socket, in);
-    super.consumeHttpRequestHeaders(socket, in);
+    super.consumeHttpRequest(socket, in);
+
+    final BufferedWriter out = super.newBufferedWriter(socket);
+    super.writeHttpResponseLine(socket, out, 200, "OK"); 
+    super.sendHttpResponseHeader(socket, out, "Content-Length", "100"); 
+
     super.close(socket);
   }
 
 }
-
-

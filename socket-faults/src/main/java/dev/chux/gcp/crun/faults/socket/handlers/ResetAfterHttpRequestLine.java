@@ -29,18 +29,8 @@ public class ResetAfterHttpRequestLine extends AbstractSocketFaultHandler {
   @Override
   protected void handle(final Socket socket) throws Exception {
     final BufferedReader in = super.newBufferedReader(socket);
-
-    final String httpRequestLine = in.readLine();
-    final SocketAddress address = super.getRemoteAddress(socket);
-
-    if (isNullOrEmpty(httpRequestLine)) {
-      logger.warn("missing HTTP request line: {}", address);
-    } else {
-      logger.info("got HTTP request line '{}' from: {}", httpRequestLine, address);
-    }
-
+    super.consumeHttpRequestLine(socket, in);
     super.close(socket);
   }
 
 }
-

@@ -25,10 +25,15 @@ public class SocketFaultsModule extends AbstractModule implements Consumer<Injec
   protected void configure() {
     bind(AppMainThread.class).annotatedWith(MainThread.class).to(SocketFaultsMainThread.class).asEagerSingleton();
 
-    Multibinder.newSetBinder(binder(), String.class, Names.named("socket-faults://names"));
-    MapBinder.newMapBinder(binder(), String.class, SocketFaultHandler.class, Names.named("socket-faults://handlers"));
+    Multibinder.newSetBinder(binder(),
+      String.class, Names.named("socket-faults://names"));
 
-    bind(ServerSocketsProvider.class).to(ServerSocketsProviderImpl.class).asEagerSingleton();
+    MapBinder.newMapBinder(binder(),
+      String.class, SocketFaultHandler.class, Names.named("socket-faults://handlers"));
+
+    bind(ServerSocketsProvider.class)
+      .to(ServerSocketsProviderImpl.class)
+      .asEagerSingleton();
 
     install(new FaultHandlersModule());
   }
