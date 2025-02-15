@@ -220,7 +220,7 @@ abstract class AbstractSocketFaultHandler implements SocketFaultHandler {
     int contentLength = 0;
     while (!isNullOrEmpty(header = in.readLine())) {
       if (header.toLowerCase().startsWith("content-length:")) {
-        contentLength = Integer.parseInt(header.split(":\s?", 2)[1], 10);
+        contentLength = Integer.parseInt(header.split(":", 2)[1].trim(), 10);
       }
       logger.info("got HTTP request header '{}' from: {}", header, getRemoteAddress(socket));
     }
