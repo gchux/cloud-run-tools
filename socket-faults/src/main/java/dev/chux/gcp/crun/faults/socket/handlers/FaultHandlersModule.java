@@ -38,6 +38,14 @@ public class FaultHandlersModule extends AbstractModule {
     handlersBinder.addBinding(ResetIncompleteHttpResponse.SOCKET_NAME)
       .to(ResetIncompleteHttpResponse.class).asEagerSingleton();
     socketNames.addBinding().toInstance(ResetIncompleteHttpResponse.SOCKET_NAME);
+
+    handlersBinder.addBinding(ResetWithChoppedHttpResponseHeader.SOCKET_NAME)
+      .to(ResetWithChoppedHttpResponseHeader.class).asEagerSingleton();
+    socketNames.addBinding().toInstance(ResetWithChoppedHttpResponseHeader.SOCKET_NAME);
+
+    handlersBinder.addBinding(ResetWithChoppedHttpResponseLine.SOCKET_NAME)
+      .to(ResetWithChoppedHttpResponseLine.class).asEagerSingleton();
+    socketNames.addBinding().toInstance(ResetWithChoppedHttpResponseLine.SOCKET_NAME);
   }
 
 }

@@ -16,13 +16,13 @@ import dev.chux.gcp.crun.faults.socket.ServerSocketsProvider;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Throwables.getStackTraceAsString;
 
-public class ResetIncompleteHttpResponse extends AbstractSocketFaultHandler {
+public class ResetWithChoppedHttpResponseLine extends AbstractSocketFaultHandler {
   private static final Logger logger = LoggerFactory.getLogger(ResetAfterHttpRequest.class);
 
-  static final String SOCKET_NAME = "reset-incomplete-http-response";
+  static final String SOCKET_NAME = "reset-with-chopped-http-response-line";
 
   @Inject
-  public ResetIncompleteHttpResponse(
+  public ResetWithChoppedHttpResponseLine(
     final ServerSocketsProvider serverSocketsProvider
   ) {
     super(SOCKET_NAME, serverSocketsProvider);
@@ -34,9 +34,7 @@ public class ResetIncompleteHttpResponse extends AbstractSocketFaultHandler {
     super.consumeHttpRequest(socket, in);
 
     final BufferedWriter out = super.newBufferedWriter(socket);
-    super.writeHttpResponseLine(socket, out, 200, "OK"); 
-    super.sendHttpResponseHeader(socket, out, "Content-Length", "1000"); 
-    super.sendHttpResponseBody(socket, out, "incomplete data");
+    super.send(socket, out, "HTTP/1.1 ");
 
     super.close(socket);
   }

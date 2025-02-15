@@ -211,7 +211,7 @@ abstract class AbstractSocketFaultHandler implements SocketFaultHandler {
       logger.warn("missing HTTP request line: {}", getRemoteAddress(socket));
       return absent();
     }
-    logger.info("got HTTP request line '{}' from: {}", httpRequestLine, getRemoteAddress(socket));
+    logger.info("{} - got HTTP request line '{}' from: {}", this.get(), httpRequestLine, getRemoteAddress(socket));
     return fromNullable(emptyToNull(httpRequestLine));
   }
 
@@ -222,9 +222,9 @@ abstract class AbstractSocketFaultHandler implements SocketFaultHandler {
       if (header.toLowerCase().startsWith("content-length:")) {
         contentLength = Integer.parseInt(header.split(":", 2)[1].trim(), 10);
       }
-      logger.info("got HTTP request header '{}' from: {}", header, getRemoteAddress(socket));
+      logger.info("{} - got HTTP request header '{}' from: {}", this.get(), header, getRemoteAddress(socket));
     }
-    logger.info("got HTTP 'Content-Length: {}' from: {}", contentLength, getRemoteAddress(socket));
+    logger.info("{} - got HTTP 'Content-Length: {}' from: {}", this.get(), contentLength, getRemoteAddress(socket));
     return contentLength;
   }
 
@@ -240,13 +240,41 @@ abstract class AbstractSocketFaultHandler implements SocketFaultHandler {
       data.append((char) character);
       index += 1;
     }
-    logger.info("got HTTP request payload '{}' from: {}", data, getRemoteAddress(socket));
+    logger.info("{} - got HTTP request payload '{}' from: {}", this.get(), data, getRemoteAddress(socket));
   }
 
   protected final void consumeHttpRequest(final Socket socket, final BufferedReader in) throws Exception {
     this.consumeHttpRequestLine(socket, in);
     final int contentLength = this.consumeHttpRequestHeaders(socket, in);
     this.consumeHttpRequestPayload(socket, in, contentLength);
+  }
+
+  protected final void write(
+    final Socket socket,
+    final BufferedWriter out,
+    final String data
+  ) throws Exception {
+    out.write(data);
+    logger.info("{} - wrote data '{}' to: {}", this.get(), data, getRemoteAddress(socket));
+  }
+
+  protected final void append(
+    final Socket socket,
+    final BufferedWriter out,
+    final String data
+  ) throws Exception {
+    out.append(data);
+    logger.info("{} - appended data '{}' to: {}", this.get(), data, getRemoteAddress(socket));
+  }
+
+  protected final void send(
+    final Socket socket,
+    final BufferedWriter out,
+    final String data
+  ) throws Exception {
+    this.write(socket, out, data);
+    out.flush();
+    logger.info("{} - sent data '{}' to: {}", this.get(), data, getRemoteAddress(socket));
   }
 
   protected final void writeHttpResponseLine(
@@ -260,6 +288,7 @@ abstract class AbstractSocketFaultHandler implements SocketFaultHandler {
       .append(" ")
       .append(status);
     out.newLine();
+    logger.info("{} - wrote HTTP response line 'HTTP/1.1 {} {}' to: {}", this.get(), code, status, getRemoteAddress(socket));
   }
 
   protected final void sendHttpResponseLine(
@@ -270,6 +299,7 @@ abstract class AbstractSocketFaultHandler implements SocketFaultHandler {
   ) throws Exception {
     this.writeHttpResponseLine(socket, out, code, status);
     out.flush();
+    logger.info("{} - sent HTTP response line 'HTTP/1.1 {} {}' to: {}", this.get(), code, status, getRemoteAddress(socket));
   }
 
   protected final void writeHttpResponseHeader(
@@ -282,6 +312,7 @@ abstract class AbstractSocketFaultHandler implements SocketFaultHandler {
       .append(": ")
       .append(value);
     out.newLine();
+    logger.info("{} - wrote HTTP response header '{}: {}' to: {}", this.get(), name, value, getRemoteAddress(socket));
   }
 
   protected final void sendHttpResponseHeader(
@@ -292,6 +323,27 @@ abstract class AbstractSocketFaultHandler implements SocketFaultHandler {
   ) throws Exception {
     this.writeHttpResponseHeader(socket, out, name, value);
     out.flush();
+    logger.info("{} - sent HTTP response header '{}: {}' to: {}", this.get(), name, value, getRemoteAddress(socket));
+  }
+
+  protected final void writeHttpResponseBody(
+    final Socket socket,
+    final BufferedWriter out,
+    final String data
+  ) throws Exception {
+    out.newLine();
+    this.write(socket, out, data);
+    logger.info("{} - wrote HTTP response body '{}' to: {}", this.get(), data, getRemoteAddress(socket));
+  }
+
+  protected final void sendHttpResponseBody(
+    final Socket socket,
+    final BufferedWriter out,
+    final String data
+  ) throws Exception {
+    this.writeHttpResponseBody(socket, out, data);
+    out.flush();
+    logger.info("{} - sent HTTP response body '{}' to: {}", this.get(), data, getRemoteAddress(socket));
   }
 
 }
