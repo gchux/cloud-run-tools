@@ -17,7 +17,7 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Throwables.getStackTraceAsString;
 
 public class ResetIncompleteHttpResponse extends AbstractSocketFaultHandler {
-  private static final Logger logger = LoggerFactory.getLogger(ResetAfterHttpRequest.class);
+  private static final Logger logger = LoggerFactory.getLogger(ResetIncompleteHttpResponse.class);
 
   static final String SOCKET_NAME = "reset-incomplete-http-response";
 

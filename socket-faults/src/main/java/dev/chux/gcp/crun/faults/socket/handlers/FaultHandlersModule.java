@@ -46,6 +46,18 @@ public class FaultHandlersModule extends AbstractModule {
     handlersBinder.addBinding(ResetWithChoppedHttpResponseLine.SOCKET_NAME)
       .to(ResetWithChoppedHttpResponseLine.class).asEagerSingleton();
     socketNames.addBinding().toInstance(ResetWithChoppedHttpResponseLine.SOCKET_NAME);
+
+    handlersBinder.addBinding(TimeoutBeforeHttpRequest.SOCKET_NAME)
+      .to(TimeoutBeforeHttpRequest.class).asEagerSingleton();
+    socketNames.addBinding().toInstance(TimeoutBeforeHttpRequest.SOCKET_NAME);
+
+    handlersBinder.addBinding(TimeoutAfterHttpRequest.SOCKET_NAME)
+      .to(TimeoutAfterHttpRequest.class).asEagerSingleton();
+    socketNames.addBinding().toInstance(TimeoutAfterHttpRequest.SOCKET_NAME);
+
+    handlersBinder.addBinding(TimeoutAfterHttpResponseHeaders.SOCKET_NAME)
+      .to(TimeoutAfterHttpResponseHeaders.class).asEagerSingleton();
+    socketNames.addBinding().toInstance(TimeoutAfterHttpResponseHeaders.SOCKET_NAME);
   }
 
 }

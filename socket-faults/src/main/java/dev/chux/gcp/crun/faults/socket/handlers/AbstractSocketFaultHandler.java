@@ -70,7 +70,7 @@ abstract class AbstractSocketFaultHandler implements SocketFaultHandler {
   private final ConnectableObservable<Socket> newSocketObservable() {
     return Observable.create(this)
       .observeOn(Schedulers.io())
-      .subscribeOn(Schedulers.computation())
+      .subscribeOn(Schedulers.io())
       .publish();
   }
 
@@ -205,6 +205,19 @@ abstract class AbstractSocketFaultHandler implements SocketFaultHandler {
     socket.close();
   }
 
+  protected final void pauseMilliseconds(final Socket socket, final long milliseconds) throws Exception {
+    logger.info("{} - pausing {} ms: {}", this.get(), milliseconds, getRemoteAddress(socket));
+    TimeUnit.MILLISECONDS.sleep(milliseconds);
+  }
+
+  protected final void pauseSeconds(final Socket socket, final long seconds) throws Exception {
+    this.pauseMilliseconds(socket, seconds*1000);
+  }
+
+  protected final void pause(final Socket socket, final long seconds) throws Exception {
+    this.pauseSeconds(socket, seconds);
+  }
+
   protected final Optional<String> consumeHttpRequestLine(final Socket socket, final BufferedReader in) throws Exception {
     final String httpRequestLine = in.readLine();
     if (isNullOrEmpty(httpRequestLine)) {
@@ -275,6 +288,23 @@ abstract class AbstractSocketFaultHandler implements SocketFaultHandler {
     this.write(socket, out, data);
     out.flush();
     logger.info("{} - sent data '{}' to: {}", this.get(), data, getRemoteAddress(socket));
+  }
+
+  protected final void writeLineBreak(
+    final Socket socket,
+    final BufferedWriter out
+  ) throws Exception {
+    out.newLine();
+    logger.info("{} - wrote line break to: {}", this.get(), getRemoteAddress(socket));
+  }
+
+  protected final void sendLineBreak(
+    final Socket socket,
+    final BufferedWriter out
+  ) throws Exception {
+    this.writeLineBreak(socket, out);
+    out.flush();
+    logger.info("{} - sent line break to: {}", this.get(), getRemoteAddress(socket));
   }
 
   protected final void writeHttpResponseLine(
