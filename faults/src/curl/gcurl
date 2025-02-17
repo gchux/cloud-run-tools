@@ -1,16 +1,19 @@
 #!/usr/bin/env bash
 
+MDS_URL_BASE='http://metadata.google.internal/computeMetadata/v1'
+
 CURL_LINUX_BIN=`which curl | tr -d '\n'`
 
 # cURL follows `HTTP_PROXY` and `HTTPS_PROXY` environment variables.
 # see: https://everything.curl.dev/usingcurl/proxies/env.html
 GCLOUD_AUTH_TOKEN=`${CURL_LINUX_BIN} -sS -L \
   --header 'Metadata-Flavor:Google' \
-  'http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token?alt=text' \
+  "${MDS_URL_BASE}/instance/service-accounts/default/token?alt=text" \
   | grep 'access_token ' | awk '{print $2}' | tr -d '\n'`
 
 X_CURL_RUNTIME="${X_CURL_RUNTIME:-linux}"
 
-exec env /x/curl_${X_CURL_RUNTIME} \
+# Forward authorized request to actual cURL implementation
+exec env "/x/curl_${X_CURL_RUNTIME}" \
   "--header=Authorization: Bearer ${GCLOUD_AUTH_TOKEN}" \
   "${@:1}"
