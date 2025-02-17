@@ -7,7 +7,7 @@ import java.util.function.Consumer;
 
 import com.google.inject.Inject;
 
-import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.functions.Function;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
@@ -38,10 +38,13 @@ class ManagedMultiProcessExecutor implements Consumer<ManagedMultiProcessProvide
   }
 
   private final void execute(final Collection<ManagedProcessProvider> providers) {
-    Observable.fromIterable(providers)
-      .observeOn(Schedulers.io())
+    Flowable
+      .fromIterable(providers)
+      .parallel()
+      .runOn(Schedulers.io())
       .map(this.processMapper)
-      .subscribeOn(Schedulers.computation())
+      .sequential()
+      .observeOn(Schedulers.computation())
       .blockingForEach((final ManagedProcessExecution execution) -> {
         logger.info("{} => {}", execution.provider(), execution.exitCode());
       });
