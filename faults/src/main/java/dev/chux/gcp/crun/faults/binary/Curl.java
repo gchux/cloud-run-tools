@@ -397,6 +397,7 @@ class Curl {
       final ManagedProcessBuilder builder,
       final String method
     ) {
+      // see: https://curl.se/docs/manpage.html#-X
       builder
         .addArgument("--request")
         .addArgument(method);
@@ -408,6 +409,7 @@ class Curl {
       final ManagedProcessBuilder builder,
       final String name, final String value
     ) {
+      // see: https://curl.se/docs/manpage.html#-H
       builder
         .addArgument("--header")
         .addArgument(Curl.newHttpHeader(name, value), false);
@@ -419,6 +421,7 @@ class Curl {
       final ManagedProcessBuilder builder,
       final String data
     ) {
+      // see: https://curl.se/docs/manpage.html#--data-raw
       builder
         .addArgument("--data-raw")
         .addArgument(data);
