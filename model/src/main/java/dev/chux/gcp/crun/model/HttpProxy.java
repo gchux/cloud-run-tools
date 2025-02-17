@@ -1,12 +1,12 @@
 package dev.chux.gcp.crun.model;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.Since;
 import com.google.gson.annotations.SerializedName;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.base.Strings.emptyToNull;
 
@@ -47,8 +47,7 @@ public class HttpProxy {
 
   @Override
   public String toString() {
-    return MoreObjects
-      .toStringHelper(this)
+    return toStringHelper(this)
       .add("host", this.host())
       .add("port", this.port())
       .add("secure", this.optionalIsSecure())

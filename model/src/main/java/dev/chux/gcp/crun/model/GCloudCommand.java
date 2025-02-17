@@ -12,13 +12,14 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.Since;
 import com.google.gson.annotations.SerializedName;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.base.Strings.emptyToNull;
 
 public class GCloudCommand {
 
   @Since(1.0)
-  @Expose(deserialize=false, serialize=true)
+  @Expose(deserialize=true, serialize=true)
   @SerializedName(value="namespace", alternate={"ns"})
   private String namespace;
 
@@ -96,6 +97,18 @@ public class GCloudCommand {
       return ImmutableMap.of();
     } 
     return ImmutableMap.copyOf(this.flags);
+  }
+
+  @Override
+  public String toString() {
+    return toStringHelper(this)
+      .add("namespace", this.optionalNamespace())
+      .add("groups", this.groups())
+      .add("flags", this.flags())
+      .add("format", this.optionalFormat())
+      .add("command", this.optionalCommand())
+      .add("arguments", this.arguments())
+      .toString();
   }
 
 }
