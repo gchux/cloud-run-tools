@@ -2,7 +2,6 @@ package dev.chux.gcp.crun.model;
 
 import java.util.Map;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 
 import com.google.common.collect.ImmutableMap;
@@ -11,6 +10,7 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.Since;
 import com.google.gson.annotations.SerializedName;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.base.Strings.emptyToNull;
 
@@ -80,7 +80,7 @@ public class HttpRequest {
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this)
+    return toStringHelper(this)
       .add("url", this.url())
       .add("method", this.optionalMethod())
       .add("headers", this.headers())
