@@ -1,4 +1,4 @@
-package dev.chux.gcp.crun.gcloud;
+package dev.chux.gcp.crun.model;
 
 import java.util.List;
 import java.util.Map;
@@ -15,7 +15,7 @@ import com.google.gson.annotations.SerializedName;
 import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.base.Strings.emptyToNull;
 
-public class GCloudCommandConfig {
+public class GCloudCommand {
 
   @Since(1.0)
   @Expose(deserialize=false, serialize=true)
@@ -47,7 +47,7 @@ public class GCloudCommandConfig {
   @SerializedName(value="format", alternate={"fmt"})
   private String format;
 
-  public GCloudCommandConfig() {}
+  GCloudCommand() {}
   
   public String namespace() {
     return this.namespace;

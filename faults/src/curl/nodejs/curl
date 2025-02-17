@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+cd /x/curl/nodejs
+
+pritenv
+
+set -x
+
+exec env node ./curl.js "${@:1}"

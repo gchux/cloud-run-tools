@@ -13,9 +13,9 @@ import com.google.gson.Gson;
 import spark.Request;
 import spark.Response;
 
-import dev.chux.gcp.crun.rest.Route;
-import dev.chux.gcp.crun.gcloud.GCloudCommandConfig;
+import dev.chux.gcp.crun.model.GCloudCommand;
 import dev.chux.gcp.crun.gcloud.GCloudService;
+import dev.chux.gcp.crun.rest.Route;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,13 +63,13 @@ public class RunGCloudCommandController implements Route {
 
     response.header("x-gcloud-execution-id", executionID);
 
-    final Optional<GCloudCommandConfig> maybeCmd = this.command(rawJSON);
+    final Optional<GCloudCommand> maybeCmd = this.command(rawJSON);
     if (!maybeCmd.isPresent()) {
       halt(404, "command not found");
       return null;
     }
 
-    final GCloudCommandConfig cmd = maybeCmd.get();
+    final GCloudCommand cmd = maybeCmd.get();
 
     if (!isNullOrEmpty(namespace)) {
       // namespace is optional to allow for commands like `gcloud --help`
@@ -89,9 +89,9 @@ public class RunGCloudCommandController implements Route {
     return null;
   }
 
-  private final Optional<GCloudCommandConfig> command(final String rawJSON) {
+  private final Optional<GCloudCommand> command(final String rawJSON) {
     try {
-      final GCloudCommandConfig cmd = this.gson.fromJson(rawJSON, GCloudCommandConfig.class);
+      final GCloudCommand cmd = this.gson.fromJson(rawJSON, GCloudCommand.class);
       return Optional.fromNullable(cmd);
     } catch(Exception ex) {
       ex.printStackTrace(System.err);

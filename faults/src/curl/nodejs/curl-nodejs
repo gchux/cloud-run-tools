@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-
-cd /x/curl/nodejs
-exec node ./curl.js "${@:1}"

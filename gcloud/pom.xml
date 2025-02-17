@@ -100,18 +100,21 @@
       <groupId>com.github.spotbugs</groupId>
       <artifactId>spotbugs-annotations</artifactId>
     </dependency>
-
+    <dependency>
+      <groupId>dev.chux.gcp.crun</groupId>
+      <artifactId>process-runner-model</artifactId>
+    </dependency>
     <dependency>
       <groupId>dev.chux.gcp.crun</groupId>
       <artifactId>process-runner-exec</artifactId>
     </dependency>
     <dependency>
       <groupId>dev.chux.gcp.crun</groupId>
-      <artifactId>process-runner-rest</artifactId>
+      <artifactId>process-runner-core</artifactId>
     </dependency>
     <dependency>
       <groupId>dev.chux.gcp.crun</groupId>
-      <artifactId>process-runner-core</artifactId>
+      <artifactId>process-runner-rest</artifactId>
     </dependency>
   </dependencies>
 

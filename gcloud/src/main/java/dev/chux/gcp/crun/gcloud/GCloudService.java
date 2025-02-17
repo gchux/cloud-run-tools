@@ -24,13 +24,16 @@ public class GCloudService {
     this.processConsumer = processConsumer;
   }
 
-  public void run(final GCloudCommandConfig config) {
+  public void run(final dev.chux.gcp.crun.model.GCloudCommand config) {
     final GCloudCommand gcloudCommand =
       this.gcloudCommandFactory.create(checkNotNull(config));
     this.run(gcloudCommand);
   }
 
-  public void run(final GCloudCommandConfig config, final OutputStream outputStream) {
+  public void run(
+    final dev.chux.gcp.crun.model.GCloudCommand config,
+    final OutputStream outputStream
+  ) {
     final GCloudCommand gcloudCommand = this.gcloudCommandFactory
       .createWithOutputStream(checkNotNull(config), checkNotNull(outputStream));
     this.run(gcloudCommand);

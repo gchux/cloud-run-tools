@@ -1,7 +1,9 @@
 package dev.chux.gcp.crun.faults.binary;
 
 import java.io.OutputStream;
+
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.base.Optional;
 
@@ -13,6 +15,7 @@ import dev.chux.gcp.crun.ConfigService;
 import static com.google.common.base.Optional.absent;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static com.google.common.base.Strings.nullToEmpty;
 
 public abstract class AbstractBinary<T> implements Binary<T> {
 
@@ -141,6 +144,61 @@ public abstract class AbstractBinary<T> implements Binary<T> {
       builder.addStdErr(stream.get());
     }
     return this;
+  }
+
+  protected final AbstractBinary setEnvVar(
+    final Map<String, String> container,
+    final String name, final String value
+  ) {
+    container.put(name, value);
+    return this;
+  }
+
+  protected final AbstractBinary appendEnvVar(
+    final Map<String, String> container,
+    final String name,
+    final String currentValue,
+    final String value,
+    final String separator
+  ) {
+    if (isNullOrEmpty(value)) {
+      // no-op
+      return this;
+    }
+
+    if (isNullOrEmpty(currentValue)) {
+      // if there's no current value:
+      //   - this operation is reducible to `setEnvVar` with `value`
+      return this.setEnvVar(container, name, value);
+    }
+    
+    container.put(name, currentValue + separator + value);
+
+    return this;
+  }
+
+  protected final AbstractBinary setEnvVar(
+    final ManagedProcessBuilder builder,
+    final String name, final String value
+  ) {
+    return this.setEnvVar(builder.getEnvironment(), name, value);
+  }
+
+  protected final AbstractBinary appendEnvVar(
+    final ManagedProcessBuilder builder,
+    final String name,
+    final String value,
+    final String separator
+  ) {
+    final Map<String, String> env = builder.getEnvironment();
+    
+    final String currentValue = env.get(name);
+
+    if (isNullOrEmpty(currentValue)) {
+      return this.setEnvVar(env, name, value);
+    }
+
+    return this.appendEnvVar(env, name, currentValue, value, separator);
   }
 
 }

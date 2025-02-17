@@ -15,6 +15,7 @@ import ch.vorburger.exec.ManagedProcessException;
 import com.google.common.base.Optional;
 
 import dev.chux.gcp.crun.ConfigService;
+import dev.chux.gcp.crun.model.HttpProxy;
 import dev.chux.gcp.crun.model.HttpRequest;
 import dev.chux.gcp.crun.process.ManagedProcessProvider;
 
@@ -69,7 +70,9 @@ class Curl {
       final ManagedProcessBuilder builder = newCommandBuilder();
       setMethod(builder, request)
         .setHeaders(builder, request)
+        .setProxy(builder, request)
         .setData(builder, request)
+        // methods from `AbstractBinary`
         .addArgument(builder, request.url())
         .addStdOut(builder, stdout)
         .addStdErr(builder, stderr);
@@ -133,6 +136,47 @@ class Curl {
       return this;
     }
 
+    protected final String getHttpsProxyProtocol(
+      final HttpProxy proxy
+    ) {
+      return (proxy.isSecure()? "https" : "http") + "://";
+    }
+
+    protected final String getProxyHostAndPort(
+      final HttpProxy proxy
+    ) {
+      final String port =  Integer.toString(proxy.port(), 10);
+      return proxy.host() + ":" + port;
+    }
+
+    protected AbstractCurl setProxy(
+      final ManagedProcessBuilder builder,
+      final HttpRequest request
+    ) {
+      final Optional<HttpProxy> proxy = request.optionalProxy();
+      if (proxy.isPresent()) {
+        return setProxy(builder, proxy.get());
+      }
+      return this;
+    }
+
+    protected AbstractCurl setProxy(
+      final ManagedProcessBuilder builder,
+      final HttpProxy proxy
+    ) {
+      final String hostAndPort = this.getProxyHostAndPort(proxy);
+      final String httpProxy = "http://" + hostAndPort;
+      final String httpsProxy = this.getHttpsProxyProtocol(proxy) + hostAndPort;
+
+      setEnvVar(builder, "http_proxy", httpProxy);
+      setEnvVar(builder, "https_proxy", httpsProxy);
+
+      setEnvVar(builder, "HTTP_PROXY", httpProxy);
+      setEnvVar(builder, "HTTPS_PROXY", httpsProxy);
+
+      return this;
+    }
+
     @Override
     public ManagedProcessBuilder getBuilder(
       final HttpRequest request,
@@ -170,6 +214,80 @@ class Curl {
       @Assisted("stderr") Optional<OutputStream> stderr
     ) {
       super(configService, BINARY, request, stdout, stderr);
+    }
+
+    private final String getProxyHost(
+      final String protocol,
+      final HttpProxy proxy
+    ) {
+      return "-D" + protocol + ".proxyHost=" + proxy.host();
+    }
+
+    private final String getProxyPort(
+      final String protocol,
+      final HttpProxy proxy
+    ) {
+      final String port =  Integer.toString(proxy.port(), 10);
+      return "-D" + protocol + ".proxyPort=" + port;
+    }
+
+    private final String getHttpProxyHost(
+      final HttpProxy proxy
+    ) {
+      return this.getProxyHost("http", proxy);
+    }
+
+    private final String getHttpsProxyHost(
+      final HttpProxy proxy
+    ) {
+      return this.getProxyHost("https", proxy);
+    }
+
+    private final String getHttpProxyPort(
+      final HttpProxy proxy
+    ) {
+      return this.getProxyPort("http", proxy);
+    }
+
+    private final String getHttpsProxyPort(
+      final HttpProxy proxy
+    ) {
+      return this.getProxyPort("https", proxy);
+    }
+
+    private final String getProxyJavaToolOption(
+      final String httpProxyHost,
+      final String httpProxyPort,
+      final String httpsProxyHost,
+      final String httpsProxyPort
+    ) {
+      final String httpProxy = httpProxyHost + " " + httpProxyPort;
+      final String httpsProxy = httpsProxyHost + " " + httpsProxyPort;
+      return httpProxy + " " + httpsProxy;
+    }
+
+    private final void setJavaToolOptions(
+      final ManagedProcessBuilder builder,
+      final String javaToolOptions
+    ) {
+      setEnvVar(builder, "JAVA_TOOL_OPTIONS", javaToolOptions);
+    }
+
+    @Override
+    protected AbstractCurl setProxy(
+      final ManagedProcessBuilder builder,
+      final HttpProxy proxy
+    ) {
+      final String httpProxyHost = this.getHttpProxyHost(proxy);
+      final String httpProxyPort = this.getHttpProxyPort(proxy);
+
+      final String httpsProxyHost = this.getHttpsProxyHost(proxy);
+      final String httpsProxyPort = this.getHttpsProxyPort(proxy);
+
+      this.setJavaToolOptions(builder, this.getProxyJavaToolOption(
+        httpProxyHost, httpProxyPort, httpsProxyHost, httpsProxyPort));
+
+      return super.setProxy(builder, proxy);
     }
 
   }
@@ -305,6 +423,23 @@ class Curl {
         .addArgument("--data-raw")
         .addArgument(data);
       return this;
+    }
+
+    private final String getProxyEndpoint(
+      final HttpProxy proxy
+    ) {
+      return proxy.host() + ":" + Integer.toString(proxy.port(), 10);
+    }
+
+    @Override
+    protected AbstractCurl setProxy(
+      final ManagedProcessBuilder builder,
+      final HttpProxy proxy
+    ) {
+      // see: https://curl.se/docs/manpage.html#-x
+      builder.addArgument("--proxy")
+        .addArgument(this.getProxyEndpoint(proxy));
+      return super.setProxy(builder, proxy);
     }
 
   }

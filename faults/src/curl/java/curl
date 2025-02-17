@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+cd /x/curl/java/
+
+printenv
+
+set -x
+
+exec env java -jar ./curl.jar "${@:1}"

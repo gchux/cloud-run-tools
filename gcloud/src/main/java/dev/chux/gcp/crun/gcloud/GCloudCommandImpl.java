@@ -22,26 +22,26 @@ public class GCloudCommandImpl implements GCloudCommand {
 
   private static final String GCLOUD_COMMAND = "gcloud";
 
-  private final GCloudCommandConfig gcloudCommandConfig;
+  private final dev.chux.gcp.crun.model.GCloudCommand gcloudCommand;
   private final Optional<OutputStream> stream;
   private final Provider<String> formatProvider;
 
   @AssistedInject
   public GCloudCommandImpl(
     @Named(GCloudFormatSupplier.KEY) Provider<String> formatProvider,
-    @Assisted GCloudCommandConfig gcloudCommandConfig
+    @Assisted dev.chux.gcp.crun.model.GCloudCommand gcloudCommand
   ) {
-    this(formatProvider, gcloudCommandConfig, null);
+    this(formatProvider, gcloudCommand, null);
   }
 
   @AssistedInject
   public GCloudCommandImpl(
     @Named(GCloudFormatSupplier.KEY) Provider<String> formatProvider,
-    @Assisted GCloudCommandConfig gcloudCommandConfig,
+    @Assisted dev.chux.gcp.crun.model.GCloudCommand gcloudCommand,
     @Assisted OutputStream stream
   ) {
     this.formatProvider = formatProvider;
-    this.gcloudCommandConfig = gcloudCommandConfig;
+    this.gcloudCommand = gcloudCommand;
     this.stream = Optional.fromNullable(stream);
   }
 
@@ -68,7 +68,7 @@ public class GCloudCommandImpl implements GCloudCommand {
   }
 
   private final GCloudCommandImpl setNamespace(final ManagedProcessBuilder builder) {
-    final Optional<String> namespace = this.gcloudCommandConfig.optionalNamespace();
+    final Optional<String> namespace = this.gcloudCommand.optionalNamespace();
     if (namespace.isPresent()) {
       builder.addArgument(namespace.get());
     }
@@ -76,7 +76,7 @@ public class GCloudCommandImpl implements GCloudCommand {
   }
   
   private final GCloudCommandImpl setCommand(final ManagedProcessBuilder builder) {
-    final String command = this.gcloudCommandConfig.command();
+    final String command = this.gcloudCommand.command();
     if (!isNullOrEmpty(command)) {
       builder.addArgument(command);
     }
@@ -91,7 +91,7 @@ public class GCloudCommandImpl implements GCloudCommand {
   }
 
   private final GCloudCommandImpl setFormat(final ManagedProcessBuilder builder) {
-    final Optional<String> format = this.gcloudCommandConfig.optionalFormat();
+    final Optional<String> format = this.gcloudCommand.optionalFormat();
     builder.addArgument("--format=", format.or(this.defaultFormat()));
     return this;
   }
@@ -105,15 +105,15 @@ public class GCloudCommandImpl implements GCloudCommand {
   }
 
   private final GCloudCommandImpl setArguments(final ManagedProcessBuilder builder) {
-    return this.addArguments(builder, this.gcloudCommandConfig.arguments());
+    return this.addArguments(builder, this.gcloudCommand.arguments());
   }
 
   private final GCloudCommandImpl setGroups(final ManagedProcessBuilder builder) {
-    return this.addArguments(builder, this.gcloudCommandConfig.groups());
+    return this.addArguments(builder, this.gcloudCommand.groups());
   }
 
   private final GCloudCommandImpl setFlags(final ManagedProcessBuilder builder) {
-    final Map<String, String> flags = this.gcloudCommandConfig.flags();
+    final Map<String, String> flags = this.gcloudCommand.flags();
     
     for (final Map.Entry<String, String> flag : flags.entrySet()) {
       final String fl = flag.getKey();

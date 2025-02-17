@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
 export PATH="/x/curl/python/bin:${PATH}"
+
 cd /x/curl/python
-exec python3 ./curl.py "${@:1}"
+
+printenv
+
+set -x
+
+exec env python3 ./curl.py "${@:1}"

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+cd /x/curl/golang
+
+printenv
+
+set -x
+
+exec env ./curl "${@:1}"

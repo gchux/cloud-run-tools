@@ -36,6 +36,11 @@ public class HttpRequest {
   @SerializedName(value="headers", alternate={"metadata"})
   private Map<String, String> headers;
 
+  @Since(1.0)
+  @Expose(deserialize=true, serialize=true)
+  @SerializedName(value="proxy", alternate={})
+  private HttpProxy proxy;
+
   HttpRequest() {}
   
   public String url() {
@@ -43,11 +48,11 @@ public class HttpRequest {
   }
   
   public String method() {
-    return emptyToNull(this.url);
+    return emptyToNull(this.method);
   }
   
   public Optional<String> optionalMethod() {
-    return fromNullable(emptyToNull(this.method));
+    return fromNullable(emptyToNull(this.method()));
   }
   
   public String data() {
@@ -65,12 +70,21 @@ public class HttpRequest {
     return ImmutableMap.copyOf(this.headers);
   }
 
+  public HttpProxy proxy() {
+    return this.proxy;
+  }
+
+  public Optional<HttpProxy> optionalProxy() {
+    return fromNullable(this.proxy());
+  }
+
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
       .add("url", this.url())
       .add("method", this.optionalMethod())
       .add("headers", this.headers())
+      .add("proxy", this.optionalProxy())
       .addValue(this.optionalData())
       .toString();
   }

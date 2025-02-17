@@ -4,8 +4,8 @@ import java.io.OutputStream;
 
 public interface GCloudCommandFactory {
 
-  public GCloudCommand create(GCloudCommandConfig gcloudCommandConfig);
+  public GCloudCommand create(final dev.chux.gcp.crun.model.GCloudCommand gcloudCommand);
 
-  public GCloudCommand createWithOutputStream(GCloudCommandConfig gcloudCommandConfig, OutputStream stream);
+  public GCloudCommand createWithOutputStream(final dev.chux.gcp.crun.model.GCloudCommand gcloudCommand, OutputStream stream);
 
 }
