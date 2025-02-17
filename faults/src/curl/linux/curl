@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+printenv
+
+CURL_BIN=`which curl | tr -d '\n'`
+
+set -x
+
+exec env ${CURL_BIN} "${@:1}"

@@ -2,8 +2,10 @@
 
 cd /x/curl/java/
 
+JAVA_BIN=`which java | tr -d '\n'`
+
 printenv
 
 set -x
 
-exec env java -jar ./curl.jar "${@:1}"
+exec env ${JAVA_BIN} -jar ./curl.jar "${@:1}"
