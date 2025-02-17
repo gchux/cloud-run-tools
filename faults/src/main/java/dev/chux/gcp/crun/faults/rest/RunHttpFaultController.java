@@ -73,6 +73,12 @@ public class RunHttpFaultController implements Route {
         post("/", "*/*", this);
         post("/:runtime", "*/*", this); 
       });
+
+      post("/curl", "*/*", this);
+      path("/curl", () -> {
+        post("/", "*/*", this);
+        post("/:runtime", "*/*", this); 
+      });
     });
     logger.info("allowed runtimes: {}", this.allowedRuntimes);
   }

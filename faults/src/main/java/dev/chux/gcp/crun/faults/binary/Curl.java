@@ -42,21 +42,24 @@ class Curl {
     private final Optional<OutputStream> stdout;
     private final Optional<OutputStream> stderr;
 
+    protected final String runtime;
+
     protected AbstractCurl(
       final ConfigService configService,
-      final String binary
+      final String runtime
     ) {
-      this(configService, binary, null, absent(), absent());
+      this(configService, runtime, null, absent(), absent());
     }
 
     protected AbstractCurl(
       final ConfigService configService,
-      final String binary,
+      final String runtime,
        HttpRequest request,
        Optional<OutputStream> stdout,
        Optional<OutputStream> stderr
     ) {
-      super(configService, "curl." + binary);
+      super(configService, "curl." + runtime);
+      this.runtime = runtime;
       this.request = fromNullable(request);
       this.stdout = stdout;
       this.stderr = stderr;
@@ -74,6 +77,7 @@ class Curl {
         .setData(builder, request)
         // methods from `AbstractBinary`
         .addArgument(builder, request.url())
+        .setEnvVar(builder, "X_CURL_RUNTIME", this.runtime)
         .addStdOut(builder, stdout)
         .addStdErr(builder, stderr);
       return builder;
@@ -173,6 +177,9 @@ class Curl {
 
       setEnvVar(builder, "HTTP_PROXY", httpProxy);
       setEnvVar(builder, "HTTPS_PROXY", httpsProxy);
+
+      setEnvVar(builder, "X_HTTP_PROXY", httpProxy);
+      setEnvVar(builder, "X_HTTPS_PROXY", httpProxy);
 
       return this;
     }
