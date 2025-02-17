@@ -2,8 +2,10 @@
 
 cd /x/curl/nodejs
 
+NODEJS_BIN=`which node | tr -d '\n'`
+
 pritenv
 
 set -x
 
-exec env node ./curl.js "${@:1}"
+exec env ${NODEJS_BIN} ./curl.js "${@:1}"

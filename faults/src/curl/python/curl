@@ -4,8 +4,10 @@ export PATH="/x/curl/python/bin:${PATH}"
 
 cd /x/curl/python
 
+PYTHON_BIN=`which python3 | tr -d '\n'`
+
 printenv
 
 set -x
 
-exec env python3 ./curl.py "${@:1}"
+exec env ${PYTHON_BIN} ./curl.py "${@:1}"
