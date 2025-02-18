@@ -18,7 +18,7 @@ import ch.vorburger.exec.ManagedProcessException;
 
 import dev.chux.gcp.crun.faults.binary.CurlFactory;
 
-import dev.chux.gcp.crun.model.GoogleAPIsRequest;
+import dev.chux.gcp.crun.model.GoogleAPIsHttpRequest;
 
 import dev.chux.gcp.crun.process.ManagedProcessProvider;
 
@@ -30,14 +30,14 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Throwables.getStackTraceAsString;
 
-public class GoogleAPIsHttpRequestCommand implements FaultCommand<GoogleAPIsRequest> {
+public class GoogleAPIsHttpRequestCommand implements FaultCommand<GoogleAPIsHttpRequest> {
 
   private static final Logger logger = LoggerFactory.getLogger(GoogleAPIsHttpRequestCommand.class);
 
   final static String KEY = CommandModule.NAMESPACE + "/googleapis/http/request";
 
   private final CurlFactory curlFactory;
-  private final GoogleAPIsRequest request;
+  private final GoogleAPIsHttpRequest request;
   private final String runtime;
   private final Optional<String> projectId;
   private final Optional<OutputStream> stdout, stderr;
@@ -45,7 +45,7 @@ public class GoogleAPIsHttpRequestCommand implements FaultCommand<GoogleAPIsRequ
   @AssistedInject
   public GoogleAPIsHttpRequestCommand(
     final CurlFactory curlFactory,
-    @Assisted("request") final GoogleAPIsRequest request,
+    @Assisted("request") final GoogleAPIsHttpRequest request,
     @Assisted("runtime") final String runtime,
     @Assisted("stdout") final Optional<OutputStream> stdout,
     @Assisted("stderr") final Optional<OutputStream> stderr
@@ -63,7 +63,7 @@ public class GoogleAPIsHttpRequestCommand implements FaultCommand<GoogleAPIsRequ
   }
 
   @Override
-  public GoogleAPIsRequest get() {
+  public GoogleAPIsHttpRequest get() {
     return this.request;
   }
 

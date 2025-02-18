@@ -17,7 +17,7 @@ import static com.google.common.base.Strings.emptyToNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Strings.nullToEmpty;
 
-public class GoogleAPIsRequest extends HttpRequest {
+public class GoogleAPIsHttpRequest extends HttpRequest {
 
   @Since(1.0)
   @Expose(deserialize=true, serialize=true)
@@ -39,7 +39,7 @@ public class GoogleAPIsRequest extends HttpRequest {
   @SerializedName(value="resource", alternate={"parent", "name"})
   private String resource;
 
-  GoogleAPIsRequest() {}
+  GoogleAPIsHttpRequest() {}
   
   @Override
   public String url() {

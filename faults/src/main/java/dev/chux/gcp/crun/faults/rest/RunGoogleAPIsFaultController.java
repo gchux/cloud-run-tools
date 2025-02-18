@@ -20,7 +20,7 @@ import spark.Response;
 
 import dev.chux.gcp.crun.ConfigService;
 import dev.chux.gcp.crun.faults.FaultsService;
-import dev.chux.gcp.crun.model.GoogleAPIsRequest;
+import dev.chux.gcp.crun.model.GoogleAPIsHttpRequest;
 import dev.chux.gcp.crun.rest.Route;
 
 import org.slf4j.Logger;
@@ -99,7 +99,7 @@ public class RunGoogleAPIsFaultController implements Route {
     final String executionID = UUID.randomUUID().toString();
 
     final String rawBody = request.body();
-    final Optional<GoogleAPIsRequest> grequest = this.gapisRequest(rawBody);
+    final Optional<GoogleAPIsHttpRequest> grequest = this.gapisRequest(rawBody);
 
     if (!grequest.isPresent()) {
       halt(400, "invalid HTTP request");
@@ -141,9 +141,9 @@ public class RunGoogleAPIsFaultController implements Route {
     return fromNullable(emptyToNull(request.params(":runtime")));
   }
 
-  private final Optional<GoogleAPIsRequest> gapisRequest(final String rawBody) {
+  private final Optional<GoogleAPIsHttpRequest> gapisRequest(final String rawBody) {
     try {
-      final GoogleAPIsRequest request = this.gson.fromJson(rawBody, GoogleAPIsRequest.class);
+      final GoogleAPIsHttpRequest request = this.gson.fromJson(rawBody, GoogleAPIsHttpRequest.class);
       return fromNullable(request);
     } catch(Exception ex) {
       logger.error("invalid Google APIs request: {}", rawBody);

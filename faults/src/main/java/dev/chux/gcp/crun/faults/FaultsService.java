@@ -11,7 +11,7 @@ import com.google.common.base.Optional;
 import dev.chux.gcp.crun.faults.command.FaultCommand;
 import dev.chux.gcp.crun.faults.command.FaultCommandFactory;
 
-import dev.chux.gcp.crun.model.GoogleAPIsRequest;
+import dev.chux.gcp.crun.model.GoogleAPIsHttpRequest;
 import dev.chux.gcp.crun.model.HttpRequest;
 
 import dev.chux.gcp.crun.process.ManagedProcessProvider;
@@ -24,6 +24,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class FaultsService {
 
   private final FaultCommandFactory faultCommandFactory;
+
   private final Consumer<ManagedProcessProvider> processConsumer;
   private final Consumer<ManagedMultiProcessProvider> multiProcessConsumer;
   
@@ -54,7 +55,7 @@ public class FaultsService {
   }
 
   public void runGoogleAPIsHttpRequest(
-    final GoogleAPIsRequest request,
+    final GoogleAPIsHttpRequest request,
     final String runtime,
     final Optional<OutputStream> stdout,
     final Optional<OutputStream> stderr

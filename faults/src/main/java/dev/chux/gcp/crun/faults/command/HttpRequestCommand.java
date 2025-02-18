@@ -35,9 +35,8 @@ public class HttpRequestCommand implements FaultCommand<HttpRequest> {
 
   final static String KEY = CommandModule.NAMESPACE + "/http/request";
 
-  private static final String DEFAULT_RUNTIME = "linux";
-
   private final CurlFactory curlFactory;
+
   private final HttpRequest request;
   private final Optional<String> runtime;
   private final Optional<OutputStream> stdout, stderr;

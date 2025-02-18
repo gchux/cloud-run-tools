@@ -6,7 +6,7 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 
-import dev.chux.gcp.crun.model.GoogleAPIsRequest;
+import dev.chux.gcp.crun.model.GoogleAPIsHttpRequest;
 import dev.chux.gcp.crun.model.HttpRequest;
 
 public class CommandModule extends AbstractModule {
@@ -23,7 +23,7 @@ public class CommandModule extends AbstractModule {
       HttpRequestCommand.class
     );
 
-    final TypeLiteral<FaultCommand<GoogleAPIsRequest>> gapisHttpRequestCommandType = new TypeLiteral<FaultCommand<GoogleAPIsRequest>>() {};
+    final TypeLiteral<FaultCommand<GoogleAPIsHttpRequest>> gapisHttpRequestCommandType = new TypeLiteral<FaultCommand<GoogleAPIsHttpRequest>>() {};
     builder.implement(
       gapisHttpRequestCommandType,
       Names.named(GoogleAPIsHttpRequestCommand.KEY),

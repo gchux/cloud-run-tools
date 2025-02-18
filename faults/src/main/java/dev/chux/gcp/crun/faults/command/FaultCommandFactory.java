@@ -10,7 +10,7 @@ import com.google.inject.name.Named;
 import com.google.common.base.Optional;
 
 import dev.chux.gcp.crun.model.HttpRequest;
-import dev.chux.gcp.crun.model.GoogleAPIsRequest;
+import dev.chux.gcp.crun.model.GoogleAPIsHttpRequest;
 
 public interface FaultCommandFactory {
 
@@ -25,8 +25,8 @@ public interface FaultCommandFactory {
 
   // @Named("faults://commands/googleapis/http/request")
   @Named(GoogleAPIsHttpRequestCommand.KEY)
-  public FaultCommand<GoogleAPIsRequest> newGoogleAPIsHttpRequestCommand(
-    @Assisted("request") final GoogleAPIsRequest request,
+  public FaultCommand<GoogleAPIsHttpRequest> newGoogleAPIsHttpRequestCommand(
+    @Assisted("request") final GoogleAPIsHttpRequest request,
     @Assisted("runtime") final String runtime,
     @Assisted("stdout") final Optional<OutputStream> stdout,
     @Assisted("stderr") final Optional<OutputStream> stderr
