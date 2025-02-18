@@ -74,7 +74,7 @@ VOLUME /tmp
 
 COPY --from=build ${DEPENDENCY} /x/rest_app
 
-RUN apk add --update --no-cache bash curl nodejs python3=3.12.9-r0
+RUN apk add --update --no-cache bash curl jq nodejs python3=3.12.9-r0
 
 # cRUL linux
 COPY faults/src/curl/linux/curl /x/curl_linux
