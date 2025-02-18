@@ -105,7 +105,7 @@ public abstract class AbstractBinary<T> implements Binary<T> {
   }
 
   protected final ManagedProcessBuilder newCommandBuilder() throws ManagedProcessException {
-    final ManagedProcessBuilder builder = new ManagedProcessBuilder(get());
+    final ManagedProcessBuilder builder = new ManagedProcessBuilder(this.binary);
     return this.setShortFlags(builder);
   }
 

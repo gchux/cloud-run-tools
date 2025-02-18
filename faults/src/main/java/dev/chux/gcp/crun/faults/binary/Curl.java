@@ -9,6 +9,7 @@ import com.google.inject.assistedinject.Assisted;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
 
 import ch.vorburger.exec.ManagedProcessBuilder;
 import ch.vorburger.exec.ManagedProcessException;
@@ -21,6 +22,7 @@ import dev.chux.gcp.crun.process.ManagedProcessProvider;
 
 import static com.google.common.base.Optional.absent;
 import static com.google.common.base.Optional.fromNullable;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 class Curl {
 
@@ -77,7 +79,8 @@ class Curl {
         .setData(builder, request)
         // methods from `AbstractBinary`
         .addArgument(builder, request.url())
-        .setEnvVar(builder, "X_CURL_RUNTIME", this.runtime)
+        .setEnvVar(builder, "X_CURL_RUNTIME", get())
+        .setEnvVar(builder, "X_CURL_BINARY", super.get())
         .addStdOut(builder, stdout)
         .addStdErr(builder, stderr);
       return builder;
@@ -190,12 +193,18 @@ class Curl {
       final Optional<OutputStream> stdout,
       final Optional<OutputStream> stderr
     ) throws ManagedProcessException {
+      checkNotNull(request);
       return newCurlCommandBuilder(request, stdout, stderr);
     }
 
     @Override
     public ManagedProcessBuilder getBuilder() throws ManagedProcessException {
-      return this.getBuilder(this.request.get(), this.stdout, this.stderr);
+      return this.getBuilder(this.request.orNull(), this.stdout, this.stderr);
+    }
+
+    @Override
+    public String get() {
+      return this.runtime;
     }
 
   }
@@ -216,7 +225,7 @@ class Curl {
     @AssistedInject
     public Java(
       final ConfigService configService,
-      @Assisted HttpRequest request,
+      @Assisted("request") HttpRequest request,
       @Assisted("stdout") Optional<OutputStream> stdout,
       @Assisted("stderr") Optional<OutputStream> stderr
     ) {
@@ -315,7 +324,7 @@ class Curl {
     @AssistedInject
     public Python(
       final ConfigService configService,
-      @Assisted HttpRequest request,
+      @Assisted("request") HttpRequest request,
       @Assisted("stdout") Optional<OutputStream> stdout,
       @Assisted("stderr") Optional<OutputStream> stderr
     ) {
@@ -340,7 +349,7 @@ class Curl {
     @AssistedInject
     public NodeJS(
       final ConfigService configService,
-      @Assisted HttpRequest request,
+      @Assisted("request") HttpRequest request,
       @Assisted("stdout") Optional<OutputStream> stdout,
       @Assisted("stderr") Optional<OutputStream> stderr
     ) {
@@ -365,8 +374,7 @@ class Curl {
     @AssistedInject
     public Golang(
       final ConfigService configService,
-      final String binary,
-      @Assisted HttpRequest request,
+      @Assisted("request") HttpRequest request,
       @Assisted("stdout") Optional<OutputStream> stdout,
       @Assisted("stderr") Optional<OutputStream> stderr
     ) {
@@ -391,8 +399,7 @@ class Curl {
     @AssistedInject
     public Linux(
       final ConfigService configService,
-      final String binary,
-      @Assisted HttpRequest request,
+      @Assisted("request") HttpRequest request,
       @Assisted("stdout") Optional<OutputStream> stdout,
       @Assisted("stderr") Optional<OutputStream> stderr
     ) {
@@ -447,6 +454,69 @@ class Curl {
       builder.addArgument("--proxy")
         .addArgument(this.getProxyEndpoint(proxy));
       return super.setProxy(builder, proxy);
+    }
+
+  }
+
+  static abstract class WithGoogleAuthorization extends AbstractCurl {
+
+    public static final String KEY = CurlModule.NAMESPACE + "/google";
+
+    private final String runtime;
+
+    public WithGoogleAuthorization(
+      final ConfigService configService,
+      final String binary,
+      final String runtime,
+      final HttpRequest request,
+      final Optional<OutputStream> stdout,
+      final Optional<OutputStream> stderr
+    ) {
+      super(configService, "google." + binary, request, stdout, stderr);
+      this.runtime = runtime;
+    }
+
+    @Override
+    public String get() {
+      return this.runtime;
+    }
+
+  }
+
+  static class WithGoogleIdToken extends WithGoogleAuthorization {
+
+    public static final String KEY = WithGoogleAuthorization.KEY + "/id";
+
+    private static final String BINARY = "id";
+
+    @AssistedInject
+    public WithGoogleIdToken(
+      final ConfigService configService,
+      @Assisted("runtime") String runtime,
+      @Assisted("request") HttpRequest request,
+      @Assisted("stdout") Optional<OutputStream> stdout,
+      @Assisted("stderr") Optional<OutputStream> stderr
+    ) {
+      super(configService, BINARY, runtime, request, stdout, stderr);
+    }
+
+  }
+
+  static class WithGoogleAuthToken extends WithGoogleAuthorization {
+
+    public static final String KEY = WithGoogleAuthorization.KEY + "/auth";
+
+    private static final String BINARY = "auth";
+
+    @AssistedInject
+    public WithGoogleAuthToken(
+      final ConfigService configService,
+      @Assisted("runtime") String runtime,
+      @Assisted("request") HttpRequest request,
+      @Assisted("stdout") Optional<OutputStream> stdout,
+      @Assisted("stderr") Optional<OutputStream> stderr
+    ) {
+      super(configService, BINARY, runtime, request, stdout, stderr);
     }
 
   }

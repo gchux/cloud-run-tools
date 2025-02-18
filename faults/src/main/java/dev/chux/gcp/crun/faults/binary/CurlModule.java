@@ -42,6 +42,16 @@ public class CurlModule extends AbstractModule {
         ManagedProcessProvider.class,
         Names.named(Curl.Golang.KEY),
         Curl.Golang.class
+      )
+      .implement(
+        ManagedProcessProvider.class,
+        Names.named(Curl.WithGoogleIdToken.KEY),
+        Curl.WithGoogleIdToken.class
+      )
+      .implement(
+        ManagedProcessProvider.class,
+        Names.named(Curl.WithGoogleAuthToken.KEY),
+        Curl.WithGoogleAuthToken.class
       );
 
     install(builder.build(CurlFactory.class));
@@ -58,6 +68,8 @@ public class CurlModule extends AbstractModule {
       curl.addBinding(Curl.Python.KEY).to(Curl.Python.class).in(Scopes.SINGLETON);
       curl.addBinding(Curl.NodeJS.KEY).to(Curl.NodeJS.class).in(Scopes.SINGLETON);
       curl.addBinding(Curl.Golang.KEY).to(Curl.Golang.class).in(Scopes.SINGLETON);
+      curl.addBinding(Curl.WithGoogleIdToken.KEY).to(Curl.WithGoogleIdToken.class).in(Scopes.SINGLETON);
+      curl.addBinding(Curl.WithGoogleAuthToken.KEY).to(Curl.WithGoogleAuthToken.class).in(Scopes.SINGLETON);
   }
 
 }

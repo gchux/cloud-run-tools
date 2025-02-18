@@ -15,7 +15,7 @@ public interface CurlFactory {
   // @Named("faults://binaries/curl/linux")
   @Named(Curl.Linux.KEY)
   public ManagedProcessProvider newCurlLinux(
-    final HttpRequest request,
+    @Assisted("request") final HttpRequest request,
     @Assisted("stdout") final Optional<OutputStream> stdout,
     @Assisted("stderr") final Optional<OutputStream> stderr
   );
@@ -23,7 +23,7 @@ public interface CurlFactory {
   // @Named("faults://binaries/curl/java")
   @Named(Curl.Java.KEY)
   public ManagedProcessProvider newCurlJava(
-    final HttpRequest request,
+    @Assisted("request") final HttpRequest request,
     @Assisted("stdout") final Optional<OutputStream> stdout,
     @Assisted("stderr") final Optional<OutputStream> stderr
   );
@@ -31,7 +31,7 @@ public interface CurlFactory {
   // @Named("faults://binaries/curl/python")
   @Named(Curl.Python.KEY)
   public ManagedProcessProvider newCurlPython(
-    final HttpRequest request,
+    @Assisted("request") final HttpRequest request,
     @Assisted("stdout") final Optional<OutputStream> stdout,
     @Assisted("stderr") final Optional<OutputStream> stderr
   );
@@ -39,7 +39,7 @@ public interface CurlFactory {
   // @Named("faults://binaries/curl/nodejs")
   @Named(Curl.NodeJS.KEY)
   public ManagedProcessProvider newCurlNodeJS(
-    final HttpRequest request,
+    @Assisted("request") final HttpRequest request,
     @Assisted("stdout") final Optional<OutputStream> stdout,
     @Assisted("stderr") final Optional<OutputStream> stderr
   );
@@ -47,7 +47,25 @@ public interface CurlFactory {
   // @Named("faults://binaries/curl/golang")
   @Named(Curl.Golang.KEY)
   public ManagedProcessProvider newCurlGolang(
-    final HttpRequest request,
+    @Assisted("request") final HttpRequest request,
+    @Assisted("stdout") final Optional<OutputStream> stdout,
+    @Assisted("stderr") final Optional<OutputStream> stderr
+  );
+
+  // @Named("faults://binaries/curl/google/id")
+  @Named(Curl.WithGoogleIdToken.KEY)
+  public ManagedProcessProvider newCurlWithGoogleIdToken(
+    @Assisted("runtime") final String runtime,
+    @Assisted("request") final HttpRequest request,
+    @Assisted("stdout") final Optional<OutputStream> stdout,
+    @Assisted("stderr") final Optional<OutputStream> stderr
+  );
+
+  // @Named("faults://binaries/curl/google/auth")
+  @Named(Curl.WithGoogleAuthToken.KEY)
+  public ManagedProcessProvider newCurlWithGoogleAuthToken(
+    @Assisted("runtime") final String runtime,
+    @Assisted("request") final HttpRequest request,
     @Assisted("stdout") final Optional<OutputStream> stdout,
     @Assisted("stderr") final Optional<OutputStream> stderr
   );
