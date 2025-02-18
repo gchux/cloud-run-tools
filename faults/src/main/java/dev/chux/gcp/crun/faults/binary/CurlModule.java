@@ -42,6 +42,16 @@ public class CurlModule extends AbstractModule {
         ManagedProcessProvider.class,
         Names.named(Curl.Golang.KEY),
         Curl.Golang.class
+      )
+      .implement(
+        ManagedProcessProvider.class,
+        Names.named(Curl.WithGoogleIdToken.KEY),
+        Curl.WithGoogleIdToken.class
+      )
+      .implement(
+        ManagedProcessProvider.class,
+        Names.named(Curl.WithGoogleAuthToken.KEY),
+        Curl.WithGoogleAuthToken.class
       );
 
     install(builder.build(CurlFactory.class));
@@ -50,14 +60,14 @@ public class CurlModule extends AbstractModule {
     final TypeLiteral<AbstractBinary<HttpRequest>> valueType = new TypeLiteral<AbstractBinary<HttpRequest>>() {};
 
     final MapBinder<String, AbstractBinary<HttpRequest>> curl = MapBinder
-      .newMapBinder(binder(), keyType, valueType, Names.named(NAMESPACE));
+    .newMapBinder(binder(), keyType, valueType, Names.named(NAMESPACE));
 
-      // SINGLETON factories for curl managed process builder
-      curl.addBinding(Curl.Linux.KEY).to(Curl.Linux.class).in(Scopes.SINGLETON);
-      curl.addBinding(Curl.Java.KEY).to(Curl.Java.class).in(Scopes.SINGLETON);
-      curl.addBinding(Curl.Python.KEY).to(Curl.Python.class).in(Scopes.SINGLETON);
-      curl.addBinding(Curl.NodeJS.KEY).to(Curl.NodeJS.class).in(Scopes.SINGLETON);
-      curl.addBinding(Curl.Golang.KEY).to(Curl.Golang.class).in(Scopes.SINGLETON);
+    // SINGLETON factories for curl managed process builder
+    curl.addBinding(Curl.Linux.KEY).to(Curl.Linux.class).in(Scopes.SINGLETON);
+    curl.addBinding(Curl.Java.KEY).to(Curl.Java.class).in(Scopes.SINGLETON);
+    curl.addBinding(Curl.Python.KEY).to(Curl.Python.class).in(Scopes.SINGLETON);
+    curl.addBinding(Curl.NodeJS.KEY).to(Curl.NodeJS.class).in(Scopes.SINGLETON);
+    curl.addBinding(Curl.Golang.KEY).to(Curl.Golang.class).in(Scopes.SINGLETON);
   }
 
 }

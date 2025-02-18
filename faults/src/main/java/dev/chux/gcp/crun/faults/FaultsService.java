@@ -10,7 +10,10 @@ import com.google.common.base.Optional;
 
 import dev.chux.gcp.crun.faults.command.FaultCommand;
 import dev.chux.gcp.crun.faults.command.FaultCommandFactory;
+
+import dev.chux.gcp.crun.model.GoogleAPIsRequest;
 import dev.chux.gcp.crun.model.HttpRequest;
+
 import dev.chux.gcp.crun.process.ManagedProcessProvider;
 import dev.chux.gcp.crun.process.ManagedMultiProcessProvider;
 import dev.chux.gcp.crun.process.ProcessModule.ProcessConsumer;
@@ -50,11 +53,21 @@ public class FaultsService {
     }
   }
 
-  private final void run(final FaultCommand command) {
+  public void runGoogleAPIsHttpRequest(
+    final GoogleAPIsRequest request,
+    final String runtime,
+    final Optional<OutputStream> stdout,
+    final Optional<OutputStream> stderr
+  ) {
+    this.run(this.faultCommandFactory
+      .newGoogleAPIsHttpRequestCommand(request, runtime, stdout, stderr));
+  }
+
+  private final void run(final ManagedProcessProvider command) {
     this.processConsumer.accept(command);
   }
 
-  private final void runAll(final FaultCommand command) {
+  private final void runAll(final ManagedMultiProcessProvider command) {
     this.multiProcessConsumer.accept(command);
   }
 

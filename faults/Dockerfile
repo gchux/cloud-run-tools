@@ -74,7 +74,7 @@ VOLUME /tmp
 
 COPY --from=build ${DEPENDENCY} /x/rest_app
 
-RUN apk add --update --no-cache bash curl nodejs python3=3.12.9-r0
+RUN apk add --update --no-cache bash curl jq nodejs python3=3.12.9-r0
 
 # cRUL linux
 COPY faults/src/curl/linux/curl /x/curl_linux
@@ -97,6 +97,12 @@ RUN ln -s "$(which python3.12)" /x/curl/python/bin/python \
 # cRUL Golang
 COPY --from=curl_golang_build /curl/golang /x/curl/golang
 COPY faults/src/curl/golang/curl /x/curl_golang
+
+# cRUL with Google Auth token
+COPY faults/src/curl/gcurl /x/gcurl
+
+# cRUL with Google ID token
+COPY faults/src/curl/gidcurl /x/gidcurl
 
 COPY ./faults/faults-generator.properties /x/faults-generator.properties
 COPY ./faults/entrypoint.sh /entrypoint.sh

@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+MDS_BASE_URL='http://metadata.google.internal/computeMetadata/v1'
+
+CURL_LINUX_BIN=`which curl | tr -d '\n'`
+
+# cURL follows `HTTP_PROXY` and `HTTPS_PROXY` environment variables.
+# see: https://everything.curl.dev/usingcurl/proxies/env.html
+AUTH_TOKEN=`${CURL_LINUX_BIN} -sS \
+  --header 'Metadata-Flavor:Google' \
+  "${MDS_BASE_URL}/instance/service-accounts/default/token?alt=json" \
+  | jq -cMr '.access_token' | tr -d '\n'`
+
+X_CURL_RUNTIME="${X_CURL_RUNTIME:-linux}"
+
+# Forward authorized request to the specified cURL implementation
+exec env "/x/curl_${X_CURL_RUNTIME}" \
+  --header${X_FLAG_SEPARATOR:-=}"Authorization: Bearer ${AUTH_TOKEN}" \
+  "${@:1}"
