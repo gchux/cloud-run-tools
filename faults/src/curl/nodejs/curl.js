@@ -58,13 +58,13 @@ class Curl {
     const method = this.#method();
     const headers = this.#headers();
 
-    this.#logRequest(method, headers)
+    this.#logRequest(method, headers);
 
     try {
-      const response = await axios({
+      const response = await axios.request({
         method: method,
         url: this.curl.url,
-        headers: headers,
+        headers: Object.fromEntries(headers),
         data: this.curl.data,
       });
       this.#logResponse(response);

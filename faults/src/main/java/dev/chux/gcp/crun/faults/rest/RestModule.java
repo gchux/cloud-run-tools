@@ -17,6 +17,9 @@ public class RestModule extends AbstractModule {
 
     routesBinder.addBinding(RunHttpFaultController.KEY)
       .to(RunHttpFaultController.class).in(Scopes.SINGLETON);
+
+    routesBinder.addBinding(RunGoogleAPIsFaultController.KEY)
+      .to(RunGoogleAPIsFaultController.class).in(Scopes.SINGLETON);
   }
 
 }

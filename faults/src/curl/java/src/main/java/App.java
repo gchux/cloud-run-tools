@@ -44,7 +44,7 @@ public final class App {
     OPTIONS.addOption("X", OPTION_REQUEST, true, "HTTP method to be used");
 
     // https://curl.se/docs/manpage.html#-H
-    final Option option = new Option("H", "header", true, "HTTP request metadata; headets to be sent");
+    final Option option = new Option("H", "header", true, "HTTP request metadata; headers to be sent");
     option.setArgs(Option.UNLIMITED_VALUES);
     OPTIONS.addOption(option);
     

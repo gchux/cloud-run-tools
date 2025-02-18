@@ -16,5 +16,5 @@ echo "curl_${X_CURL_RUNTIME}: JWT claims => `jq -cMR 'split(".") | .[1] | @base6
 
 # Forward authorized request to the specified cURL implementation
 exec env "/x/curl_${X_CURL_RUNTIME}" \
-  "--header=Authorization: Bearer ${ID_TOKEN}" \
+  --header${X_FLAG_SEPARATOR:-=}"Authorization: Bearer ${AUTH_TOKEN}" \
   "${@:1}"

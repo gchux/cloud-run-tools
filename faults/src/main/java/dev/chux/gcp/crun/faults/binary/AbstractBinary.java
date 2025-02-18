@@ -21,6 +21,7 @@ public abstract class AbstractBinary<T> implements Binary<T> {
 
   private final String propertiesPrefix;
 
+  private final String id;
   private final String binary;
   private final List<String> shortFlags;
   private final Optional<String> flagSeparator;
@@ -29,6 +30,7 @@ public abstract class AbstractBinary<T> implements Binary<T> {
     final ConfigService configService,
     final String binary
   ) {
+    this.id = binary;
     this.propertiesPrefix = this.getPropertiesPrefix(binary);
     this.binary = this.getBinary(configService, this.propertiesPrefix);
     this.shortFlags = this.getShortFlags(configService, this.propertiesPrefix);
@@ -37,6 +39,14 @@ public abstract class AbstractBinary<T> implements Binary<T> {
 
   @Override()
   public String get() {
+    return this.binary;
+  }
+
+  protected final String id() {
+    return this.id;
+  }
+
+  protected final String binary() {
     return this.binary;
   }
 
@@ -86,7 +96,7 @@ public abstract class AbstractBinary<T> implements Binary<T> {
     return configService.getMultivalueAppProp(key);
   }
 
-  private final String flagSeparator() {
+  protected final String flagSeparator() {
     return this.flagSeparator.or(" ");
   }
 
@@ -106,11 +116,12 @@ public abstract class AbstractBinary<T> implements Binary<T> {
 
   protected final ManagedProcessBuilder newCommandBuilder() throws ManagedProcessException {
     final ManagedProcessBuilder builder = new ManagedProcessBuilder(this.binary);
-    return this.setShortFlags(builder);
+    this.setEnvVar(builder, "X_FLAG_SEPARATOR", this.flagSeparator());
+    return setEnvironment(builder).setShortFlags(builder);
   }
 
   protected final ManagedProcessBuilder addLongFlag(
-      final ManagedProcessBuilder builder,
+    final ManagedProcessBuilder builder,
     final String name,
     final String value
   ) {
@@ -118,7 +129,7 @@ public abstract class AbstractBinary<T> implements Binary<T> {
     return builder;
   }
 
-  protected final AbstractBinary addArgument(
+  protected final AbstractBinary<T> addArgument(
     final ManagedProcessBuilder builder,
     final String value
   ) {
@@ -126,7 +137,7 @@ public abstract class AbstractBinary<T> implements Binary<T> {
     return this;
   }
 
-  protected final AbstractBinary addStdOut(
+  protected final AbstractBinary<T> addStdOut(
     final ManagedProcessBuilder builder,
     final Optional<OutputStream> stream
   ) {
@@ -136,7 +147,7 @@ public abstract class AbstractBinary<T> implements Binary<T> {
     return this;
   }
   
-  protected final AbstractBinary addStdErr(
+  protected final AbstractBinary<T> addStdErr(
     final ManagedProcessBuilder builder,
     final Optional<OutputStream> stream
   ) {
@@ -146,7 +157,7 @@ public abstract class AbstractBinary<T> implements Binary<T> {
     return this;
   }
 
-  protected final AbstractBinary setEnvVar(
+  protected final AbstractBinary<T> setEnvVar(
     final Map<String, String> container,
     final String name, final String value
   ) {
@@ -154,7 +165,14 @@ public abstract class AbstractBinary<T> implements Binary<T> {
     return this;
   }
 
-  protected final AbstractBinary appendEnvVar(
+  protected final AbstractBinary<T> setEnvVar(
+    final ManagedProcessBuilder builder,
+    final String name, final String value
+  ) {
+    return this.setEnvVar(builder.getEnvironment(), name, value);
+  }
+
+  protected final AbstractBinary<T> appendEnvVar(
     final Map<String, String> container,
     final String name,
     final String currentValue,
@@ -177,14 +195,7 @@ public abstract class AbstractBinary<T> implements Binary<T> {
     return this;
   }
 
-  protected final AbstractBinary setEnvVar(
-    final ManagedProcessBuilder builder,
-    final String name, final String value
-  ) {
-    return this.setEnvVar(builder.getEnvironment(), name, value);
-  }
-
-  protected final AbstractBinary appendEnvVar(
+  protected final AbstractBinary<T> appendEnvVar(
     final ManagedProcessBuilder builder,
     final String name,
     final String value,
@@ -200,5 +211,9 @@ public abstract class AbstractBinary<T> implements Binary<T> {
 
     return this.appendEnvVar(env, name, currentValue, value, separator);
   }
+
+  protected abstract AbstractBinary<T> setEnvironment(
+    final ManagedProcessBuilder builder
+  );
 
 }

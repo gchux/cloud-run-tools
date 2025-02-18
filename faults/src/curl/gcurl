@@ -15,5 +15,5 @@ X_CURL_RUNTIME="${X_CURL_RUNTIME:-linux}"
 
 # Forward authorized request to the specified cURL implementation
 exec env "/x/curl_${X_CURL_RUNTIME}" \
-  "--header=Authorization: Bearer ${AUTH_TOKEN}" \
+  --header${X_FLAG_SEPARATOR:-=}"Authorization: Bearer ${AUTH_TOKEN}" \
   "${@:1}"

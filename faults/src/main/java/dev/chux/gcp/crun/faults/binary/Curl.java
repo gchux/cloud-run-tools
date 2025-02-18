@@ -3,217 +3,75 @@ package dev.chux.gcp.crun.faults.binary;
 import java.io.OutputStream;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.AssistedInject;
 import com.google.inject.assistedinject.Assisted;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
 
 import ch.vorburger.exec.ManagedProcessBuilder;
 import ch.vorburger.exec.ManagedProcessException;
-import com.google.common.base.Optional;
 
 import dev.chux.gcp.crun.ConfigService;
 import dev.chux.gcp.crun.model.HttpProxy;
 import dev.chux.gcp.crun.model.HttpRequest;
-import dev.chux.gcp.crun.process.ManagedProcessProvider;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Optional.absent;
-import static com.google.common.base.Optional.fromNullable;
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Strings.isNullOrEmpty;
 
-class Curl {
+public class Curl {
 
   private static final Joiner HTTP_HEADER_JOINER = Joiner.on(": ").useForNull("ignored");
 
-  private static final String newHttpHeader(final String name, final String value) {
+  static final String newHttpHeader(final String name, final String value) {
     return  HTTP_HEADER_JOINER.join(name, value);
   }
 
-  private static final String newHttpHeader(final Map.Entry<String, String> header) {
+  static final String newHttpHeader(final Map.Entry<String, String> header) {
     return Curl.newHttpHeader(header.getKey(), header.getValue());
   }
 
-  static abstract class AbstractCurl 
-    extends AbstractBinary<HttpRequest>
-    implements ManagedProcessProvider {
-
-    private final Optional<HttpRequest> request;
-    private final Optional<OutputStream> stdout;
-    private final Optional<OutputStream> stderr;
-
-    protected final String runtime;
-
-    protected AbstractCurl(
-      final ConfigService configService,
-      final String runtime
-    ) {
-      this(configService, runtime, null, absent(), absent());
+  public static final String runtimeKey(final Optional<String> runtime) {
+    if (!runtime.isPresent()) {
+      return Linux.KEY;
     }
-
-    protected AbstractCurl(
-      final ConfigService configService,
-      final String runtime,
-       HttpRequest request,
-       Optional<OutputStream> stdout,
-       Optional<OutputStream> stderr
-    ) {
-      super(configService, "curl." + runtime);
-      this.runtime = runtime;
-      this.request = fromNullable(request);
-      this.stdout = stdout;
-      this.stderr = stderr;
-    }
-
-    protected final ManagedProcessBuilder newCurlCommandBuilder(
-      final HttpRequest request,
-      final Optional<OutputStream> stdout,
-      final Optional<OutputStream> stderr
-    ) throws ManagedProcessException {
-      final ManagedProcessBuilder builder = newCommandBuilder();
-      setMethod(builder, request)
-        .setHeaders(builder, request)
-        .setProxy(builder, request)
-        .setData(builder, request)
-        // methods from `AbstractBinary`
-        .addArgument(builder, request.url())
-        .setEnvVar(builder, "X_CURL_RUNTIME", get())
-        .setEnvVar(builder, "X_CURL_BINARY", super.get())
-        .addStdOut(builder, stdout)
-        .addStdErr(builder, stderr);
-      return builder;
-    }
-
-    protected final AbstractCurl setMethod(
-      final ManagedProcessBuilder builder,
-      final HttpRequest request
-    ) {
-      final Optional<String> method = request.optionalMethod();
-      if (method.isPresent()) {
-        this.setMethod(builder, method.get());
-      }
-      return this;
-    }
-
-    protected AbstractCurl setMethod(
-      final ManagedProcessBuilder builder,
-      final String method
-    ) {
-      super.addLongFlag(builder, "request", method);
-      return this;
-    }
-
-    protected final AbstractCurl setData(
-      final ManagedProcessBuilder builder,
-      final HttpRequest request
-    ) {
-      final Optional<String> data = request.optionalData();
-      if (data.isPresent()) {
-        this.setData(builder, data.get());
-      }
-      return this;
-    }
-
-    protected AbstractCurl setData(
-      final ManagedProcessBuilder builder,
-      final String data
-    ) {
-      super.addLongFlag(builder, "data-raw", data);
-      return this;
-    }
-
-    protected final AbstractCurl setHeaders(
-      final ManagedProcessBuilder builder,
-      final HttpRequest request
-    ) {
-      final Map<String, String> headers = request.headers();
-      for(final Map.Entry<String, String> header : headers.entrySet()) {
-        this.setHeader(builder, header.getKey(), header.getValue());
-      }
-      return this;
-    }
-
-    protected AbstractCurl setHeader(
-      final ManagedProcessBuilder builder,
-      final String name, final String value
-    ) {
-      super.addLongFlag(builder, "header", Curl.newHttpHeader(name, value));
-      return this;
-    }
-
-    protected final String getHttpsProxyProtocol(
-      final HttpProxy proxy
-    ) {
-      return (proxy.isSecure()? "https" : "http") + "://";
-    }
-
-    protected final String getProxyHostAndPort(
-      final HttpProxy proxy
-    ) {
-      final String port =  Integer.toString(proxy.port(), 10);
-      return proxy.host() + ":" + port;
-    }
-
-    protected AbstractCurl setProxy(
-      final ManagedProcessBuilder builder,
-      final HttpRequest request
-    ) {
-      final Optional<HttpProxy> proxy = request.optionalProxy();
-      if (proxy.isPresent()) {
-        return setProxy(builder, proxy.get());
-      }
-      return this;
-    }
-
-    protected AbstractCurl setProxy(
-      final ManagedProcessBuilder builder,
-      final HttpProxy proxy
-    ) {
-      final String hostAndPort = this.getProxyHostAndPort(proxy);
-      final String httpProxy = "http://" + hostAndPort;
-      final String httpsProxy = this.getHttpsProxyProtocol(proxy) + hostAndPort;
-
-      setEnvVar(builder, "http_proxy", httpProxy);
-      setEnvVar(builder, "https_proxy", httpsProxy);
-
-      setEnvVar(builder, "HTTP_PROXY", httpProxy);
-      setEnvVar(builder, "HTTPS_PROXY", httpsProxy);
-
-      setEnvVar(builder, "X_HTTP_PROXY", httpProxy);
-      setEnvVar(builder, "X_HTTPS_PROXY", httpProxy);
-
-      return this;
-    }
-
-    @Override
-    public ManagedProcessBuilder getBuilder(
-      final HttpRequest request,
-      final Optional<OutputStream> stdout,
-      final Optional<OutputStream> stderr
-    ) throws ManagedProcessException {
-      checkNotNull(request);
-      return newCurlCommandBuilder(request, stdout, stderr);
-    }
-
-    @Override
-    public ManagedProcessBuilder getBuilder() throws ManagedProcessException {
-      return this.getBuilder(this.request.orNull(), this.stdout, this.stderr);
-    }
-
-    @Override
-    public String get() {
-      return this.runtime;
-    }
-
+    return runtimeKey(runtime.get());
   }
 
-  static class Java extends AbstractCurl {
+  static final String runtimeKey(final String runtime) {
+    if (isNullOrEmpty(runtime)) {
+      return Linux.KEY;
+    }
+
+    final String rt = runtime.toLowerCase();
+    
+    switch(rt) {
+      case Java.BINARY:
+        return Java.KEY;
+      case Python.BINARY:
+        return Python.KEY;
+      case NodeJS.BINARY:
+        return NodeJS.KEY;
+      case Golang.BINARY:
+        return Golang.KEY;
+      case Linux.BINARY:
+      default:
+        return Linux.KEY;
+    }
+  }
+
+  public static class Java extends AbstractCurl {
 
     public static final String KEY = CurlModule.NAMESPACE + "/java";
 
-    private static final String BINARY = "java";
+    public static final String BINARY = "java";
 
     @Inject
     public Java(
@@ -308,11 +166,11 @@ class Curl {
 
   }
 
-  static class Python extends AbstractCurl {
+  public static class Python extends AbstractCurl {
 
     public static final String KEY = CurlModule.NAMESPACE + "/python";
 
-    private static final String BINARY = "python";
+    public static final String BINARY = "python";
 
     @Inject
     public Python(
@@ -333,11 +191,11 @@ class Curl {
 
   }
 
-  static class NodeJS extends AbstractCurl {
+  public static class NodeJS extends AbstractCurl {
 
     public static final String KEY = CurlModule.NAMESPACE + "/nodejs";
 
-    private static final String BINARY = "nodejs";
+    public static final String BINARY = "nodejs";
 
     @Inject
     public NodeJS(
@@ -358,11 +216,11 @@ class Curl {
 
   }
 
-  static class Golang extends AbstractCurl {
+  public static class Golang extends AbstractCurl {
 
     public static final String KEY = CurlModule.NAMESPACE + "/golang";
 
-    private static final String BINARY = "golang";
+    public static final String BINARY = "golang";
 
     @Inject
     public Golang(
@@ -383,11 +241,11 @@ class Curl {
 
   }
 
-  static class Linux extends AbstractCurl {
+  public static class Linux extends AbstractCurl {
 
     public static final String KEY = CurlModule.NAMESPACE + "/linux";
 
-    private static final String BINARY = "linux";
+    public static final String BINARY = "linux";
 
     @Inject
     public Linux(
@@ -399,7 +257,7 @@ class Curl {
     @AssistedInject
     public Linux(
       final ConfigService configService,
-      @Assisted("request") HttpRequest request,
+      @Assisted("request") @Nullable HttpRequest request,
       @Assisted("stdout") Optional<OutputStream> stdout,
       @Assisted("stderr") Optional<OutputStream> stderr
     ) {
@@ -462,18 +320,53 @@ class Curl {
 
     public static final String KEY = CurlModule.NAMESPACE + "/google";
 
+    private final CurlFactory curlFactory;
     private final String runtime;
+    private final String runtimeKey;
+    private final Optional<String> projectId;
+
+    private AbstractCurl delegate;
 
     public WithGoogleAuthorization(
       final ConfigService configService,
+      final CurlFactory curlFactory,
       final String binary,
-      final String runtime,
+      /* assisted */ final String runtime,
+      /* assisted */ final Optional<String> projectId,
+      /* assisted */ @Nullable final HttpRequest request,
+      /* assisted */ final Optional<OutputStream> stdout,
+      /* assisted */ final Optional<OutputStream> stderr
+    ) {
+      super(configService, "google." + binary, request, stdout, stderr);
+
+      checkArgument(!isNullOrEmpty(runtime));
+      this.runtime = runtime;
+      this.runtimeKey = Curl.runtimeKey(runtime);
+
+      this.curlFactory = curlFactory;
+
+      this.projectId = projectId;
+      this.delegate = this.newCurl(request, stdout, stderr);
+    }
+
+    private final AbstractCurl newCurl(
       final HttpRequest request,
       final Optional<OutputStream> stdout,
       final Optional<OutputStream> stderr
     ) {
-      super(configService, "google." + binary, request, stdout, stderr);
-      this.runtime = runtime;
+      switch(this.runtimeKey) {
+        case Curl.Java.KEY:
+          return this.curlFactory.newCurlJava(request, stdout, stderr);
+        case Curl.Python.KEY:
+          return this.curlFactory.newCurlPython(request, stdout, stderr);
+        case Curl.Golang.KEY:
+          return this.curlFactory.newCurlGolang(request, stdout, stderr);
+        case Curl.NodeJS.KEY:
+          return this.curlFactory.newCurlNodeJS(request, stdout, stderr);
+        case Curl.Linux.KEY:
+        default:
+          return this.curlFactory.newCurlLinux(request, stdout, stderr);
+      }
     }
 
     @Override
@@ -481,9 +374,71 @@ class Curl {
       return this.runtime;
     }
 
+    @Override
+    protected AbstractCurl setMethod(
+      final ManagedProcessBuilder builder,
+      final String method
+    ) {
+      return this.delegate.setMethod(builder, method);
+    }
+
+    @Override
+    protected AbstractCurl setHeader(
+      final ManagedProcessBuilder builder,
+      final String name, final String value
+    ) {
+      if (this.projectId.isPresent()) {
+        this.delegate
+          .setHeader(builder,
+            "X-Goog-User-Project",
+            this.projectId.get()
+          );
+      }
+      return this.delegate.setHeader(builder, name, value);
+    }
+
+    @Override
+    protected AbstractCurl setData(
+      final ManagedProcessBuilder builder,
+      final String data
+    ) {
+      return this.delegate.setData(builder, data);
+    }
+
+    @Override
+    protected AbstractCurl setProxy(
+      final ManagedProcessBuilder builder,
+      final HttpProxy proxy
+    ) {
+      return this.delegate.setProxy(builder, proxy);
+    }
+
+    @Override
+    protected AbstractBinary<HttpRequest> setEnvironment(
+      final ManagedProcessBuilder builder
+    ) {
+      this.delegate.setEnvVar(builder,
+        "X_FLAG_SEPARATOR",
+        this.delegate.flagSeparator()
+      );
+      return super.setEnvironment(builder);
+    }
+
+    @Override
+    public String toString() {
+      return toStringHelper(this)
+      .add("id", id())
+      .add("binary", binary())
+      .add("runtime", this.runtime)
+      .add("runtime_key", this.runtimeKey)
+      .add("project_id", this.projectId)
+      .add("delegate", this.delegate)
+      .toString();
+    }
+
   }
 
-  static class WithGoogleIdToken extends WithGoogleAuthorization {
+  public static class WithGoogleIdToken extends WithGoogleAuthorization {
 
     public static final String KEY = WithGoogleAuthorization.KEY + "/id";
 
@@ -492,17 +447,19 @@ class Curl {
     @AssistedInject
     public WithGoogleIdToken(
       final ConfigService configService,
+      final CurlFactory curlFactory,
       @Assisted("runtime") String runtime,
+      @Assisted("projectId") Optional<String> projectId,
       @Assisted("request") HttpRequest request,
       @Assisted("stdout") Optional<OutputStream> stdout,
       @Assisted("stderr") Optional<OutputStream> stderr
     ) {
-      super(configService, BINARY, runtime, request, stdout, stderr);
+      super(configService, curlFactory, BINARY, runtime, projectId, request, stdout, stderr);
     }
 
   }
 
-  static class WithGoogleAuthToken extends WithGoogleAuthorization {
+  public static class WithGoogleAuthToken extends WithGoogleAuthorization {
 
     public static final String KEY = WithGoogleAuthorization.KEY + "/auth";
 
@@ -511,12 +468,14 @@ class Curl {
     @AssistedInject
     public WithGoogleAuthToken(
       final ConfigService configService,
+      final CurlFactory curlFactory,
       @Assisted("runtime") String runtime,
+      @Assisted("projectId") Optional<String> projectId,
       @Assisted("request") HttpRequest request,
       @Assisted("stdout") Optional<OutputStream> stdout,
       @Assisted("stderr") Optional<OutputStream> stderr
     ) {
-      super(configService, BINARY, runtime, request, stdout, stderr);
+      super(configService, curlFactory, BINARY, runtime, projectId, request, stdout, stderr);
     }
 
   }

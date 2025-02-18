@@ -20,7 +20,7 @@ import spark.Response;
 
 import dev.chux.gcp.crun.ConfigService;
 import dev.chux.gcp.crun.faults.FaultsService;
-import dev.chux.gcp.crun.model.HttpRequest;
+import dev.chux.gcp.crun.model.GoogleAPIsRequest;
 import dev.chux.gcp.crun.rest.Route;
 
 import org.slf4j.Logger;
@@ -33,22 +33,22 @@ import static com.google.common.base.Strings.emptyToNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Throwables.getStackTraceAsString;
 
-public class RunHttpFaultController implements Route {
-  private static final Logger logger = LoggerFactory.getLogger(RunHttpFaultController.class);
+public class RunGoogleAPIsFaultController implements Route {
+  private static final Logger logger = LoggerFactory.getLogger(RunGoogleAPIsFaultController.class);
 
-  public static final String PROPERTIES_PREFIX = RestModule.PROPERTIES_PREFIX + ".http.request";
+  public static final String PROPERTIES_PREFIX = RestModule.PROPERTIES_PREFIX + ".googleapis.http.request";
   public static final String PROPERTY_ALLOWED_RUNTIMES = PROPERTIES_PREFIX + ".runtimes.allowed";
 
   private static final String SYS_OUT = "sys";
 
-  public static final String KEY = RestModule.NAMESPACE + "/http/request";
+  public static final String KEY = RestModule.NAMESPACE + "/googleapis/http/request";
 
   private final Gson gson;
   private final FaultsService faultsService;
   private final Set<String> allowedRuntimes;
 
   @Inject
-  public RunHttpFaultController(
+  public RunGoogleAPIsFaultController(
     final ConfigService configService,
     final Gson gson,
     final FaultsService faultsService
@@ -68,36 +68,51 @@ public class RunHttpFaultController implements Route {
 
   public void register(final String root) {
     path(root, () -> {
-      post("/http", "*/*", this);
-      path("/http", () -> {
-        post("/", "*/*", this);
-        post("/:runtime", "*/*", this); 
+      path("/googleapis", () -> {
+        path("/http", () -> {
+          post("/:runtime", "*/*", this); 
+        });
+
+        path("/curl", () -> {
+          post("/:runtime", "*/*", this); 
+        });
       });
 
-      post("/curl", "*/*", this);
-      path("/curl", () -> {
-        post("/", "*/*", this);
-        post("/:runtime", "*/*", this); 
+      path("/gapis", () -> {
+        path("/http", () -> {
+          post("/:runtime", "*/*", this); 
+        });
+
+        path("/curl", () -> {
+          post("/:runtime", "*/*", this); 
+        });
       });
     });
     logger.info("allowed runtimes: {}", this.allowedRuntimes);
   }
 
   public String endpoint(final String root) {
-    return "POST " + root + "/(http|curl)[/[optional:fault]]";
+    return "POST " + root + "/(googleapis|gapis)/(http|curl)/:runtime";
   }
 
   public Object handle(final Request request, final Response response) throws Exception {
     final String executionID = UUID.randomUUID().toString();
 
     final String rawBody = request.body();
-    final Optional<HttpRequest> httpRequest = this.httpRequest(rawBody);
-    if (!httpRequest.isPresent()) {
+    final Optional<GoogleAPIsRequest> grequest = this.gapisRequest(rawBody);
+
+    if (!grequest.isPresent()) {
       halt(400, "invalid HTTP request");
       return null;
     }
 
     final Optional<String> runtime = this.runtime(request);
+
+    if (!runtime.isPresent()) {
+      halt(400, "missing runtime");
+      return null;
+    }
+
     if (!this.isAllowedRuntime(runtime)) {
       halt(404, "invalid runtime: " + runtime.get());
       return null;
@@ -107,15 +122,15 @@ public class RunHttpFaultController implements Route {
 
     logger.info("starting: {}", executionID);
 
-    logger.info("runtime: {} | HTTP request: {}", runtime, httpRequest.get());
+    logger.info("runtime: {} | Google APIs request: {}", runtime, grequest.get());
 
     final Optional<OutputStream> output = Optional.of(response.raw().getOutputStream());
 
-    this.faultsService.runHttpRequest(httpRequest.get(), runtime, output, output);
+    this.faultsService.runGoogleAPIsHttpRequest(grequest.get(), runtime.get(), output, output);
 
     logger.info("finished: {}", executionID);
 
-    return httpRequest.get().toString();
+    return grequest.get().toString();
   }
 
   private final boolean isAllowedRuntime(final Optional<String> runtime) {
@@ -126,12 +141,12 @@ public class RunHttpFaultController implements Route {
     return fromNullable(emptyToNull(request.params(":runtime")));
   }
 
-  private final Optional<HttpRequest> httpRequest(final String rawBody) {
+  private final Optional<GoogleAPIsRequest> gapisRequest(final String rawBody) {
     try {
-      final HttpRequest request = this.gson.fromJson(rawBody, HttpRequest.class);
+      final GoogleAPIsRequest request = this.gson.fromJson(rawBody, GoogleAPIsRequest.class);
       return fromNullable(request);
     } catch(Exception ex) {
-      logger.error("invalid HTTP request: {}", rawBody);
+      logger.error("invalid Google APIs request: {}", rawBody);
       logger.error("failed to parse json", getStackTraceAsString(ex));
     }
     return absent();

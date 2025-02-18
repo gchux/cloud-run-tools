@@ -3,24 +3,22 @@ package dev.chux.gcp.crun.faults.command;
 import java.io.OutputStream;
 
 import java.util.Collection;
-import java.util.Map;
 
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.google.inject.assistedinject.AssistedInject;
 import com.google.inject.assistedinject.Assisted;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
-import ch.vorburger.exec.ManagedProcess;
 import ch.vorburger.exec.ManagedProcessBuilder;
 import ch.vorburger.exec.ManagedProcessException;
 
 import dev.chux.gcp.crun.faults.binary.AbstractBinary;
+import dev.chux.gcp.crun.faults.binary.Curl;
 import dev.chux.gcp.crun.faults.binary.CurlFactory;
-import dev.chux.gcp.crun.faults.binary.CurlModule;
+
 import dev.chux.gcp.crun.model.HttpRequest;
+
 import dev.chux.gcp.crun.process.ManagedProcessProvider;
 
 import org.slf4j.Logger;
@@ -40,7 +38,6 @@ public class HttpRequestCommand implements FaultCommand<HttpRequest> {
   private static final String DEFAULT_RUNTIME = "linux";
 
   private final CurlFactory curlFactory;
-  private final Map<String, AbstractBinary<HttpRequest>> curlBinaries;
   private final HttpRequest request;
   private final Optional<String> runtime;
   private final Optional<OutputStream> stdout, stderr;
@@ -48,16 +45,12 @@ public class HttpRequestCommand implements FaultCommand<HttpRequest> {
   @AssistedInject
   public HttpRequestCommand(
     final CurlFactory curlFactory,
-    // @Named("faults://binaries/curl")
-    @Named(CurlModule.NAMESPACE)
-    final Map<String, AbstractBinary<HttpRequest>> curlBinaries,
-    @Assisted final HttpRequest request,
+    @Assisted("request") final HttpRequest request,
     @Assisted("runtime") final Optional<String> runtime,
     @Assisted("stdout") final Optional<OutputStream> stdout,
     @Assisted("stderr") final Optional<OutputStream> stderr
   ) {
     this.curlFactory = curlFactory;
-    this.curlBinaries = curlBinaries;
     this.request = request;
     this.runtime = runtime;
     this.stdout = stdout;
@@ -71,8 +64,7 @@ public class HttpRequestCommand implements FaultCommand<HttpRequest> {
 
   @Override
   public ManagedProcessBuilder getBuilder() throws ManagedProcessException {
-    return this.curlBinaries.get(this.runtimeID())
-      .getBuilder(this.request, this.stdout, this.stderr);
+    return this.newCurl().getBuilder();
   } 
 
   @Override
@@ -86,12 +78,24 @@ public class HttpRequestCommand implements FaultCommand<HttpRequest> {
     );
   } 
 
-  private final String runtime() {
-    return "/" + this.runtime.or(DEFAULT_RUNTIME);
+  private final String runtimeKey() {
+    return Curl.runtimeKey(this.runtime);
   }
 
-  private final String runtimeID() {
-    return CurlModule.NAMESPACE + runtime();
+  private ManagedProcessProvider newCurl() {
+    switch(this.runtimeKey()) {
+      case Curl.Java.KEY:
+        return this.curlFactory.newCurlJava(this.request, this.stdout, this.stderr);
+      case Curl.Python.KEY:
+        return this.curlFactory.newCurlPython(this.request, this.stdout, this.stderr);
+      case Curl.Golang.KEY:
+        return this.curlFactory.newCurlGolang(this.request, this.stdout, this.stderr);
+      case Curl.NodeJS.KEY:
+        return this.curlFactory.newCurlNodeJS(this.request, this.stdout, this.stderr);
+      case Curl.Linux.KEY:
+      default:
+        return this.curlFactory.newCurlLinux(this.request, this.stdout, this.stderr);
+    }
   }
 
 }
