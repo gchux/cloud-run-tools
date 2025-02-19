@@ -94,7 +94,10 @@ public class RunHttpFaultController implements Route {
     return "POST " + root + "/(http|curl)[/[optional:fault]]";
   }
 
-  public Object handle(final Request request, final Response response) throws Exception {
+  public Object handle(
+    final Request request,
+    final Response response
+  ) throws Exception {
     final String executionID = UUID.randomUUID().toString();
 
     final String rawBody = request.body();
@@ -117,7 +120,7 @@ public class RunHttpFaultController implements Route {
       return null;
     }
 
-    response.header("x-faults-execution-id", executionID);
+    response.header("x-execution-id", executionID);
 
     logger.info("starting: {}", executionID);
 
@@ -178,7 +181,9 @@ public class RunHttpFaultController implements Route {
   private final Optional<HttpRequests> toHttpRequests(
     final Optional<HttpRequest> request
   ) {
-    if (!request.isPresent()) { return absent(); }
+    if (!request.isPresent()) {
+      return absent();
+    }
     return Optional.of(
       this.newHttpRequests(
         singletonList(request.get())
