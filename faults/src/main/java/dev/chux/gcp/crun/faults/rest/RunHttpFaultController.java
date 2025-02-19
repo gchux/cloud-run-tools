@@ -103,13 +103,14 @@ public class RunHttpFaultController implements Route {
     final String rawBody = request.body();
 
     final Optional<HttpRequests> httpRequests;
-    if (this.isMultiple(request)) {
+    if (isMultiple(request, "type")) {
       httpRequests = this.requestsPayload(rawBody);
     } else {
       httpRequests = this.requestPayload(rawBody);
     }
 
     if (!httpRequests.isPresent()) {
+      logger.error("invalid payload: {}", rawBody);
       halt(400, "invalid HTTP request(s)");
       return null;
     }
@@ -170,14 +171,6 @@ public class RunHttpFaultController implements Route {
     return fromNullable(emptyToNull(request.params(":runtime")));
   }
 
-  private final boolean isMultiple(final Request request) {
-    final String type = request.queryParams("type");
-    if (isNullOrEmpty(type)) {
-      return false;
-    }
-    return type.equalsIgnoreCase("multi") || type.equalsIgnoreCase("batch");
-  }
-
   private final Optional<HttpRequests> toHttpRequests(
     final Optional<HttpRequest> request
   ) {
@@ -203,23 +196,20 @@ public class RunHttpFaultController implements Route {
 
   private final Optional<HttpRequests> requestPayload(final String rawJSON) {
     // see: https://github.com/gchux/jmeter-test-runner/blob/main/model/src/main/java/dev/chux/gcp/crun/model/HttpRequest.java
-    return this.toHttpRequests(this.payload(rawJSON, HttpRequest.class));
+    try {
+      final Optional<HttpRequest> httpRequest = jsonPayload(this.gson, rawJSON, HttpRequest.class);
+      return this.toHttpRequests(httpRequest);
+    } catch(final Exception ex) {
+      logger.error("failed to parse HTTP request", getStackTraceAsString(ex));
+    }
+    return absent();
   }
 
   private final Optional<HttpRequests> requestsPayload(final String rawJSON) {
     // see: https://github.com/gchux/jmeter-test-runner/blob/main/model/src/main/java/dev/chux/gcp/crun/model/HttpRequests.java
-    return this.payload(rawJSON, HttpRequests.class);
-  }
-
-  private final <T> Optional<T> payload(
-    final String rawBody,
-    final Class<T> clazz
-  ) {
     try {
-      final T request = this.gson.fromJson(rawBody, clazz);
-      return fromNullable(request);
-    } catch(Exception ex) {
-      logger.error("invalid HTTP request: {}", rawBody);
+      return jsonPayload(this.gson, rawJSON, HttpRequests.class);
+    } catch(final Exception ex) {
       logger.error("failed to parse json", getStackTraceAsString(ex));
     }
     return absent();

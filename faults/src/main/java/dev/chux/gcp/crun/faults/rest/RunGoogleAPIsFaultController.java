@@ -104,6 +104,7 @@ public class RunGoogleAPIsFaultController implements Route {
     final Optional<GoogleAPIsHttpRequest> grequest = this.gapisRequest(rawBody);
 
     if (!grequest.isPresent()) {
+      logger.error("invalid Google APIs request: {}", rawBody);
       halt(400, "invalid HTTP request");
       return null;
     }
@@ -120,7 +121,7 @@ public class RunGoogleAPIsFaultController implements Route {
       return null;
     }
 
-    response.header("x-faults-execution-id", executionID);
+    response.header("x-execution-id", executionID);
 
     logger.info("starting: {}", executionID);
 
@@ -145,10 +146,8 @@ public class RunGoogleAPIsFaultController implements Route {
 
   private final Optional<GoogleAPIsHttpRequest> gapisRequest(final String rawBody) {
     try {
-      final GoogleAPIsHttpRequest request = this.gson.fromJson(rawBody, GoogleAPIsHttpRequest.class);
-      return fromNullable(request);
+      return jsonPayload(this.gson, rawBody, GoogleAPIsHttpRequest.class);
     } catch(Exception ex) {
-      logger.error("invalid Google APIs request: {}", rawBody);
       logger.error("failed to parse json", getStackTraceAsString(ex));
     }
     return absent();

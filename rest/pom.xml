@@ -30,6 +30,7 @@
       <groupId>com.sparkjava</groupId>
       <artifactId>spark-core</artifactId>
     </dependency>
+
     <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
@@ -39,6 +40,8 @@
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
     </dependency>
+    
+    <!-- dependency injection -->
     <dependency>
       <groupId>com.google.inject</groupId>
       <artifactId>guice</artifactId>
