@@ -13,37 +13,40 @@ import com.google.gson.annotations.SerializedName;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class GCloudCommands implements Supplier<List<GCloudCommand>> {
+abstract class Multivalue<T> implements Supplier<List<T>> {
 
   @Since(1.0)
   @Expose(deserialize=true, serialize=true)
-  @SerializedName(value="commands", alternate={"cmds"})
-  private List<GCloudCommand> commands;
+  @SerializedName(value="values", alternate={"items"})
+  private List<T> requests;
 
-  GCloudCommands() {}
+  Multivalue() {}
 
-  public GCloudCommands(final List<GCloudCommand> commands) {
-    this.commands = Lists.newArrayList(checkNotNull(commands));
+  protected Multivalue(final List<T> requests) {
+    this.requests = Lists.newArrayList(checkNotNull(requests));
   }
   
-  public List<GCloudCommand> commands() {
-    if( this.commands == null ) {
+  public List<T> values() {
+    if( this.requests == null ) {
       return ImmutableList.of();
     } 
-    return ImmutableList.copyOf(this.commands);
+    return ImmutableList.copyOf(this.requests);
+  }
+
+  public List<T> items() {
+    return this.values();
   }
 
   @Override
-  public List<GCloudCommand> get() {
-    return this.commands();
+  public List<T> get() {
+    return this.values();
   }
 
   @Override
   public String toString() {
     return toStringHelper(this)
-      .addValue(this.commands())
+      .addValue(this.values())
       .toString();
   }
 
 }
-

@@ -1,6 +1,7 @@
 package dev.chux.gcp.crun.faults.rest;
 
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 
 import java.util.List;
 import java.util.Set;
@@ -21,17 +22,23 @@ import spark.Response;
 import dev.chux.gcp.crun.ConfigService;
 import dev.chux.gcp.crun.faults.FaultsService;
 import dev.chux.gcp.crun.model.HttpRequest;
+import dev.chux.gcp.crun.model.HttpRequests;
 import dev.chux.gcp.crun.rest.Route;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static spark.Spark.*;
+
 import static com.google.common.base.Optional.absent;
 import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.base.Strings.emptyToNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Throwables.getStackTraceAsString;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+import static java.util.Collections.singletonList;
 
 public class RunHttpFaultController implements Route {
   private static final Logger logger = LoggerFactory.getLogger(RunHttpFaultController.class);
@@ -92,11 +99,15 @@ public class RunHttpFaultController implements Route {
 
     final String rawBody = request.body();
 
-    // see: https://github.com/gchux/jmeter-test-runner/blob/main/model/src/main/java/dev/chux/gcp/crun/model/HttpRequest.java
-    final Optional<HttpRequest> httpRequest = this.httpRequest(rawBody);
+    final Optional<HttpRequests> httpRequests;
+    if (this.isMultiple(request)) {
+      httpRequests = this.requestsPayload(rawBody);
+    } else {
+      httpRequests = this.requestPayload(rawBody);
+    }
 
-    if (!httpRequest.isPresent()) {
-      halt(400, "invalid HTTP request");
+    if (!httpRequests.isPresent()) {
+      halt(400, "invalid HTTP request(s)");
       return null;
     }
 
@@ -110,28 +121,97 @@ public class RunHttpFaultController implements Route {
 
     logger.info("starting: {}", executionID);
 
-    logger.info("runtime: {} | HTTP request: {}", runtime, httpRequest.get());
-
-    final Optional<OutputStream> output = Optional.of(response.raw().getOutputStream());
-
-    this.faultsService.runHttpRequest(httpRequest.get(), runtime, output, output);
+    this.execHttpRequests(request, response, runtime, httpRequests.get());
 
     logger.info("finished: {}", executionID);
 
-    return httpRequest.get().toString();
+    return httpRequests.get().toString();
   }
 
-  private final boolean isAllowedRuntime(final Optional<String> runtime) {
-    return !runtime.isPresent() || this.allowedRuntimes.contains(runtime.get());
+  private final void execHttpRequest(
+    final Request request,
+    final Response response,
+    final Optional<String> runtime,
+    final HttpRequest httpRequest,
+    final OutputStream stream
+  ) {
+    logger.info("runtime: {} | HTTP request: {}", runtime, httpRequest);
+    final Optional<OutputStream> output = Optional.of(stream);
+    this.faultsService.runHttpRequest(httpRequest, runtime, output, output);
+  }
+
+  private final void execHttpRequests(
+    final Request request,
+    final Response response,
+    final Optional<String> runtime,
+    final HttpRequests httpRequests
+  ) throws Exception {
+    final List<HttpRequest> tasks = httpRequests.get();
+
+    if (tasks.isEmpty()) {
+      halt(204, "no HTTP requests");
+      return;
+    }
+
+    final OutputStream output = response.raw().getOutputStream();
+    final OutputStreamWriter writer = new OutputStreamWriter(output, UTF_8);
+
+    for(final HttpRequest httpRequest : tasks) {
+      this.execHttpRequest(request, response, runtime, httpRequest, output);
+      writer.write("\n---\n");
+      writer.flush();
+    }
   }
 
   private final Optional<String> runtime(final Request request) {
     return fromNullable(emptyToNull(request.params(":runtime")));
   }
 
-  private final Optional<HttpRequest> httpRequest(final String rawBody) {
+  private final boolean isMultiple(final Request request) {
+    final String type = request.queryParams("type");
+    if (isNullOrEmpty(type)) {
+      return false;
+    }
+    return type.equalsIgnoreCase("multi") || type.equalsIgnoreCase("batch");
+  }
+
+  private final Optional<HttpRequests> toHttpRequests(
+    final Optional<HttpRequest> request
+  ) {
+    if (!request.isPresent()) { return absent(); }
+    return Optional.of(
+      this.newHttpRequests(
+        singletonList(request.get())
+      )
+    );
+  }
+
+  private final HttpRequests newHttpRequests(
+    final List<HttpRequest> requests
+  ) {
+    return new HttpRequests(requests);
+  }
+
+  private final boolean isAllowedRuntime(final Optional<String> runtime) {
+    return !runtime.isPresent() || this.allowedRuntimes.contains(runtime.get());
+  }
+
+  private final Optional<HttpRequests> requestPayload(final String rawJSON) {
+    // see: https://github.com/gchux/jmeter-test-runner/blob/main/model/src/main/java/dev/chux/gcp/crun/model/HttpRequest.java
+    return this.toHttpRequests(this.payload(rawJSON, HttpRequest.class));
+  }
+
+  private final Optional<HttpRequests> requestsPayload(final String rawJSON) {
+    // see: https://github.com/gchux/jmeter-test-runner/blob/main/model/src/main/java/dev/chux/gcp/crun/model/HttpRequests.java
+    return this.payload(rawJSON, HttpRequests.class);
+  }
+
+  private final <T> Optional<T> payload(
+    final String rawBody,
+    final Class<T> clazz
+  ) {
     try {
-      final HttpRequest request = this.gson.fromJson(rawBody, HttpRequest.class);
+      final T request = this.gson.fromJson(rawBody, clazz);
       return fromNullable(request);
     } catch(Exception ex) {
       logger.error("invalid HTTP request: {}", rawBody);

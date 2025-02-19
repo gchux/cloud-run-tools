@@ -1,9 +1,8 @@
 package dev.chux.gcp.crun.faults.binary;
 
 import java.io.OutputStream;
-import java.util.Map;
 
-import javax.annotation.Nullable;
+import java.util.Map;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.AssistedInject;
@@ -257,7 +256,7 @@ public class Curl {
     @AssistedInject
     public Linux(
       final ConfigService configService,
-      @Assisted("request") @Nullable HttpRequest request,
+      @Assisted("request") HttpRequest request,
       @Assisted("stdout") Optional<OutputStream> stdout,
       @Assisted("stderr") Optional<OutputStream> stderr
     ) {
@@ -325,7 +324,23 @@ public class Curl {
     private final String runtimeKey;
     private final Optional<String> projectId;
 
-    private AbstractCurl delegate;
+    private Optional<AbstractCurl> delegate;
+
+    public WithGoogleAuthorization(
+      final ConfigService configService,
+      final CurlFactory curlFactory,
+      final String binary
+    ) {
+      super(configService, "google." + binary);
+
+      this.curlFactory = curlFactory;
+
+      this.runtime = Linux.BINARY;
+      this.runtimeKey = Linux.KEY;
+      
+      this.projectId = absent();
+      this.delegate = absent();
+    }
 
     public WithGoogleAuthorization(
       final ConfigService configService,
@@ -333,7 +348,7 @@ public class Curl {
       final String binary,
       /* assisted */ final String runtime,
       /* assisted */ final Optional<String> projectId,
-      /* assisted */ @Nullable final HttpRequest request,
+      /* assisted */ final HttpRequest request,
       /* assisted */ final Optional<OutputStream> stdout,
       /* assisted */ final Optional<OutputStream> stderr
     ) {
@@ -346,7 +361,8 @@ public class Curl {
       this.curlFactory = curlFactory;
 
       this.projectId = projectId;
-      this.delegate = this.newCurl(request, stdout, stderr);
+
+      this.delegate = Optional.of(this.newCurl(request, stdout, stderr));
     }
 
     private final AbstractCurl newCurl(
@@ -354,6 +370,8 @@ public class Curl {
       final Optional<OutputStream> stdout,
       final Optional<OutputStream> stderr
     ) {
+      checkNotNull(request);
+
       switch(this.runtimeKey) {
         case Curl.Java.KEY:
           return this.curlFactory.newCurlJava(request, stdout, stderr);
@@ -369,6 +387,24 @@ public class Curl {
       }
     }
 
+    private final AbstractCurl delegate() {
+      return this.delegate.get();
+    }
+
+    private final AbstractCurl setDelegate(
+      final HttpRequest request,
+      final Optional<OutputStream> stdout,
+      final Optional<OutputStream> stderr
+    ) {
+      final AbstractCurl delegate = this.newCurl(request, stdout, stderr);
+      this.delegate = Optional.of(delegate);
+      return delegate;
+    }
+
+    private final void resetDelegate() {
+      this.delegate = absent();
+    }
+
     @Override
     public String get() {
       return this.runtime;
@@ -379,7 +415,7 @@ public class Curl {
       final ManagedProcessBuilder builder,
       final String method
     ) {
-      return this.delegate.setMethod(builder, method);
+      return this.delegate().setMethod(builder, method);
     }
 
     @Override
@@ -388,13 +424,13 @@ public class Curl {
       final String name, final String value
     ) {
       if (this.projectId.isPresent()) {
-        this.delegate
+        this.delegate()
           .setHeader(builder,
             "X-Goog-User-Project",
             this.projectId.get()
           );
       }
-      return this.delegate.setHeader(builder, name, value);
+      return this.delegate().setHeader(builder, name, value);
     }
 
     @Override
@@ -402,7 +438,7 @@ public class Curl {
       final ManagedProcessBuilder builder,
       final String data
     ) {
-      return this.delegate.setData(builder, data);
+      return this.delegate().setData(builder, data);
     }
 
     @Override
@@ -410,18 +446,35 @@ public class Curl {
       final ManagedProcessBuilder builder,
       final HttpProxy proxy
     ) {
-      return this.delegate.setProxy(builder, proxy);
+      return this.delegate().setProxy(builder, proxy);
     }
 
     @Override
     protected AbstractBinary<HttpRequest> setEnvironment(
       final ManagedProcessBuilder builder
     ) {
-      this.delegate.setEnvVar(builder,
+      this.delegate().setEnvVar(builder,
         "X_FLAG_SEPARATOR",
-        this.delegate.flagSeparator()
+        this.delegate().flagSeparator()
       );
       return super.setEnvironment(builder);
+    }
+
+    /**
+     * `delegate` is mutable state, thus to be thread-safe,
+     * `getBuilder(request, stdout, stderr)` must be `synchronized`.
+     */
+    @Override
+    public synchronized ManagedProcessBuilder getBuilder(
+      final HttpRequest request,
+      final Optional<OutputStream> stdout,
+      final Optional<OutputStream> stderr
+    ) throws ManagedProcessException {
+      checkNotNull(request);
+      final AbstractCurl delegate = this.setDelegate(request, stdout, stderr);
+      final ManagedProcessBuilder builder = super.getBuilder(request, stdout, stderr);
+      this.resetDelegate();
+      return builder;
     }
 
     @Override
@@ -444,6 +497,14 @@ public class Curl {
 
     private static final String BINARY = "id";
 
+    @Inject
+    public WithGoogleIdToken(
+      final ConfigService configService,
+      final CurlFactory curlFactory
+    ) {
+      super(configService, curlFactory, BINARY);
+    }
+
     @AssistedInject
     public WithGoogleIdToken(
       final ConfigService configService,
@@ -464,6 +525,14 @@ public class Curl {
     public static final String KEY = WithGoogleAuthorization.KEY + "/auth";
 
     private static final String BINARY = "auth";
+
+    @Inject
+    public WithGoogleAuthToken(
+      final ConfigService configService,
+      final CurlFactory curlFactory
+    ) {
+      super(configService, curlFactory, BINARY);
+    }
 
     @AssistedInject
     public WithGoogleAuthToken(

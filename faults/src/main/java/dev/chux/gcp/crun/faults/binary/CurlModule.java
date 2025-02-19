@@ -68,6 +68,8 @@ public class CurlModule extends AbstractModule {
     curl.addBinding(Curl.Python.KEY).to(Curl.Python.class).in(Scopes.SINGLETON);
     curl.addBinding(Curl.NodeJS.KEY).to(Curl.NodeJS.class).in(Scopes.SINGLETON);
     curl.addBinding(Curl.Golang.KEY).to(Curl.Golang.class).in(Scopes.SINGLETON);
+    curl.addBinding(Curl.WithGoogleIdToken.KEY).to(Curl.WithGoogleIdToken.class).in(Scopes.SINGLETON);
+    curl.addBinding(Curl.WithGoogleAuthToken.KEY).to(Curl.WithGoogleAuthToken.class).in(Scopes.SINGLETON);
   }
 
 }

@@ -189,7 +189,7 @@ abstract class AbstractCurl
 
   @Override
   public ManagedProcessBuilder getBuilder() throws ManagedProcessException {
-    return this.getBuilder(this.request.orNull(), this.stdout, this.stderr);
+    return this.getBuilder(this.request.get(), this.stdout, this.stderr);
   }
 
   @Override
