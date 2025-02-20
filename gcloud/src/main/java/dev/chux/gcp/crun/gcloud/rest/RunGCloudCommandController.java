@@ -1,5 +1,6 @@
 package dev.chux.gcp.crun.gcloud.rest;
 
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 
 import java.util.List;
@@ -31,6 +32,7 @@ import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.emptyToNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static com.google.common.base.Throwables.getStackTraceAsString;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -39,7 +41,7 @@ import static java.util.Collections.singletonList;
 public class RunGCloudCommandController implements Route {
   private static final Logger logger = LoggerFactory.getLogger(RunGCloudCommandController.class);
 
-  private static final String SYS_OUT = "sys";
+  private static final String OUT_STDOUT = "stdout";
 
   public static final String KEY = RestModule.NAMESPACE + "/exec";
 
@@ -56,20 +58,25 @@ public class RunGCloudCommandController implements Route {
    * # Single command execution:
    *   - Description: executes 1 Google Cloud CLI command
    *   - Endpoints:
-   *     - POST /gcloud/exec
-   *     - POST /gcloud/exec/
-   *     - POST /gcloud/exec[/namespace]
+   *     - `POST /gcloud/exec`
+   *     - `POST /gcloud/exec/`
+   *     - `POST /gcloud/exec[/:namespace]`
+   *     - `POST /gcloud/exec[/:namespace/]`
+   *   - Path Params:
+   *     - namespace: Optional<String> = OneOf<linux | java | python | nodejs | golang>
    *   - JSON Payload:
    *     - type: `GCloudCommand`
    *     - source: <root>/model/src/main/java/dev/chux/gcp/crun/model/GCloudCommand.java
    *     - JSON payload:
    *       {
-   *         "namespace": Optional<String>         // main group, (optional if path param `namespace` is defined); i/e: `run`, `app`, `storage`, etc...
-   *         "groups": Optional<List<String>>      // seconsary groups; i/e for namespace `run`: [`services`] or [`revisions`], etc...
-   *         "command": Required<String>           // action; i/e for namespace `run` and groups [`services`]: `update`, `delete`, etc...
-   *         "flags" Optional<Map<String, String>> // map of flag names –without dashes– to values; i/e: `{"project":"sample-project"}`
-   *         "arguments": Optional<List<String>>   // i/e for namespace `run`, groups [`services`], and action `delete`: `service-name` 
-   *         "format": Optional<String>            // the Google Cloud CLI flag `format`; i/e: `text`, `json`, `yaml`, etc...
+   *         "namespace": Optional<String>                // main group, (optional if path param `namespace` is defined); i/e: `run`, `app`, `storage`, etc...
+   *         "groups": Optional<List<String>>             // seconsary groups; i/e for namespace `run`: [`services`] or [`revisions`], etc...
+   *         "command": Required<String>                  // action; i/e for namespace `run` and groups [`services`]: `update`, `delete`, etc...
+   *         "flags" Optional<Map<String, String>>        // map of flag names –without dashes– to values; i/e: `{"project":"sample-project"}`
+   *         "arguments": Optional<List<String>>          // i/e for namespace `run`, groups [`services`], and action `delete`: `service-name` 
+   *         "format": Optional<String>                   // the Google Cloud CLI flag `format`; i/e: `text`, `json`, `yaml`, etc...
+   *         "project": Optional<String>                  // the Google Cloud Project ID used with flag `project`; i/e: `test-project`
+   *         "environment": Optional<Map<String, String>> // map of environment variables names to values; i/e: `{"CLOUDSDK_CORE_DISABLE_PROMPTS":"1"}`
    *       }
    *   - Samples:
    *     - `POST /gcloud/exec/run`
@@ -92,18 +99,21 @@ public class RunGCloudCommandController implements Route {
    * # Multiple command execution:
    *   - Description: executes 1 or more Google Cloud CLI command
    *   - Endpoints:
-   *     - POST /gcloud/exec/all
+   *     - POST /gcloud/exec
+   *     - POST /gcloud/exec/
+   *   - Query Params:
+   *     - type: Required<String> = OneOf<batch | multi>
    *   - JSON payload:
-   *     - type: `GCloudCommands`
+   *     - type: `Multivalue<GCloudCommand>`
    *     - source: <root>/model/src/main/java/dev/chux/gcp/crun/model/GCloudCommands.java
    *     {
-   *       "commands": List<GCloudCommand>         // list of simple Google Cloud CLI commands to be executed
+   *       "(items|values)": List<GCloudCommand>   // list of simple Google Cloud CLI commands to be executed
    *     }
    *   - Samples:
-   *     - `POST /gcloud/exec/all`
+   *     - `POST /gcloud/exec?type=batch`
    *       ```json
    *       {
-   *         "commands": [
+   *         "items": [
    *           {
    *             "namespace": "run",
    *             "groups": ["services"],
@@ -134,14 +144,14 @@ public class RunGCloudCommandController implements Route {
       post("/exec", "*/*", this);
       path("/exec", () -> {
         post("/", "*/*", this);
-        post("/all", "*/*", this);
         post("/:namespace", "*/*", this);
+        post("/:namespace/", "*/*", this);
       });
     });
   }
 
   public String endpoint(final String root) {
-    return "POST " + root + "/exec[/optional:namespace]";
+    return "POST " + root + "/exec[/[optional:namespace]][/?[type=(batch|multi)]]";
   }
 
   public Object handle(
@@ -152,23 +162,31 @@ public class RunGCloudCommandController implements Route {
 
     final String rawJSON = request.body();
     final String namespace = emptyToNull(request.params(":namespace"));
+    final boolean isMultiple = isMultiple(request, "type");
 
     response.header("x-gcloud-execution-id", executionID);
 
     logger.info("starting: {}", executionID);
 
+    logger.debug("namespace: {}", namespace);
+    logger.debug("rawJSON: {}", rawJSON);
+    logger.debug("isMultiple: {}", isMultiple);
+
     final Optional<GCloudCommands> commands;
-    if ( isNullOrEmpty(namespace) || !namespace.equalsIgnoreCase("all") ) {
+    if (isMultiple) {
+      commands = this.commandsPayload(rawJSON);
+    } else {
       commands = toGCloudCommands(
         fromNullable(namespace), this.commandPayload(rawJSON)
       );
-    } else {
-      commands = this.commandsPayload(rawJSON);
     }
+
+    logger.debug("commands: {}", commands);
 
     if ( commands.isPresent() ) {
       this.runCommands(request, response, commands.get());
     } else {
+      logger.error("invalid 'gcloud' payload: {}", rawJSON);
       halt(404, "command(s) not found");
     }
     
@@ -206,22 +224,30 @@ public class RunGCloudCommandController implements Route {
     return new GCloudCommands(commands);
   }
 
-  private final void runCommand(
+  private final boolean runCommand(
     final Request request,
     final Response response,
-    final String output,
+    final OutputStream stream,
     final GCloudCommand command
   )  throws Exception {
     checkNotNull(command);
+    
+    if (isNullOrEmpty(command.namespace())) {
+      logger.error("GCLOUD command without namespace: {}", command);
+      return false;
+    }
 
-    logger.info("running GCloud Command: {}", command);
+    logger.info("running GCLOUD command: {}", command);
+
+    final String output = request.queryParams("output"); 
 
     if( isNullOrEmpty(output) ) {
-      this.gcloudService.run(command,
-        response.raw().getOutputStream());
+      this.gcloudService.run(command, stream);
     } else {
       this.gcloudService.run(command);
     }
+    
+    return true;
   }
 
   private final void runCommands(
@@ -237,39 +263,43 @@ public class RunGCloudCommandController implements Route {
       return;
     }
 
-    final String output = request.queryParams("output"); 
+    final OutputStream stream = response.raw().getOutputStream();
+    final OutputStreamWriter writer = new OutputStreamWriter(stream, UTF_8);
 
-    final OutputStreamWriter writer =
-      new OutputStreamWriter(response.raw().getOutputStream(), UTF_8);
-
+    int index = 0;
     for (final GCloudCommand command : commands.get()) {
-      this.runCommand(request, response, output, command);
-      writer.write("\n---\n");
-      writer.flush();
+      writer.append("\n>>> COMMAND[")
+        .append(Integer.toString(index+1, 10))
+        .append("] >>>\n\n")
+        .flush();
+
+      final boolean ok = this.runCommand(request, response, stream, command);
+
+      writer.append("\n<<< COMMAND[")
+        .append(Integer.toString(++index, 10))
+        .append("] = ")
+        .append(ok ? "SUCCESS" : "FAILED")
+        .append(" <<<\n\n")
+        .flush();
     }
   }
 
   private final Optional<GCloudCommand> commandPayload(final String rawJSON) {
-    return this.payload(rawJSON, GCloudCommand.class);
+    try {
+      return jsonPayload(this.gson, rawJSON, GCloudCommand.class);
+    } catch(final Exception ex) {
+      logger.error("failed to parse json", getStackTraceAsString(ex));
+    }
+    return absent();
   }
 
   private final Optional<GCloudCommands> commandsPayload(final String rawJSON) {
-    return this.payload(rawJSON, GCloudCommands.class);
-  }
-
-  private final <T> Optional<T> payload(
-    final String rawJSON,
-    final Class<T> clazz
-  ) {
     try {
-      final T cmd = this.gson.fromJson(rawJSON, clazz);
-      return Optional.<T>fromNullable(cmd);
-    } catch(Exception ex) {
-      ex.printStackTrace(System.err);
-      logger.error("invalid 'gcloud' payload: {}", rawJSON);
-      logger.error("failed to parse json", ex);
+      return jsonPayload(this.gson, rawJSON, GCloudCommands.class);
+    } catch(final Exception ex) {
+      logger.error("failed to parse json", getStackTraceAsString(ex));
     }
-    return Optional.<T>absent();
+    return absent();
   }
 
 }

@@ -48,14 +48,18 @@ public class GCloudCommandImpl implements GCloudCommand {
   @Override
   public ManagedProcessBuilder getBuilder() throws ManagedProcessException {
     final ManagedProcessBuilder builder = newGCloudCommandBuilder();
-    this.setNamespace(builder)
+
+    this.setEnvironment(builder)
+      .setNamespace(builder)
       .setGroups(builder)
       .setCommand(builder)
       .setFlags(builder)
+      .setProject(builder)
       .setFormat(builder)
       .setArguments(
         builder.addArgument("--quiet")
       ).addOutput(builder);
+
     return builder;
   } 
 
@@ -65,6 +69,49 @@ public class GCloudCommandImpl implements GCloudCommand {
 
   private final ManagedProcessBuilder newGCloudCommandBuilder() throws ManagedProcessException {
     return new ManagedProcessBuilder(GCLOUD_COMMAND);
+  }
+
+  private final void setEnvVar(
+    final Map<String, String> env,
+    final String name, final String value
+  ) {
+    if (!isNullOrEmpty(name) && !isNullOrEmpty(value)) {
+      env.put(name, value);
+    }
+  }
+
+  private final void setEnvVar(
+    final Map<String, String> env,
+    final Map.Entry<String, String> variable
+  ) {
+    this.setEnvVar(env, variable.getKey(), variable.getValue());
+  }
+
+  private final GCloudCommandImpl setEnvironment(
+    final ManagedProcessBuilder builder
+  ) {
+    final Map<String, String> env = builder.getEnvironment();
+
+    this.setEnvVar(env, "CLOUDSDK_CORE_DISABLE_PROMPTS", "1");
+
+    final Map<String, String> environment = this.gcloudCommand.environment();
+    for (final Map.Entry<String, String> variable : environment.entrySet()) {
+      this.setEnvVar(env, variable);
+    }
+
+    return this;
+  }
+
+  private final GCloudCommandImpl setFlag(
+    final ManagedProcessBuilder builder,
+    final String name, final String value
+  ) {
+    if (isNullOrEmpty(value)) {
+      builder.addArgument("--" + name);
+    } else {
+      builder.addArgument("--" + name + "=" + value);
+    }
+    return this;
   }
 
   private final GCloudCommandImpl setNamespace(final ManagedProcessBuilder builder) {
@@ -90,10 +137,17 @@ public class GCloudCommandImpl implements GCloudCommand {
     return this;
   }
 
+  private final GCloudCommandImpl setProject(final ManagedProcessBuilder builder) {
+    final Optional<String> project = this.gcloudCommand.optionalProject();
+    if (project.isPresent()) {
+      return this.setFlag(builder, "project", project.get());
+    }
+    return this;
+  }
+
   private final GCloudCommandImpl setFormat(final ManagedProcessBuilder builder) {
     final Optional<String> format = this.gcloudCommand.optionalFormat();
-    builder.addArgument("--format=", format.or(this.defaultFormat()));
-    return this;
+    return this.setFlag(builder, "format", format.or(this.defaultFormat()));
   }
 
   private final GCloudCommandImpl addArguments(
@@ -114,16 +168,8 @@ public class GCloudCommandImpl implements GCloudCommand {
 
   private final GCloudCommandImpl setFlags(final ManagedProcessBuilder builder) {
     final Map<String, String> flags = this.gcloudCommand.flags();
-    
     for (final Map.Entry<String, String> flag : flags.entrySet()) {
-      final String fl = flag.getKey();
-      final String value = flag.getValue();
-
-      if (isNullOrEmpty(value)) {
-        builder.addArgument("--" + fl);
-      } else {
-        builder.addArgument("--" + fl + "=", value);
-      }
+      this.setFlag(builder, flag.getKey(), flag.getValue());
     }
     return this;
   }
