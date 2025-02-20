@@ -2,6 +2,8 @@ package dev.chux.gcp.crun.gcloud;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
 import java.io.OutputStream;
 
 import com.google.inject.Inject;
@@ -11,38 +13,58 @@ import com.google.inject.assistedinject.AssistedInject;
 import com.google.inject.assistedinject.Assisted;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
 
 import ch.vorburger.exec.ManagedProcessBuilder;
 import ch.vorburger.exec.ManagedProcessException;
 
+import dev.chux.gcp.crun.ConfigService;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
+import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
 public class GCloudCommandImpl implements GCloudCommand {
 
-  private static final String GCLOUD_COMMAND = "gcloud";
+  private static final Logger logger = LoggerFactory.getLogger(GCloudCommandImpl.class);
 
+  private static final String DEFAULT_GCLOUD_COMMAND = "gcloud";
+
+  private static final String PROPERTY_PREFIX = "gcloud.";
+  private static final String PROPERTY_GCLOUD_COMMAND = PROPERTY_PREFIX + "command";
+  private static final String PROPERTY_GCLOUD_ENVIRONMENT_BLACKLIST = PROPERTY_PREFIX + "environment.blacklist";
+
+  private final String gcloudBinary;
   private final dev.chux.gcp.crun.model.GCloudCommand gcloudCommand;
   private final Optional<OutputStream> stream;
   private final Provider<String> formatProvider;
+  private final Set<String> environmentBlacklist;
 
   @AssistedInject
   public GCloudCommandImpl(
+    final ConfigService configService,
     @Named(GCloudFormatSupplier.KEY) Provider<String> formatProvider,
     @Assisted dev.chux.gcp.crun.model.GCloudCommand gcloudCommand
   ) {
-    this(formatProvider, gcloudCommand, null);
+    this(configService, formatProvider, gcloudCommand, null);
   }
 
   @AssistedInject
   public GCloudCommandImpl(
+    final ConfigService configService,
     @Named(GCloudFormatSupplier.KEY) Provider<String> formatProvider,
     @Assisted dev.chux.gcp.crun.model.GCloudCommand gcloudCommand,
     @Assisted OutputStream stream
   ) {
+    this.gcloudBinary = this.gcloudBinary(configService);
     this.formatProvider = formatProvider;
     this.gcloudCommand = gcloudCommand;
-    this.stream = Optional.fromNullable(stream);
+    this.stream = fromNullable(stream);
+    this.environmentBlacklist = this.environmentBlacklist(configService);
   }
 
   @Override
@@ -65,12 +87,44 @@ public class GCloudCommandImpl implements GCloudCommand {
     return builder;
   } 
 
+  private final String gcloudBinary(
+    final ConfigService configService
+  ) {
+    return configService
+      .getOptionalAppProp(PROPERTY_GCLOUD_COMMAND)
+      .or(DEFAULT_GCLOUD_COMMAND);
+  }
+
+  private final Set<String> environmentBlacklist(
+    final ConfigService configService
+  ) {
+    return ImmutableSet.copyOf(environmentBlacklistProperty(configService));
+  }
+
+  private final List<String> environmentBlacklistProperty(
+    final ConfigService configService
+  ) {
+    return configService.getMultivalueAppProp(PROPERTY_GCLOUD_ENVIRONMENT_BLACKLIST);
+  }
+
   private final String defaultFormat() {
     return this.formatProvider.get();
   }
 
   private final ManagedProcessBuilder newGCloudCommandBuilder() throws ManagedProcessException {
-    return new ManagedProcessBuilder(GCLOUD_COMMAND);
+    return new ManagedProcessBuilder(this.gcloudBinary);
+  }
+
+  private final void checkAndSetNormalizedEnvVar(
+    final Map<String, String> env,
+    final String name, final String value
+  ) {
+    final String safeVarName = name.toUpperCase();
+    if (this.environmentBlacklist.contains(safeVarName)) {
+      logger.error("skipped blacklisted env var: '{}={}'", name, value);
+    } else {
+      env.put(safeVarName, value);
+    }
   }
 
   private final void setEnvVar(
@@ -78,7 +132,7 @@ public class GCloudCommandImpl implements GCloudCommand {
     final String name, final String value
   ) {
     if (!isNullOrEmpty(name) && !isNullOrEmpty(value)) {
-      env.put(name, value);
+      this.checkAndSetNormalizedEnvVar(env, name, value);
     }
   }
 
@@ -94,7 +148,7 @@ public class GCloudCommandImpl implements GCloudCommand {
   ) {
     final Map<String, String> env = builder.getEnvironment();
 
-    this.setEnvVar(env, "CLOUDSDK_CORE_DISABLE_PROMPTS", "1");
+    this.checkAndSetNormalizedEnvVar(env, "CLOUDSDK_CORE_DISABLE_PROMPTS", "1");
 
     final Map<String, String> environment = this.gcloudCommand.environment();
     for (final Map.Entry<String, String> variable : environment.entrySet()) {
@@ -130,6 +184,7 @@ public class GCloudCommandImpl implements GCloudCommand {
   private final GCloudCommandImpl addOutput(final ManagedProcessBuilder builder) {
     if (this.stream.isPresent()) {
       builder.addStdOut(this.stream.get());
+      builder.addStdErr(this.stream.get());
     }
     return this;
   }

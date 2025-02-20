@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+MDS_BASE_URL='http://metadata.google.internal/computeMetadata/v1'
+
+GCLOUD_BIN=`which gcloud | tr -d '\n'`
+
+export CLOUDSDK_CORE_DISABLE_PROMPTS=1
+
+printenv
+
+set -x
+
+# Forward execution to `Cloud CLI`
+exec env ${GCLOUD_BIN} "${@:1}"
