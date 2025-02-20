@@ -50,13 +50,23 @@ public class GCloudCommand {
 
   @Since(1.0)
   @Expose(deserialize=true, serialize=true)
-  @SerializedName(value="project", alternate={"parent"})
+  @SerializedName(value="project", alternate={"ctx"})
   private String project;
 
   @Since(1.0)
   @Expose(deserialize=true, serialize=true)
   @SerializedName(value="environment", alternate={"env"})
   private Map<String, String> environment;
+
+  @Since(1.0)
+  @Expose(deserialize=true, serialize=true)
+  @SerializedName(value="verbosity", alternate={"log/level", "log:level"})
+  private String verbosity;
+
+  @Since(1.0)
+  @Expose(deserialize=true, serialize=true)
+  @SerializedName(value="log/http", alternate={"log:http"})
+  private Boolean logHttp;
 
   public GCloudCommand() {}
   
@@ -94,6 +104,22 @@ public class GCloudCommand {
 
   public Optional<String> optionalProject() {
     return fromNullable(this.project());
+  }
+
+  public String verbosity() {
+    return emptyToNull(this.verbosity);
+  }
+
+  public Optional<String> optionalVerbosity() {
+    return fromNullable(this.verbosity());
+  }
+
+  public boolean logHttp() {
+    return (this.logHttp != null) && this.logHttp.booleanValue();
+  }
+
+  public Optional<Boolean> optionalLogHttp() {
+    return fromNullable(this.logHttp);
   }
 
   public List<String> groups() {

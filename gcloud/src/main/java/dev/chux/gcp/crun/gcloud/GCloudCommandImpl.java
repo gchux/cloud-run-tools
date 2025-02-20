@@ -56,9 +56,11 @@ public class GCloudCommandImpl implements GCloudCommand {
       .setFlags(builder)
       .setProject(builder)
       .setFormat(builder)
-      .setArguments(
-        builder.addArgument("--quiet")
-      ).addOutput(builder);
+      .setVerbosity(builder)
+      .setLogHttp(builder)
+      .setFlag(builder, "quiet")
+      .setArguments(builder)
+      .addOutput(builder);
 
     return builder;
   } 
@@ -104,12 +106,30 @@ public class GCloudCommandImpl implements GCloudCommand {
 
   private final GCloudCommandImpl setFlag(
     final ManagedProcessBuilder builder,
-    final String name, final String value
+    final String name
+  ) {
+    if (!isNullOrEmpty(name)) {
+      builder.addArgument("--" + name);
+    }
+    return this;
+  }
+
+  private final GCloudCommandImpl setFlag(
+    final ManagedProcessBuilder builder,
+    final String name,
+    final String value
   ) {
     if (isNullOrEmpty(value)) {
-      builder.addArgument("--" + name);
-    } else {
+      this.setFlag(builder, name);
+    } else if (!isNullOrEmpty(name)) {
       builder.addArgument("--" + name + "=" + value);
+    }
+    return this;
+  }
+
+  private final GCloudCommandImpl addOutput(final ManagedProcessBuilder builder) {
+    if (this.stream.isPresent()) {
+      builder.addStdOut(this.stream.get());
     }
     return this;
   }
@@ -130,19 +150,38 @@ public class GCloudCommandImpl implements GCloudCommand {
     return this;
   }
 
-  private final GCloudCommandImpl addOutput(final ManagedProcessBuilder builder) {
-    if (this.stream.isPresent()) {
-      builder.addStdOut(this.stream.get());
+  private final GCloudCommandImpl setOptionalStringFlag(
+    final ManagedProcessBuilder builder,
+    final String name,
+    final Optional<String> value
+  ) {
+    if (value.isPresent()) {
+      return this.setFlag(builder, name, value.get());
+    }
+    return this;
+  }
+
+  private final GCloudCommandImpl setBooleanFlag(
+    final ManagedProcessBuilder builder,
+    final String name,
+    final boolean isEnabled
+  ) {
+    if (isEnabled) {
+      return this.setFlag(builder, name);
     }
     return this;
   }
 
   private final GCloudCommandImpl setProject(final ManagedProcessBuilder builder) {
-    final Optional<String> project = this.gcloudCommand.optionalProject();
-    if (project.isPresent()) {
-      return this.setFlag(builder, "project", project.get());
-    }
-    return this;
+    return this.setOptionalStringFlag(builder, "project", this.gcloudCommand.optionalProject());
+  }
+
+  private final GCloudCommandImpl setVerbosity(final ManagedProcessBuilder builder) {
+    return this.setOptionalStringFlag(builder, "verbosity", this.gcloudCommand.optionalVerbosity());
+  }
+
+  private final GCloudCommandImpl setLogHttp(final ManagedProcessBuilder builder) {
+    return this.setBooleanFlag(builder, "log-http", this.gcloudCommand.logHttp());
   }
 
   private final GCloudCommandImpl setFormat(final ManagedProcessBuilder builder) {

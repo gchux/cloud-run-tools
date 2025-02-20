@@ -74,9 +74,11 @@ public class RunGCloudCommandController implements Route {
    *         "command": Required<String>                  // action; i/e for namespace `run` and groups [`services`]: `update`, `delete`, etc...
    *         "flags" Optional<Map<String, String>>        // map of flag names –without dashes– to values; i/e: `{"project":"sample-project"}`
    *         "arguments": Optional<List<String>>          // i/e for namespace `run`, groups [`services`], and action `delete`: `service-name` 
-   *         "format": Optional<String>                   // the Google Cloud CLI flag `format`; i/e: `text`, `json`, `yaml`, etc...
-   *         "project": Optional<String>                  // the Google Cloud Project ID used with flag `project`; i/e: `test-project`
+   *         "format": Optional<String>                   // https://cloud.google.com/sdk/gcloud/reference#--format ; i/e: `text`, `json`, `yaml`, etc...
+   *         "project": Optional<String>                  // https://cloud.google.com/sdk/gcloud/reference#--project ; i/e: `test-project`
    *         "environment": Optional<Map<String, String>> // map of environment variables names to values; i/e: `{"CLOUDSDK_CORE_DISABLE_PROMPTS":"1"}`
+   *         "verbosity": Optional<String>                // https://cloud.google.com/sdk/gcloud/reference#--verbosity ; i/e: `debug`
+   *         "log/http": Optional<Boolean>                // https://cloud.google.com/sdk/gcloud/reference#--log-http ; OneOf<true | false>
    *       }
    *   - Samples:
    *     - `POST /gcloud/exec/run`
