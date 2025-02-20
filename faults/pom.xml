@@ -20,6 +20,7 @@
     <java.version>17</java.version>
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
+    <faults.version>v1.0.6</faults.version>
   </properties>
 
   <dependencyManagement>
