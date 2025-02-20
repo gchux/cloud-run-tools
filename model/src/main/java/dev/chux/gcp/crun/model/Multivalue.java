@@ -10,31 +10,40 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.Since;
 import com.google.gson.annotations.SerializedName;
 
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.Since;
+import com.google.gson.annotations.SerializedName;
+
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-abstract class Multivalue<T> implements Supplier<List<T>> {
+public abstract class Multivalue<T> implements Supplier<List<T>> {
 
   @Since(1.0)
   @Expose(deserialize=true, serialize=true)
-  @SerializedName(value="values", alternate={"items"})
-  private List<T> requests;
+  @SerializedName(
+    value="values",
+    alternate={
+      "items",
+      "tasks",
+      "elements",
+      "commands",
+      "jobs"
+    }
+  )
+  private List<T> values;
 
   Multivalue() {}
 
-  protected Multivalue(final List<T> requests) {
-    this.requests = Lists.newArrayList(checkNotNull(requests));
+  protected Multivalue(final List<T> values) {
+    this.values = Lists.newArrayList(checkNotNull(values));
   }
   
-  public List<T> values() {
-    if( this.requests == null ) {
+  public final List<T> values() {
+    if (this.values == null) {
       return ImmutableList.of();
-    } 
-    return ImmutableList.copyOf(this.requests);
-  }
-
-  public List<T> items() {
-    return this.values();
+    }
+    return ImmutableList.copyOf(this.values);
   }
 
   @Override
@@ -45,7 +54,7 @@ abstract class Multivalue<T> implements Supplier<List<T>> {
   @Override
   public String toString() {
     return toStringHelper(this)
-      .addValue(this.values())
+      .addValue(this.get())
       .toString();
   }
 

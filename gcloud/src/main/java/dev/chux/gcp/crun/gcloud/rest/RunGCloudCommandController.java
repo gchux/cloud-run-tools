@@ -86,11 +86,14 @@ public class RunGCloudCommandController implements Route {
    *         "groups": ["services"],
    *         "command": "delete",
    *         "flags": {
-   *           "project": "sample-project",
    *           "verbosity": "debug"
    *         },
    *         "arguments": ["sample-service"],
-   *         "format": "text"
+   *         "format": "text",
+   *         "project": "test-project",
+   *         "environment": {
+   *           "CLOUDSDK_CORE_DISABLE_PROMPTS": "1"
+   *         }
    *       }
    *       ```
    *
@@ -119,8 +122,13 @@ public class RunGCloudCommandController implements Route {
    *             "groups": ["services"],
    *             "command": "delete",
    *             "flags": {
-   *               "project": "test-project",
    *               "verbosity": "debug"
+   *             }
+   *             "arguments": ["sample-service"],
+   *             "format": "json"
+   *             "project": "test-project",
+   *             "environment": {
+   *               "CLOUDSDK_CORE_DISABLE_PROMPTS": "1"
    *             }
    *           },
    *           {
@@ -128,11 +136,14 @@ public class RunGCloudCommandController implements Route {
    *             "groups": ["services"],
    *             "command": "delete",
    *             "flags": {
-   *               "project": "sample-project",
    *               "verbosity": "debug"
    *             },
    *             "arguments": ["sample-service"],
    *             "format": "text"
+   *             "project": "test-project",
+   *             "environment": {
+   *               "CLOUDSDK_CORE_DISABLE_PROMPTS": "1"
+   *             }
    *           }
    *         ]
    *       }

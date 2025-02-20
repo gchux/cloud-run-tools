@@ -48,7 +48,17 @@ public class GCloudCommand {
   @SerializedName(value="format", alternate={"fmt"})
   private String format;
 
-  GCloudCommand() {}
+  @Since(1.0)
+  @Expose(deserialize=true, serialize=true)
+  @SerializedName(value="project", alternate={"parent"})
+  private String project;
+
+  @Since(1.0)
+  @Expose(deserialize=true, serialize=true)
+  @SerializedName(value="environment", alternate={"env"})
+  private Map<String, String> environment;
+
+  public GCloudCommand() {}
   
   public String namespace() {
     return this.namespace;
@@ -78,6 +88,14 @@ public class GCloudCommand {
     return fromNullable(this.format());
   }
 
+  public String project() {
+    return emptyToNull(this.project);
+  }
+
+  public Optional<String> optionalProject() {
+    return fromNullable(this.project());
+  }
+
   public List<String> groups() {
     if( this.groups == null ) {
       return ImmutableList.of();
@@ -99,15 +117,24 @@ public class GCloudCommand {
     return ImmutableMap.copyOf(this.flags);
   }
 
+  public Map<String, String> environment() {
+    if( this.environment == null ) {
+      return ImmutableMap.of();
+    } 
+    return ImmutableMap.copyOf(this.environment);
+  }
+
   @Override
   public String toString() {
     return toStringHelper(this)
+      .add("project", this.optionalProject())
       .add("namespace", this.optionalNamespace())
       .add("groups", this.groups())
       .add("flags", this.flags())
       .add("format", this.optionalFormat())
       .add("command", this.optionalCommand())
       .add("arguments", this.arguments())
+      .add("environment", this.environment())
       .toString();
   }
 
