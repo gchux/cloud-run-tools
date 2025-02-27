@@ -6,6 +6,7 @@ fi
 
 set -x
 
-exec java -cp /app \
-  dev.chux.gcp.crun.jmeter.JMeterApp \
+exec java \
+  -Djmeter.log.level=${JMETER_LOG_LEVEL:-INFO} \
+  -cp /app dev.chux.gcp.crun.jmeter.JMeterApp \
   --config=${JMETER_CONFIG}
