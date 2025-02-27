@@ -54,7 +54,7 @@ class AppModule extends AbstractModule implements BootstrapModule {
     this.module = checkNotNull(module, "optional module is required");
 
     this.environmentMap = loadEnvironment();
-    this.propertiesMap = loadProperties(this.propertiesFile);
+    this.propertiesMap = loadProperties(propertiesFile);
   }
 
   private static final String SERVER_PORT_ENV = "PORT";
@@ -63,8 +63,10 @@ class AppModule extends AbstractModule implements BootstrapModule {
   public void configure(final BootstrapBinder binder) {
     final PropertiesConfigurationProvider environmentProvider =
       newPropertiesProvider(this.environmentMap, absent());
+
     final PropertiesConfigurationProvider propertiesProvider =
       newPropertiesProvider(this.propertiesMap, Optional.of(this.environmentMap));
+    
     final SystemConfigurationProvider systemPropertiesProvider = new SystemConfigurationProvider(this.environmentMap);
 
     final CompositeConfigurationProvider compositeConfigProvider =
@@ -74,9 +76,11 @@ class AppModule extends AbstractModule implements BootstrapModule {
   }
 
   protected void configure() {
+    logger.debug("binding environment: {}", this.environmentMap);
     Names.bindProperties(binder(), this.environmentMap);
     bindConfiguration("app://environment", this.environmentMap);
 
+    logger.debug("binding properties: {}", this.propertiesMap);
     Names.bindProperties(binder(), this.propertiesMap);
     bindConfiguration("app://properties", this.propertiesMap);
 
@@ -114,7 +118,7 @@ class AppModule extends AbstractModule implements BootstrapModule {
 
     final Map<String, String> environmentMap = env.build();
 
-    logger.info("environment: {}", environmentMap);
+    logger.info("loaded environment: {}", environmentMap);
 
     return environmentMap;
   }
@@ -135,7 +139,7 @@ class AppModule extends AbstractModule implements BootstrapModule {
     Map<String, String> propertiesMap = Maps.<String, String>fromProperties(properties);
     propertiesMap = ImmutableMap.<String, String>copyOf(propertiesMap);
 
-    logger.info("properties: {}", propertiesMap);
+    logger.info("loaded properties: {}", propertiesMap);
 
     return propertiesMap;
   }

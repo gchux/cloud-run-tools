@@ -22,7 +22,11 @@ import dev.chux.gcp.crun.process.ProcessOutputFactory;
 import static com.google.common.base.Optional.absent;
 import static com.google.common.base.Optional.fromNullable;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class JMeterTestImpl implements JMeterTest {
+  private static final Logger logger = LoggerFactory.getLogger(JMeterTestImpl.class);
 
   private static final String JMETER_BIN = "jmeter";
 
@@ -94,11 +98,16 @@ public class JMeterTestImpl implements JMeterTest {
 
   private final List<String> command() {
     final ImmutableList.Builder<String> cmd = ImmutableList.<String>builder();
+
+    final String jmx = this.jmx();
+
+    logger.debug("JMX: {}", jmx);
+
     this.setHost(cmd
       .add(JMETER_BIN, "-n",
         "-l", "/dev/stdout",
         "-j", "/dev/stdout",
-        "-t", this.jmx()))
+        "-t", jmx))
       .setPath(cmd)
       .setProperties(cmd);
     return cmd.build();

@@ -83,7 +83,7 @@ abstract class AbstractApp implements Supplier<Optional<Module>> {
     final String propertiesFile = getPropertiesFile(cmdln);
     logger.info("using properties file: {}", propertiesFile);
     
-    return createInjector(propertiesFile);
+    return this.createInjector(propertiesFile);
   }
 
   protected final Optional<AppMainThread> getAppMainThread(final Injector injector) {
@@ -111,9 +111,9 @@ abstract class AbstractApp implements Supplier<Optional<Module>> {
   }
 
   protected final void start(@CheckForNull final String[] args, final Consumer<Injector> action) {
-    final Injector injector = initialize(checkNotNull(args));
+    final Injector injector = this.initialize(checkNotNull(args));
 
-    final Optional<LifecycleManager> maybeManager = getLifecycleManager(injector);
+    final Optional<LifecycleManager> maybeManager = this.getLifecycleManager(injector);
 
     if (!maybeManager.isPresent()) {
       logger.error("LifecycleManager is unavailable");

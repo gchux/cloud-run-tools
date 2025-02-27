@@ -11,6 +11,7 @@ import dev.chux.gcp.crun.process.ProcessOutput;
 import dev.chux.gcp.crun.rest.Route;
 import dev.chux.gcp.crun.jmeter.rest.RunJMeterTestController;
 import dev.chux.gcp.crun.jmeter.config.JMeterTestProvider;
+import dev.chux.gcp.crun.jmeter.config.JMeterTestDirProvider;
 
 public class JMeterModule extends AbstractModule {
 
@@ -21,7 +22,7 @@ public class JMeterModule extends AbstractModule {
 
     bind(String.class)
       .annotatedWith(Names.named("jmeter://jmx.dir"))
-      .toProvider(JMeterTestProvider.class);
+      .toProvider(JMeterTestDirProvider.class);
 
     install(new FactoryModuleBuilder()
       .implement(JMeterTest.class, JMeterTestImpl.class)
