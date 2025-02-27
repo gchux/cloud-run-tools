@@ -64,8 +64,8 @@ public class JMeterTestImpl implements JMeterTest {
   }
 
   public JMeterTestImpl(ProcessOutputFactory processOutputFactory,
-    Provider<String> jmeterTestProvider,
     Provider<String> jmeterTestDirProvider,
+    Provider<String> jmeterTestProvider,
     JMeterTestConfig jMeterTestConfig,
     Optional<OutputStream> stream,
     boolean closeable) {
