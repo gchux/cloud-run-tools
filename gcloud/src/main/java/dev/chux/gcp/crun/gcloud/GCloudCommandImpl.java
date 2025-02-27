@@ -98,7 +98,9 @@ public class GCloudCommandImpl implements GCloudCommand {
   private final Set<String> environmentBlacklist(
     final ConfigService configService
   ) {
-    return ImmutableSet.copyOf(environmentBlacklistProperty(configService));
+    return ImmutableSet.copyOf(
+      this.environmentBlacklistProperty(configService)
+    );
   }
 
   private final List<String> environmentBlacklistProperty(
@@ -181,15 +183,20 @@ public class GCloudCommandImpl implements GCloudCommand {
     return this;
   }
 
-  private final GCloudCommandImpl addOutput(final ManagedProcessBuilder builder) {
+  private final GCloudCommandImpl addOutput(
+    final ManagedProcessBuilder builder
+  ) {
     if (this.stream.isPresent()) {
-      builder.addStdOut(this.stream.get());
-      builder.addStdErr(this.stream.get());
+      builder
+        .addStdOut(this.stream.get())
+        .addStdErr(this.stream.get());
     }
     return this;
   }
 
-  private final GCloudCommandImpl setNamespace(final ManagedProcessBuilder builder) {
+  private final GCloudCommandImpl setNamespace(
+    final ManagedProcessBuilder builder
+  ) {
     final Optional<String> namespace = this.gcloudCommand.optionalNamespace();
     if (namespace.isPresent()) {
       builder.addArgument(namespace.get());
@@ -197,7 +204,9 @@ public class GCloudCommandImpl implements GCloudCommand {
     return this;
   }
   
-  private final GCloudCommandImpl setCommand(final ManagedProcessBuilder builder) {
+  private final GCloudCommandImpl setCommand(
+    final ManagedProcessBuilder builder
+  ) {
     final String command = this.gcloudCommand.command();
     if (!isNullOrEmpty(command)) {
       builder.addArgument(command);
@@ -227,40 +236,56 @@ public class GCloudCommandImpl implements GCloudCommand {
     return this;
   }
 
-  private final GCloudCommandImpl setProject(final ManagedProcessBuilder builder) {
+  private final GCloudCommandImpl setProject(
+    final ManagedProcessBuilder builder
+  ) {
     return this.setOptionalStringFlag(builder, "project", this.gcloudCommand.optionalProject());
   }
 
-  private final GCloudCommandImpl setVerbosity(final ManagedProcessBuilder builder) {
+  private final GCloudCommandImpl setVerbosity(
+    final ManagedProcessBuilder builder
+  ) {
     return this.setOptionalStringFlag(builder, "verbosity", this.gcloudCommand.optionalVerbosity());
   }
 
-  private final GCloudCommandImpl setLogHttp(final ManagedProcessBuilder builder) {
+  private final GCloudCommandImpl setLogHttp(
+    final ManagedProcessBuilder builder
+  ) {
     return this.setBooleanFlag(builder, "log-http", this.gcloudCommand.logHttp());
   }
 
-  private final GCloudCommandImpl setFormat(final ManagedProcessBuilder builder) {
+  private final GCloudCommandImpl setFormat(
+    final ManagedProcessBuilder builder
+  ) {
     final Optional<String> format = this.gcloudCommand.optionalFormat();
     return this.setFlag(builder, "format", format.or(this.defaultFormat()));
   }
 
   private final GCloudCommandImpl addArguments(
-    final ManagedProcessBuilder builder, final List<String> arguments) {
+    final ManagedProcessBuilder builder,
+    final List<String> arguments
+  ) {
     for (final String argument : arguments) {
       builder.addArgument(argument);
     }
     return this;
   }
 
-  private final GCloudCommandImpl setArguments(final ManagedProcessBuilder builder) {
+  private final GCloudCommandImpl setArguments(
+    final ManagedProcessBuilder builder
+  ) {
     return this.addArguments(builder, this.gcloudCommand.arguments());
   }
 
-  private final GCloudCommandImpl setGroups(final ManagedProcessBuilder builder) {
+  private final GCloudCommandImpl setGroups(
+    final ManagedProcessBuilder builder
+  ) {
     return this.addArguments(builder, this.gcloudCommand.groups());
   }
 
-  private final GCloudCommandImpl setFlags(final ManagedProcessBuilder builder) {
+  private final GCloudCommandImpl setFlags(
+    final ManagedProcessBuilder builder
+  ) {
     final Map<String, String> flags = this.gcloudCommand.flags();
     for (final Map.Entry<String, String> flag : flags.entrySet()) {
       this.setFlag(builder, flag.getKey(), flag.getValue());
