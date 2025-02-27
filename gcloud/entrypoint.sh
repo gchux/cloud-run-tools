@@ -6,6 +6,7 @@ fi
 
 set -x
 
-exec java -cp /app \
+exec java \
+  -Dgcloud.log.level=${GCLOUD_LOG_LEVEL:-INFO} \
   dev.chux.gcp.crun.gcloud.GCloudApp \
   --config=${GCLOUD_CONFIG}
