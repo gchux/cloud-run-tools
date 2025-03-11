@@ -103,15 +103,16 @@ public class JMeterTestImpl implements JMeterTest {
 
     logger.debug("JMX: {}", jmx);
 
-    this.setHost(cmd
+    this.setID(cmd
       .add(JMETER_BIN, "-n",
         "-l", "/dev/stdout",
         "-j", "/dev/stdout",
         "-t", jmx))
-      .setPath(cmd)
       .setProto(cmd)
-      .setPort(cmd)
       .setMethod(cmd)
+      .setHost(cmd)
+      .setPath(cmd)
+      .setPort(cmd)
       .setProperties(cmd);
     return cmd.build();
   }
@@ -125,6 +126,10 @@ public class JMeterTestImpl implements JMeterTest {
   private final JMeterTestImpl setIntProperty(
     final ImmutableList.Builder<String> cmd, final String key, final int value) {
       return this.setProperty(cmd, key, Integer.toString(value, 10));
+  }
+
+  private final JMeterTestImpl setID(final ImmutableList.Builder<String> cmd) {
+    return this.setProperty(cmd, "tid", this.jMeterTestConfig.id());
   }
 
   private final JMeterTestImpl setHost(final ImmutableList.Builder<String> cmd) {

@@ -12,6 +12,7 @@ import static com.google.common.base.Optional.fromNullable;
 
 public class JMeterTestConfig {
 
+  private final String id;
   private final Optional<String> jmx;
   private final Optional<String> proto;
   private final Optional<String> method;
@@ -24,18 +25,23 @@ public class JMeterTestConfig {
   private int rampupTime = 1;
   private int rampupSteps = 1;
 
-  public JMeterTestConfig(final String host) {
-    this(host, null);
+  public JMeterTestConfig(
+    @CheckForNull @NonNull final String id,
+    @CheckForNull @NonNull final String host
+  ) {
+    this(id, host, null);
   }
   
   public JMeterTestConfig(
-    final String host,
+    @CheckForNull @NonNull final String id,
+    @CheckForNull @NonNull final String host,
     @Nullable final String path
   ) {
-    this(null, null, null, host, null, path);
+    this(id, null, null, null, host, null, path);
   }
 
   public JMeterTestConfig(
+    @CheckForNull @NonNull final String id,
     @Nullable final String jmx,
     @Nullable final String proto,
     @Nullable final String method,
@@ -45,12 +51,17 @@ public class JMeterTestConfig {
   ) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(host), "host is required");
 
+    this.id = id;
     this.jmx = fromNullable(jmx);
     this.proto = fromNullable(proto);
     this.method = fromNullable(method);
     this.host = host;
     this.port = fromNullable(port);
     this.path = fromNullable(path);
+  }
+
+  public String id() {
+    return this.id;
   }
 
   public Optional<String> proto() {

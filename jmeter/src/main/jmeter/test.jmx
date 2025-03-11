@@ -26,6 +26,11 @@
       <hashTree>
         <Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="test_variables" enabled="true">
           <collectionProp name="Arguments.arguments">
+            <elementProp name="gcp.run.test.id" elementType="Argument">
+              <stringProp name="Argument.name">gcp.run.test.id</stringProp>
+              <stringProp name="Argument.value">${__P(tid)}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
             <elementProp name="gcp.run.test.host" elementType="Argument">
               <stringProp name="Argument.name">gcp.run.test.host</stringProp>
               <stringProp name="Argument.value">${__P(host)}</stringProp>
@@ -62,7 +67,8 @@
         <BeanShellSampler guiclass="BeanShellSamplerGui" testclass="BeanShellSampler" testname="BeanShell Sampler" enabled="true">
           <stringProp name="TestPlan.comments">fetch_1st_token</stringProp>
           <stringProp name="BeanShellSampler.query">import org.apache.commons.codec.digest.DigestUtils;
-          final String command = &quot;/print_id_token https://&quot; + vars.get(&quot;gcp.run.test.host&quot;) + vars.get(&quot;gcp.run.test.path&quot;);
+final String tid = vars.get(&quot;gcp.run.test.id&quot;);
+final String command = &quot;/print_id_token https://&quot; + vars.get(&quot;gcp.run.test.host&quot;) + vars.get(&quot;gcp.run.test.path&quot;);
 final Process p = Runtime.getRuntime().exec(command);
 p.waitFor();
 final BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -76,7 +82,7 @@ final String token = gcloudAuthOutput.toString().replaceAll(&quot;\n&quot;, &quo
 final String tokenSHA1 = DigestUtils.sha1Hex(token);
 vars.put(&quot;gcp.run.test.token&quot;, token);
 props.put(&quot;gcp_run_test_token&quot;, token);
-log.info(&quot;token[0]=&quot; + token.substring(0, 15) + &quot;...|&quot; + tokenSHA1);</stringProp>
+log.info(&quot;token[&quot; + tid + &quot;|0]=&quot; + token.substring(0, 15) + &quot;...|&quot; + tokenSHA1);</stringProp>
           <boolProp name="BeanShellSampler.resetInterpreter">true</boolProp>
         </BeanShellSampler>
         <hashTree/>
@@ -136,6 +142,7 @@ log.info(&quot;token[0]=&quot; + token.substring(0, 15) + &quot;...|&quot; + tok
           <hashTree>
             <BeanShellSampler guiclass="BeanShellSamplerGui" testclass="BeanShellSampler" testname="generate_new_token_after_10mins" enabled="true">
               <stringProp name="BeanShellSampler.query">import org.apache.commons.codec.digest.DigestUtils;
+final String tid = vars.get(&quot;gcp.run.test.id&quot;);
 final String command = &quot;/print_id_token https://&quot; + vars.get(&quot;gcp.run.test.host&quot;) + vars.get(&quot;gcp.run.test.path&quot;);
 final Process p = Runtime.getRuntime().exec(command);
 p.waitFor();
@@ -152,7 +159,7 @@ vars.put(&quot;gcp.run.test.token&quot;, token);
 props.put(&quot;gcp_run_test_token&quot;, token);
 final String strMinutes = vars.get(&quot;gcp.run.test.minutes&quot;);
 final String tokenNumber = Integer.toString(Integer.parseInt(strMinutes, 10)/10, 10);
-log.info(&quot;token[&quot; + tokenNumber  + &quot;]&quot; + token.substring(0, 15) + &quot;...|&quot; + tokenSHA1);</stringProp>
+log.info(&quot;token[&quot; + tid + &quot;|&quot; + tokenNumber  + &quot;]=&quot; + token.substring(0, 15) + &quot;...|&quot; + tokenSHA1);</stringProp>
               <boolProp name="BeanShellSampler.resetInterpreter">true</boolProp>
             </BeanShellSampler>
             <hashTree/>
@@ -195,6 +202,10 @@ log.info(&quot;token[&quot; + tokenNumber  + &quot;]&quot; + token.substring(0, 
         <hashTree>
           <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="set_authorization_header" enabled="true">
             <collectionProp name="HeaderManager.headers">
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">x-jmaas-test-id</stringProp>
+                <stringProp name="Header.value">${gcp.run.test.id}</stringProp>
+              </elementProp>
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">Authorization</stringProp>
                 <stringProp name="Header.value">Bearer ${__property(gcp_run_test_token)}</stringProp>

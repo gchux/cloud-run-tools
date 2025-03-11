@@ -77,14 +77,14 @@ public class RunJMeterTestController implements Route {
     logger.info("starting: {}", testId);
 
     if( output != null && output.equalsIgnoreCase(SYS_OUT) ) {
-      this.jMeterTestService.start(jmx,
-        proto, method, host, port, path,
+      this.jMeterTestService.start(testId,
+        jmx, proto, method, host, port, path,
         concurrency, duration, rampupTime, rampupSteps);
     } else {
-      this.jMeterTestService.start(jmx,
-          proto, method, host, port, path,
-          concurrency, duration, rampupTime, rampupSteps,
-          responseOutput, false /* closeable */);
+      this.jMeterTestService.start(testId,
+        jmx, proto, method, host, port, path,
+        concurrency, duration, rampupTime, rampupSteps,
+        responseOutput, false /* closeable */);
     }
     
     logger.info("finished: {}", testId);

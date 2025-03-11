@@ -31,14 +31,14 @@ public class JMeterTestService {
     this.jmeterTestProvider = jmeterTestProvider;
   }
 
-  public void start(final Optional<String> jmx,
+  public void start(final String id, final Optional<String> jmx,
     final Optional<String> proto, final Optional<String> method,
     final String host, final Optional<Integer> port, final Optional<String> path,
     final int concurrency, final int duration, final int rampupTime, final int rampupSteps) {
-    this.start(jmx, proto, method, host, port, path, concurrency, duration, rampupTime, rampupSteps, System.out, false);
+    this.start(id, jmx, proto, method, host, port, path, concurrency, duration, rampupTime, rampupSteps, System.out, false);
   }
 
-  public void start(final Optional<String> jmx,
+  public void start(final String id, final Optional<String> jmx,
     final Optional<String> proto, final Optional<String> method,
     final String host, final Optional<Integer> port, final Optional<String> path,
     final int concurrency, final int duration, final int rampupTime, final int rampupSteps,
@@ -46,7 +46,7 @@ public class JMeterTestService {
 
     checkArgument(!isNullOrEmpty(host), "host is required");
 
-    final JMeterTestConfig config = new JMeterTestConfig(this.jmx(jmx),
+    final JMeterTestConfig config = new JMeterTestConfig(id, this.jmx(jmx),
       proto.orNull(), method.orNull(), host, port.orNull(), path.orNull())
       .concurrency(concurrency).duration(duration).rampupTime(rampupTime).rampupSteps(rampupSteps);
 
