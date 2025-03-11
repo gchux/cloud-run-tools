@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
+import com.google.common.primitives.Ints;
 
 import spark.Request;
 import spark.Response;
@@ -18,6 +19,7 @@ import dev.chux.gcp.crun.jmeter.JMeterTestService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.google.common.base.Optional.fromNullable;
 import static spark.Spark.*;
 
 public class RunJMeterTestController implements Route {
@@ -60,8 +62,11 @@ public class RunJMeterTestController implements Route {
       return "host is required";
     }
 
-    final Optional<String> jmx = Optional.fromNullable(request.queryParamOrDefault("jmx", null));
-    final Optional<String> path = Optional.fromNullable(request.queryParamOrDefault("path", null));
+    final Optional<String> jmx = fromNullable(request.queryParamOrDefault("jmx", null));
+    final Optional<String> proto = fromNullable(request.queryParamOrDefault("proto", null));
+    final Optional<String> method = fromNullable(request.queryParamOrDefault("method", null));
+    final Optional<String> path = fromNullable(request.queryParamOrDefault("path", null));
+    final Optional<Integer> port = fromNullable(Ints.tryParse(request.queryParamOrDefault("port", ""), 10));
 
     final int concurrency = Integer.parseInt(request.queryParamOrDefault("concurrency", "1"), 10);
     final int duration = Integer.parseInt(request.queryParamOrDefault("duration", "1"), 10);
@@ -72,11 +77,14 @@ public class RunJMeterTestController implements Route {
     logger.info("starting: {}", testId);
 
     if( output != null && output.equalsIgnoreCase(SYS_OUT) ) {
-      this.jMeterTestService.start(jmx, host, path,
+      this.jMeterTestService.start(jmx,
+        proto, method, host, port, path,
         concurrency, duration, rampupTime, rampupSteps);
     } else {
-      this.jMeterTestService.start(jmx, host, path,
-          concurrency, duration, rampupTime, rampupSteps, responseOutput, false /* closeable */);
+      this.jMeterTestService.start(jmx,
+          proto, method, host, port, path,
+          concurrency, duration, rampupTime, rampupSteps,
+          responseOutput, false /* closeable */);
     }
     
     logger.info("finished: {}", testId);

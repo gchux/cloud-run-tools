@@ -109,6 +109,9 @@ public class JMeterTestImpl implements JMeterTest {
         "-j", "/dev/stdout",
         "-t", jmx))
       .setPath(cmd)
+      .setProto(cmd)
+      .setPort(cmd)
+      .setMethod(cmd)
       .setProperties(cmd);
     return cmd.build();
   }
@@ -132,6 +135,18 @@ public class JMeterTestImpl implements JMeterTest {
     return this.setProperty(cmd, "path", this.path());
   }
 
+  private final JMeterTestImpl setProto(final ImmutableList.Builder<String> cmd) {
+    return this.setProperty(cmd, "proto", this.proto());
+  }
+
+  private final JMeterTestImpl setMethod(final ImmutableList.Builder<String> cmd) {
+    return this.setProperty(cmd, "http_method", this.method().toUpperCase());
+  }
+
+  private final JMeterTestImpl setPort(final ImmutableList.Builder<String> cmd) {
+    return this.setIntProperty(cmd, "port", this.port());
+  }
+
   private final JMeterTestImpl setProperties(final ImmutableList.Builder<String> cmd) {
     return this.setIntProperty(cmd, "concurrency", this.jMeterTestConfig.concurrency())
       .setIntProperty(cmd, "duration", this.jMeterTestConfig.duration())
@@ -141,10 +156,23 @@ public class JMeterTestImpl implements JMeterTest {
 
   private final String host() {
     String host = this.jMeterTestConfig.host();
-    if (host.startsWith("https://")) {
-      host = host.replaceFirst("^https://", "");
+    if (host.startsWith("http:") || host.startsWith("https:")) {
+      host = host.replaceFirst("^https?://", "");
     }
     return CharMatcher.is('/').trimTrailingFrom(host);
+  }
+
+  private final String proto() {
+    return this.jMeterTestConfig.proto().or("https");
+  }
+
+  private final String method() {
+    return this.jMeterTestConfig.method().or("get");
+  }
+
+  private final int port() {
+    return this.jMeterTestConfig.port()
+      .or(Integer.valueOf(443)).intValue();
   }
 
   private final String path() {

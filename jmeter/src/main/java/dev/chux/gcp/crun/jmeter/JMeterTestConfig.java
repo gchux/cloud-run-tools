@@ -8,11 +8,17 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 
+import static com.google.common.base.Optional.fromNullable;
+
 public class JMeterTestConfig {
 
   private final Optional<String> jmx;
+  private final Optional<String> proto;
+  private final Optional<String> method;
   private final String host;
+  private final Optional<Integer> port;
   private final Optional<String> path;
+
   private int concurrency = 1;
   private int duration = 1;
   private int rampupTime = 1;
@@ -22,22 +28,45 @@ public class JMeterTestConfig {
     this(host, null);
   }
   
-  public JMeterTestConfig(final String host, @Nullable final String path) {
-    this(null, host, path);
+  public JMeterTestConfig(
+    final String host,
+    @Nullable final String path
+  ) {
+    this(null, null, null, host, null, path);
   }
 
-  public JMeterTestConfig(@Nullable final String jmx,
+  public JMeterTestConfig(
+    @Nullable final String jmx,
+    @Nullable final String proto,
+    @Nullable final String method,
     @CheckForNull @NonNull final String host,
-    @Nullable final String path) {
+    @Nullable final Integer port,
+    @Nullable final String path
+  ) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(host), "host is required");
 
-    this.jmx = Optional.fromNullable(jmx);
+    this.jmx = fromNullable(jmx);
+    this.proto = fromNullable(proto);
+    this.method = fromNullable(method);
     this.host = host;
-    this.path = Optional.fromNullable(path);
+    this.port = fromNullable(port);
+    this.path = fromNullable(path);
+  }
+
+  public Optional<String> proto() {
+    return this.proto;
+  }
+
+  public Optional<String> method() {
+    return this.method;
   }
 
   public String host() {
     return this.host;
+  }
+
+  public Optional<Integer> port() {
+    return this.port;
   }
 
   public Optional<String> path() {

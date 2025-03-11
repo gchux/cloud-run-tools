@@ -64,6 +64,7 @@ RUN mkdir -p /jmx/
 COPY ./jmeter/jmeter-test-runner.properties /jmeter-test-runner.properties
 COPY ./jmeter/src/main/jmeter/print_id_token /print_id_token
 COPY ./jmeter/src/main/jmeter/test.jmx /jmx/test.jmx
+COPY ./jmeter/src/main/jmeter/simple.jmx /jmx/simple.jmx
 COPY ./jmeter/entrypoint.sh /entrypoint.sh
 
 ENV PATH $PATH:$JMETER_BIN
