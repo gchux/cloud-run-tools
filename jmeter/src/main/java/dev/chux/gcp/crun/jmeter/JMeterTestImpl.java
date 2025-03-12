@@ -12,6 +12,7 @@ import com.google.inject.assistedinject.Assisted;
 
 import com.google.common.base.Optional;
 import com.google.common.base.CharMatcher;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
 
@@ -29,6 +30,9 @@ public class JMeterTestImpl implements JMeterTest {
   private static final Logger logger = LoggerFactory.getLogger(JMeterTestImpl.class);
 
   private static final String JMETER_BIN = "jmeter";
+
+  private static final CharMatcher CONFIG_SEPARATOR = CharMatcher.anyOf(",;|_-");
+  private static final Splitter CONFIG_SPLITTER = Splitter.on(CONFIG_SEPARATOR).omitEmptyStrings().trimResults();
 
   private final JMeterTestConfig jMeterTestConfig;
   private final Optional<OutputStream> stream;
@@ -113,6 +117,7 @@ public class JMeterTestImpl implements JMeterTest {
       .setHost(cmd)
       .setPath(cmd)
       .setPort(cmd)
+      .setConfig(cmd)
       .setProperties(cmd);
     return cmd.build();
   }
@@ -152,6 +157,10 @@ public class JMeterTestImpl implements JMeterTest {
     return this.setIntProperty(cmd, "port", this.port());
   }
 
+  private final JMeterTestImpl setConfig(final ImmutableList.Builder<String> cmd) {
+    return this.setProperty(cmd, "threads_schedule", this.config());
+  }
+
   private final JMeterTestImpl setProperties(final ImmutableList.Builder<String> cmd) {
     return this.setIntProperty(cmd, "concurrency", this.jMeterTestConfig.concurrency())
       .setIntProperty(cmd, "duration", this.jMeterTestConfig.duration())
@@ -188,6 +197,52 @@ public class JMeterTestImpl implements JMeterTest {
     return this.jmeterTestDirProvider.get() + "/" +
       this.jMeterTestConfig.jmx()
         .or(this.jmeterTestProvider.get()) + ".jmx";
+  }
+
+  private final String config() {
+    final Optional<String> config = this.jMeterTestConfig.config();
+    if (!config.isPresent()) {
+      return "spawn(0,0s,0s,0s,0s)";
+    }
+    final String value = config.get();
+    return this.config(CONFIG_SPLITTER.splitToList(value));
+  }
+
+  private final String config(final List<String> config) {
+    int sizeOfConfig = config.size();
+
+    if ((sizeOfConfig%5)!=0) {
+      // config is incomplete/truncated
+      return "spawn(0,0s,0s,0s,0s)";
+    }
+
+    int index = 0;
+
+    final StringBuilder threadsSchedule = new StringBuilder();
+
+    while (index < sizeOfConfig) {
+      if ((index%5)==0) {
+        threadsSchedule
+          .append("spawn(")
+          .append(config.get(index));
+      } else {
+        threadsSchedule
+          .append(',')
+          .append(config.get(index))
+          .append('s');
+      }
+
+      if ((++index%5)==0){
+        threadsSchedule.append(") ");
+      }
+    }
+
+    // replace last space by a quote
+    threadsSchedule.deleteCharAt(
+      threadsSchedule.length()-1
+    );
+
+    return threadsSchedule.toString();
   }
 
 }

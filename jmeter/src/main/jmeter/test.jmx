@@ -31,6 +31,11 @@
               <stringProp name="Argument.value">${__P(tid)}</stringProp>
               <stringProp name="Argument.metadata">=</stringProp>
             </elementProp>
+            <elementProp name="gcp.run.test.http.method" elementType="Argument">
+              <stringProp name="Argument.name">gcp.run.test.http.method</stringProp>
+              <stringProp name="Argument.value">${__P(http_method)}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
             <elementProp name="gcp.run.test.host" elementType="Argument">
               <stringProp name="Argument.name">gcp.run.test.host</stringProp>
               <stringProp name="Argument.value">${__P(host)}</stringProp>
@@ -166,7 +171,7 @@ log.info(&quot;token[&quot; + tid + &quot;|&quot; + tokenNumber  + &quot;]=&quot
           </hashTree>
         </hashTree>
       </hashTree>
-      <com.blazemeter.jmeter.threads.concurrency.ConcurrencyThreadGroup guiclass="com.blazemeter.jmeter.threads.concurrency.ConcurrencyThreadGroupGui" testclass="com.blazemeter.jmeter.threads.concurrency.ConcurrencyThreadGroup" testname="gcp/cloud-run/scheduling/scalingUnderLatency" enabled="true">
+      <com.blazemeter.jmeter.threads.concurrency.ConcurrencyThreadGroup guiclass="com.blazemeter.jmeter.threads.concurrency.ConcurrencyThreadGroupGui" testclass="com.blazemeter.jmeter.threads.concurrency.ConcurrencyThreadGroup" testname="gcp/cloud-run/scheduling/simple" enabled="true">
         <elementProp name="ThreadGroup.main_controller" elementType="com.blazemeter.jmeter.control.VirtualUserController"/>
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
         <stringProp name="TargetLevel">${gcp.run.test.concurrency}</stringProp>
@@ -187,7 +192,7 @@ log.info(&quot;token[&quot; + tid + &quot;|&quot; + tokenNumber  + &quot;]=&quot
           <stringProp name="HTTPSampler.port">443</stringProp>
           <stringProp name="HTTPSampler.protocol">https</stringProp>
           <stringProp name="HTTPSampler.path">${gcp.run.test.path}</stringProp>
-          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <stringProp name="HTTPSampler.method">${gcp.run.test.http.method}</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">false</boolProp>
           <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
           <boolProp name="HTTPSampler.use_keepalive">false</boolProp>
@@ -202,6 +207,10 @@ log.info(&quot;token[&quot; + tid + &quot;|&quot; + tokenNumber  + &quot;]=&quot
         <hashTree>
           <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="set_authorization_header" enabled="true">
             <collectionProp name="HeaderManager.headers">
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">User-Agent</stringProp>
+                <stringProp name="Header.value">JMaaS/1.0.0 (jmeter/5.6.3)</stringProp>
+              </elementProp>
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">x-jmaas-test-id</stringProp>
                 <stringProp name="Header.value">${gcp.run.test.id}</stringProp>

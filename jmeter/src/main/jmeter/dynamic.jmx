@@ -171,17 +171,14 @@ log.info(&quot;token[&quot; + tid + &quot;|&quot; + tokenNumber  + &quot;]=&quot
           </hashTree>
         </hashTree>
       </hashTree>
-      <com.blazemeter.jmeter.threads.concurrency.ConcurrencyThreadGroup guiclass="com.blazemeter.jmeter.threads.concurrency.ConcurrencyThreadGroupGui" testclass="com.blazemeter.jmeter.threads.concurrency.ConcurrencyThreadGroup" testname="gcp/cloud-run/scheduling/simple" enabled="true">
-        <elementProp name="ThreadGroup.main_controller" elementType="com.blazemeter.jmeter.control.VirtualUserController"/>
+      <kg.apc.jmeter.threads.UltimateThreadGroup guiclass="kg.apc.jmeter.threads.UltimateThreadGroupGui" testclass="kg.apc.jmeter.threads.UltimateThreadGroup" testname="gcp/cloud-run/scheduling/dynamic">
+        <collectionProp name="ultimatethreadgroupdata"/>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">
+          <intProp name="LoopController.loops">-1</intProp>
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+        </elementProp>
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
-        <stringProp name="TargetLevel">${gcp.run.test.concurrency}</stringProp>
-        <stringProp name="RampUp">${gcp.run.test.rampup.time}</stringProp>
-        <stringProp name="Steps">${gcp.run.test.rampup.steps}</stringProp>
-        <stringProp name="Hold">${gcp.run.test.duration}</stringProp>
-        <stringProp name="LogFilename"></stringProp>
-        <stringProp name="Iterations"></stringProp>
-        <stringProp name="Unit">M</stringProp>
-      </com.blazemeter.jmeter.threads.concurrency.ConcurrencyThreadGroup>
+      </kg.apc.jmeter.threads.UltimateThreadGroup>
       <hashTree>
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="test_endpoint" enabled="true">
           <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>

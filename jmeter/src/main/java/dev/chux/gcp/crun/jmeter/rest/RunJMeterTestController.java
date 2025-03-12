@@ -67,6 +67,7 @@ public class RunJMeterTestController implements Route {
     final Optional<String> method = fromNullable(request.queryParamOrDefault("method", null));
     final Optional<String> path = fromNullable(request.queryParamOrDefault("path", null));
     final Optional<Integer> port = fromNullable(Ints.tryParse(request.queryParamOrDefault("port", ""), 10));
+    final Optional<String> config = fromNullable(request.queryParamOrDefault("config", null));
 
     final int concurrency = Integer.parseInt(request.queryParamOrDefault("concurrency", "1"), 10);
     final int duration = Integer.parseInt(request.queryParamOrDefault("duration", "1"), 10);
@@ -78,11 +79,11 @@ public class RunJMeterTestController implements Route {
 
     if( output != null && output.equalsIgnoreCase(SYS_OUT) ) {
       this.jMeterTestService.start(testId,
-        jmx, proto, method, host, port, path,
+        jmx, proto, method, host, port, path, config,
         concurrency, duration, rampupTime, rampupSteps);
     } else {
       this.jMeterTestService.start(testId,
-        jmx, proto, method, host, port, path,
+        jmx, proto, method, host, port, path, config,
         concurrency, duration, rampupTime, rampupSteps,
         responseOutput, false /* closeable */);
     }

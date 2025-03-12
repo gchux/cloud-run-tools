@@ -31,14 +31,24 @@
               <stringProp name="Argument.value">${__P(tid)}</stringProp>
               <stringProp name="Argument.metadata">=</stringProp>
             </elementProp>
-            <elementProp name="gcp.run.test.http.method" elementType="Argument">
-              <stringProp name="Argument.name">gcp.run.test.http.method</stringProp>
-              <stringProp name="Argument.value">${__P(http_method)}</stringProp>
+            <elementProp name="gcp.run.test.proto" elementType="Argument">
+              <stringProp name="Argument.name">gcp.run.test.proto</stringProp>
+              <stringProp name="Argument.value">${__P(proto)}</stringProp>
               <stringProp name="Argument.metadata">=</stringProp>
             </elementProp>
             <elementProp name="gcp.run.test.host" elementType="Argument">
               <stringProp name="Argument.name">gcp.run.test.host</stringProp>
               <stringProp name="Argument.value">${__P(host)}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="gcp.run.test.port" elementType="Argument">
+              <stringProp name="Argument.name">gcp.run.test.port</stringProp>
+              <stringProp name="Argument.value">${__P(port)}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="gcp.run.test.http.method" elementType="Argument">
+              <stringProp name="Argument.name">gcp.run.test.http.method</stringProp>
+              <stringProp name="Argument.value">${__P(http_method)}</stringProp>
               <stringProp name="Argument.metadata">=</stringProp>
             </elementProp>
             <elementProp name="gcp.run.test.path" elementType="Argument">
@@ -71,23 +81,15 @@
         <hashTree/>
         <BeanShellSampler guiclass="BeanShellSamplerGui" testclass="BeanShellSampler" testname="BeanShell Sampler" enabled="true">
           <stringProp name="TestPlan.comments">fetch_1st_token</stringProp>
-          <stringProp name="BeanShellSampler.query">import org.apache.commons.codec.digest.DigestUtils;
-final String tid = vars.get(&quot;gcp.run.test.id&quot;);
-final String command = &quot;/print_id_token https://&quot; + vars.get(&quot;gcp.run.test.host&quot;) + vars.get(&quot;gcp.run.test.path&quot;);
-final Process p = Runtime.getRuntime().exec(command);
-p.waitFor();
-final BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
-final StringBuilder gcloudAuthOutput = new StringBuilder();
-String line;
-while( (line = in.readLine()) != null) {
-  gcloudAuthOutput.append(line);
-}
-in.close();
-final String token = gcloudAuthOutput.toString().replaceAll(&quot;\n&quot;, &quot;&quot;);
-final String tokenSHA1 = DigestUtils.sha1Hex(token);
-vars.put(&quot;gcp.run.test.token&quot;, token);
-props.put(&quot;gcp_run_test_token&quot;, token);
-log.info(&quot;token[&quot; + tid + &quot;|0]=&quot; + token.substring(0, 15) + &quot;...|&quot; + tokenSHA1);</stringProp>
+          <stringProp name="BeanShellSampler.query">final String tid = vars.get(&quot;gcp.run.test.id&quot;);
+final String http_method = vars.get(&quot;gcp.run.test.http.method&quot;);
+final String proto = vars.get(&quot;gcp.run.test.proto&quot;);
+final String host = vars.get(&quot;gcp.run.test.host&quot;);
+final String port = vars.get(&quot;gcp.run.test.port&quot;);
+final String path = vars.get(&quot;gcp.run.test.path&quot;);
+final String url = proto + &quot;://&quot; + host + &quot;:&quot; + port + &quot;&quot; + path;
+props.put(&quot;gcp_run_test_url&quot;, url);
+log.info(&quot;TEST[&quot; + tid + &quot;] = &quot; + http_method + &quot; &quot; + url);</stringProp>
           <boolProp name="BeanShellSampler.resetInterpreter">true</boolProp>
         </BeanShellSampler>
         <hashTree/>
@@ -146,32 +148,22 @@ log.info(&quot;token[&quot; + tid + &quot;|0]=&quot; + token.substring(0, 15) + 
           </IfController>
           <hashTree>
             <BeanShellSampler guiclass="BeanShellSamplerGui" testclass="BeanShellSampler" testname="generate_new_token_after_10mins" enabled="true">
-              <stringProp name="BeanShellSampler.query">import org.apache.commons.codec.digest.DigestUtils;
-final String tid = vars.get(&quot;gcp.run.test.id&quot;);
-final String command = &quot;/print_id_token https://&quot; + vars.get(&quot;gcp.run.test.host&quot;) + vars.get(&quot;gcp.run.test.path&quot;);
-final Process p = Runtime.getRuntime().exec(command);
-p.waitFor();
-final BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
-final StringBuilder gcloudAuthOutput = new StringBuilder();
-String line;
-while( (line = in.readLine()) != null) {
-  gcloudAuthOutput.append(line);
-}
-in.close();
-final String token = gcloudAuthOutput.toString().replaceAll(&quot;\n&quot;, &quot;&quot;);
-final String tokenSHA1 = DigestUtils.sha1Hex(token);
-vars.put(&quot;gcp.run.test.token&quot;, token);
-props.put(&quot;gcp_run_test_token&quot;, token);
-final String strMinutes = vars.get(&quot;gcp.run.test.minutes&quot;);
-final String tokenNumber = Integer.toString(Integer.parseInt(strMinutes, 10)/10, 10);
-log.info(&quot;token[&quot; + tid + &quot;|&quot; + tokenNumber  + &quot;]=&quot; + token.substring(0, 15) + &quot;...|&quot; + tokenSHA1);</stringProp>
+              <stringProp name="BeanShellSampler.query">final String tid = vars.get(&quot;gcp.run.test.id&quot;);
+final String http_method = vars.get(&quot;gcp.run.test.http.method&quot;);
+final String proto = vars.get(&quot;gcp.run.test.proto&quot;);
+final String host = vars.get(&quot;gcp.run.test.host&quot;);
+final String port = vars.get(&quot;gcp.run.test.port&quot;);
+final String path = vars.get(&quot;gcp.run.test.path&quot;);
+final String url = proto + &quot;://&quot; + host + &quot;:&quot; + port + &quot;&quot; + path;
+props.put(&quot;gcp_run_test_url&quot;, url);
+log.info(&quot;TEST[&quot; + tid + &quot;] = &quot; + http_method + &quot; &quot; + url);</stringProp>
               <boolProp name="BeanShellSampler.resetInterpreter">true</boolProp>
             </BeanShellSampler>
             <hashTree/>
           </hashTree>
         </hashTree>
       </hashTree>
-      <com.blazemeter.jmeter.threads.concurrency.ConcurrencyThreadGroup guiclass="com.blazemeter.jmeter.threads.concurrency.ConcurrencyThreadGroupGui" testclass="com.blazemeter.jmeter.threads.concurrency.ConcurrencyThreadGroup" testname="gcp/cloud-run/scheduling/simple" enabled="true">
+      <com.blazemeter.jmeter.threads.concurrency.ConcurrencyThreadGroup guiclass="com.blazemeter.jmeter.threads.concurrency.ConcurrencyThreadGroupGui" testclass="com.blazemeter.jmeter.threads.concurrency.ConcurrencyThreadGroup" testname="gcp/generic/scheduling/simple" enabled="true">
         <elementProp name="ThreadGroup.main_controller" elementType="com.blazemeter.jmeter.control.VirtualUserController"/>
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
         <stringProp name="TargetLevel">${gcp.run.test.concurrency}</stringProp>
@@ -189,8 +181,8 @@ log.info(&quot;token[&quot; + tid + &quot;|&quot; + tokenNumber  + &quot;]=&quot
             <collectionProp name="Arguments.arguments"/>
           </elementProp>
           <stringProp name="HTTPSampler.domain">${gcp.run.test.host}</stringProp>
-          <stringProp name="HTTPSampler.port">443</stringProp>
-          <stringProp name="HTTPSampler.protocol">https</stringProp>
+          <stringProp name="HTTPSampler.port">${gcp.run.test.port}</stringProp>
+          <stringProp name="HTTPSampler.protocol">${gcp.run.test.proto}</stringProp>
           <stringProp name="HTTPSampler.path">${gcp.run.test.path}</stringProp>
           <stringProp name="HTTPSampler.method">${gcp.run.test.http.method}</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">false</boolProp>
@@ -216,8 +208,12 @@ log.info(&quot;token[&quot; + tid + &quot;|&quot; + tokenNumber  + &quot;]=&quot
                 <stringProp name="Header.value">${gcp.run.test.id}</stringProp>
               </elementProp>
               <elementProp name="" elementType="Header">
-                <stringProp name="Header.name">Authorization</stringProp>
-                <stringProp name="Header.value">Bearer ${__property(gcp_run_test_token)}</stringProp>
+                <stringProp name="Header.name">x-jmaas-test-url</stringProp>
+                <stringProp name="Header.value">${__property(gcp_run_test_url)}</stringProp>
+              </elementProp>
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">x-jmaas-test-method</stringProp>
+                <stringProp name="Header.value">${gcp.run.test.http.method}</stringProp>
               </elementProp>
             </collectionProp>
           </HeaderManager>

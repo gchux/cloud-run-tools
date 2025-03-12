@@ -20,6 +20,8 @@ public class JMeterTestConfig {
   private final Optional<Integer> port;
   private final Optional<String> path;
 
+  private Optional<String> config;
+
   private int concurrency = 1;
   private int duration = 1;
   private int rampupTime = 1;
@@ -86,6 +88,15 @@ public class JMeterTestConfig {
 
   public Optional<String> jmx() {
     return this.jmx;
+  }
+
+  public Optional<String> config() {
+    return this.config;
+  }
+
+  public JMeterTestConfig config(@Nullable final String config) {
+    this.config = fromNullable(config);
+    return this;
   }
 
   public int concurrency() {
