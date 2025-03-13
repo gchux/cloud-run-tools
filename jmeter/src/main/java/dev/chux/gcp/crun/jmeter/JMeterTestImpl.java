@@ -16,6 +16,8 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
 
+import dev.chux.gcp.crun.ConfigService;
+
 import dev.chux.gcp.crun.process.ProcessProvider;
 import dev.chux.gcp.crun.process.ProcessOutput;
 import dev.chux.gcp.crun.process.ProcessOutputFactory;
@@ -34,6 +36,9 @@ public class JMeterTestImpl implements JMeterTest {
   private static final CharMatcher CONFIG_SEPARATOR = CharMatcher.anyOf(",;|_-");
   private static final Splitter CONFIG_SPLITTER = Splitter.on(CONFIG_SEPARATOR).omitEmptyStrings().trimResults();
 
+  private final String version;
+  private final String jMeterVersion;
+
   private final JMeterTestConfig jMeterTestConfig;
   private final Optional<OutputStream> stream;
   private final boolean closeable;
@@ -45,38 +50,53 @@ public class JMeterTestImpl implements JMeterTest {
   private final AtomicBoolean started;
 
   @AssistedInject
-  public JMeterTestImpl(ProcessOutputFactory processOutputFactory, 
+  public JMeterTestImpl(
+    final ProcessOutputFactory processOutputFactory,
+    final ConfigService configService,
     @Named("jmeter://jmx.dir") Provider<String> jmeterTestDirProvider,
     @Named("jmeter://test.jmx") Provider<String> jmeterTestProvider,
-    @Assisted JMeterTestConfig jMeterTestConfig) {
-    this(processOutputFactory, jmeterTestDirProvider, jmeterTestProvider, jMeterTestConfig, absent(), false);
+    @Assisted JMeterTestConfig jMeterTestConfig
+  ) {
+    this(processOutputFactory, configService, jmeterTestDirProvider, jmeterTestProvider, jMeterTestConfig, absent(), false);
   }
 
   @AssistedInject
-  public JMeterTestImpl(ProcessOutputFactory processOutputFactory, 
+  public JMeterTestImpl(
+    final ProcessOutputFactory processOutputFactory, 
+    final ConfigService configService,
     @Named("jmeter://jmx.dir") Provider<String> jmeterTestDirProvider,
     @Named("jmeter://test.jmx") Provider<String> jmeterTestProvider,
     @Assisted JMeterTestConfig jMeterTestConfig, 
-    @Assisted OutputStream stream) {
-    this(processOutputFactory, jmeterTestDirProvider, jmeterTestProvider, jMeterTestConfig, fromNullable(stream), false);
+    @Assisted OutputStream stream
+  ) {
+    this(processOutputFactory, configService, jmeterTestDirProvider, jmeterTestProvider, jMeterTestConfig, fromNullable(stream), false);
   }
 
   @AssistedInject
-  public JMeterTestImpl(ProcessOutputFactory processOutputFactory, 
+  public JMeterTestImpl(
+    final ProcessOutputFactory processOutputFactory, 
+    final ConfigService configService,
     @Named("jmeter://jmx.dir") Provider<String> jmeterTestDirProvider,
     @Named("jmeter://test.jmx") Provider<String> jmeterTestProvider,
     @Assisted JMeterTestConfig jMeterTestConfig, 
     @Assisted OutputStream stream, 
-    @Assisted boolean closeable) {
-    this(processOutputFactory, jmeterTestDirProvider, jmeterTestProvider, jMeterTestConfig, fromNullable(stream), closeable);
+    @Assisted boolean closeable
+  ) {
+    this(processOutputFactory, configService, jmeterTestDirProvider, jmeterTestProvider, jMeterTestConfig, fromNullable(stream), closeable);
   }
 
-  public JMeterTestImpl(ProcessOutputFactory processOutputFactory,
-    Provider<String> jmeterTestDirProvider,
-    Provider<String> jmeterTestProvider,
-    JMeterTestConfig jMeterTestConfig,
-    Optional<OutputStream> stream,
-    boolean closeable) {
+  public JMeterTestImpl(
+    final ProcessOutputFactory processOutputFactory,
+    final ConfigService configService,
+    final Provider<String> jmeterTestDirProvider,
+    final Provider<String> jmeterTestProvider,
+    final JMeterTestConfig jMeterTestConfig,
+    final Optional<OutputStream> stream,
+    final boolean closeable
+  ) {
+    this.version = this.getVersion(configService);
+    this.jMeterVersion = this.getJMeterVersion(configService);
+
     this.jMeterTestConfig = jMeterTestConfig;
     this.stream = stream;
     this.closeable = closeable;
@@ -100,6 +120,18 @@ public class JMeterTestImpl implements JMeterTest {
     return this.processOutputFactory.create(System.out, /* closeable */ false);
   }
 
+  private String getVersion(
+    final ConfigService configService
+  ) {
+    return configService.getAppProp("version");
+  }
+
+  private String getJMeterVersion(
+    final ConfigService configService
+  ) {
+    return configService.getAppProp("jmeter.version");
+  }
+
   private final List<String> command() {
     final ImmutableList.Builder<String> cmd = ImmutableList.<String>builder();
 
@@ -118,7 +150,9 @@ public class JMeterTestImpl implements JMeterTest {
       .setPath(cmd)
       .setPort(cmd)
       .setConfig(cmd)
-      .setProperties(cmd);
+      .setProperties(cmd)
+      .setVersion(cmd)
+      .setJMeterVersion(cmd);
     return cmd.build();
   }
 
@@ -159,6 +193,14 @@ public class JMeterTestImpl implements JMeterTest {
 
   private final JMeterTestImpl setConfig(final ImmutableList.Builder<String> cmd) {
     return this.setProperty(cmd, "threads_schedule", this.config());
+  }
+
+  private final JMeterTestImpl setVersion(final ImmutableList.Builder<String> cmd) {
+    return this.setProperty(cmd, "jmaas_version", this.version);
+  }
+
+  private final JMeterTestImpl setJMeterVersion(final ImmutableList.Builder<String> cmd) {
+    return this.setProperty(cmd, "jm_version", this.jMeterVersion);
   }
 
   private final JMeterTestImpl setProperties(final ImmutableList.Builder<String> cmd) {
@@ -237,7 +279,7 @@ public class JMeterTestImpl implements JMeterTest {
       }
     }
 
-    // replace last space by a quote
+    // delete last space ( trim-right )
     threadsSchedule.deleteCharAt(
       threadsSchedule.length()-1
     );

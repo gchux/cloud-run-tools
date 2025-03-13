@@ -26,6 +26,16 @@
       <hashTree>
         <Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="test_variables" enabled="true">
           <collectionProp name="Arguments.arguments">
+            <elementProp name="jmaas.vesrion" elementType="Argument">
+              <stringProp name="Argument.name">jmaas.version</stringProp>
+              <stringProp name="Argument.value">${__P(jmaas_version)}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="jm.vesrion" elementType="Argument">
+              <stringProp name="Argument.name">jm.version</stringProp>
+              <stringProp name="Argument.value">${__P(jm_version)}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
             <elementProp name="gcp.run.test.id" elementType="Argument">
               <stringProp name="Argument.name">gcp.run.test.id</stringProp>
               <stringProp name="Argument.value">${__P(tid)}</stringProp>
@@ -201,7 +211,7 @@ log.info(&quot;TEST[&quot; + tid + &quot;] = &quot; + http_method + &quot; &quot
             <collectionProp name="HeaderManager.headers">
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">User-Agent</stringProp>
-                <stringProp name="Header.value">JMaaS/1.0.0 (jmeter/5.6.3)</stringProp>
+                <stringProp name="Header.value">JMaaS/${jmaas.version} (jmeter/${jm.version})</stringProp>
               </elementProp>
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">x-jmaas-test-id</stringProp>
