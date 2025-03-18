@@ -68,7 +68,7 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
     GET /jmeter/test/run?mode=concurrency&duration=32&test=generic_dynamic&steps=10,0,0,10,1;10,5,10,10,1 HTTP/1.1
     ```
 
-> [!IMPORTANT]  
+> [!IMPORTANT]
 > Query param **`duration`** must be equal to the sum of _`rampup_time + duration + shutdown_time`_ across all `5-tuples`.
 
 > [!NOTE]
@@ -98,7 +98,7 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
     GET /jmeter/test/run?mode=qps&duration=80&test=generic_qps&qps=1,10,10;10,10,60;10,0,10 HTTP/1.1
     ```
 
-> [!IMPORTANT]  
+> [!IMPORTANT]
 > Query param **`duration`** must be equal to the sum of _`duration`_ across all `3-truples`.
 
 > [!NOTE]
@@ -117,6 +117,10 @@ Depending on the value of the **`mode`** parameter, **`test`** may be one of:
 
   - `cloud_run_dynamic`
   - `generic_dynamic`
+
+## Pre-Built images
+
+- ghcr.io/gchux/jmeter-test-runner:jmaas-latest
 
 ## Samples
 
