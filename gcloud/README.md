@@ -23,7 +23,7 @@
   - **`type`**: `GCloudCommand`
   - **`source`**: [`GCloudCommands.java`](https://github.com/gchux/cloud-run-tools/blob/main/model/src/main/java/dev/chux/gcp/crun/model/GCloudCommands.java)
 
-    ```json
+    ```
     {
       "namespace":   Optional<String>              // main group, (optional if path param `namespace` is defined); i/e: `run`, `app`, `storage`, etc...
       "groups":      Optional<List<String>>        // seconsary groups; i/e for namespace `run`: [`services`] or [`revisions`], etc...
