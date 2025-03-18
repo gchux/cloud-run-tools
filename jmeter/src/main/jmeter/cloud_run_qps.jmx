@@ -181,6 +181,10 @@ log.info(&quot;token[&quot; + tid + &quot;|&quot; + tokenNumber  + &quot;]=&quot
           </hashTree>
         </hashTree>
       </hashTree>
+      <kg.apc.jmeter.timers.VariableThroughputTimer guiclass="kg.apc.jmeter.timers.VariableThroughputTimerGui" testclass="kg.apc.jmeter.timers.VariableThroughputTimer" testname="gcp/cloud-run/scheduling/rps">
+        <collectionProp name="load_profile"/>
+      </kg.apc.jmeter.timers.VariableThroughputTimer>
+      <hashTree/>
       <kg.apc.jmeter.threads.UltimateThreadGroup guiclass="kg.apc.jmeter.threads.UltimateThreadGroupGui" testclass="kg.apc.jmeter.threads.UltimateThreadGroup" testname="gcp/cloud-run/scheduling/dynamic">
         <collectionProp name="ultimatethreadgroupdata"/>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">

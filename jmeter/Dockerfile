@@ -55,7 +55,7 @@ RUN curl -L -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-manager/1.9/
 
 WORKDIR /opt/apache-jmeter-${JMETER_VERSION}/bin
 
-RUN ./PluginsManagerCMD.sh install jpgc-casutg,jpgc-fifo,jpgc-json
+RUN ./PluginsManagerCMD.sh install jpgc-casutg,jpgc-tst,jpgc-fifo,jpgc-json
 
 WORKDIR /
 

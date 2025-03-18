@@ -32,24 +32,32 @@ public class JMeterTestService {
   }
 
   public void start(final String id, final Optional<String> jmx,
-    final Optional<String> proto, final Optional<String> method,
+    final String mode, final Optional<String> proto, final Optional<String> method,
     final String host, final Optional<Integer> port, final Optional<String> path,
-    final Optional<String> config,
-    final int concurrency, final int duration, final int rampupTime, final int rampupSteps) {
-    this.start(id, jmx, proto, method, host, port, path, config, concurrency, duration, rampupTime, rampupSteps, System.out, false);
+    final Optional<String> threads, final Optional<String> profile,
+    final int concurrency, final int duration, final int rampupTime, final int rampupSteps,
+    final int minLatency, final int maxLatency) {
+    this.start(id, jmx, mode, proto, method, host, port, path,
+      threads, profile, concurrency, duration, rampupTime, rampupSteps,
+      System.out, false, minLatency, maxLatency);
   }
 
   public void start(final String id, final Optional<String> jmx,
-    final Optional<String> proto, final Optional<String> method,
+    final String mode, final Optional<String> proto, final Optional<String> method,
     final String host, final Optional<Integer> port, final Optional<String> path,
-    final Optional<String> config,
+    final Optional<String> threads, final Optional<String> profile,
     final int concurrency, final int duration, final int rampupTime, final int rampupSteps,
-      final OutputStream outputStream, final boolean closeableOutputStream) {
+    final OutputStream outputStream, final boolean closeableOutputStream,
+    final int minLatency, final int maxLatency) {
 
     checkArgument(!isNullOrEmpty(host), "host is required");
+    checkArgument(!isNullOrEmpty(mode), "mode is required");
 
-    final JMeterTestConfig cfg = new JMeterTestConfig(id, this.jmx(jmx),
-      proto.orNull(), method.orNull(), host, port.orNull(), path.orNull()).config(config.orNull())
+    final JMeterTestConfig cfg = new JMeterTestConfig(id,
+      this.jmx(jmx), mode, proto.orNull(),
+      method.orNull(), host, port.orNull(), path.orNull(),
+      minLatency, maxLatency
+    ).threads(threads.orNull()).profile(profile.orNull())
       .concurrency(concurrency).duration(duration).rampupTime(rampupTime).rampupSteps(rampupSteps);
 
     final JMeterTest test = this.newJMeterTest(cfg, outputStream, closeableOutputStream);

@@ -24,6 +24,7 @@ import dev.chux.gcp.crun.process.ProcessOutputFactory;
 
 import static com.google.common.base.Optional.absent;
 import static com.google.common.base.Optional.fromNullable;
+import static com.google.common.base.Strings.isNullOrEmpty;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +34,7 @@ public class JMeterTestImpl implements JMeterTest {
 
   private static final String JMETER_BIN = "jmeter";
 
-  private static final CharMatcher CONFIG_SEPARATOR = CharMatcher.anyOf(",;|_-");
+  private static final CharMatcher CONFIG_SEPARATOR = CharMatcher.anyOf(",;:_-|");
   private static final Splitter CONFIG_SPLITTER = Splitter.on(CONFIG_SEPARATOR).omitEmptyStrings().trimResults();
 
   private final String version;
@@ -167,43 +168,69 @@ public class JMeterTestImpl implements JMeterTest {
       return this.setProperty(cmd, key, Integer.toString(value, 10));
   }
 
-  private final JMeterTestImpl setID(final ImmutableList.Builder<String> cmd) {
+  private final JMeterTestImpl setID(
+    final ImmutableList.Builder<String> cmd
+  ) {
     return this.setProperty(cmd, "tid", this.jMeterTestConfig.id());
   }
 
-  private final JMeterTestImpl setHost(final ImmutableList.Builder<String> cmd) {
+  private final JMeterTestImpl setHost(
+    final ImmutableList.Builder<String> cmd
+  ) {
     return this.setProperty(cmd, "host", this.host());
   }
 
-  private final JMeterTestImpl setPath(final ImmutableList.Builder<String> cmd) {
+  private final JMeterTestImpl setPath(
+    final ImmutableList.Builder<String> cmd
+  ) {
     return this.setProperty(cmd, "path", this.path());
   }
 
-  private final JMeterTestImpl setProto(final ImmutableList.Builder<String> cmd) {
-    return this.setProperty(cmd, "proto", this.proto());
+  private final JMeterTestImpl setProto(
+    final ImmutableList.Builder<String> cmd
+  ) {
+    return this.setProperty(cmd, "proto", this.proto().toLowerCase());
   }
 
-  private final JMeterTestImpl setMethod(final ImmutableList.Builder<String> cmd) {
+  private final JMeterTestImpl setMethod(
+    final ImmutableList.Builder<String> cmd
+  ) {
     return this.setProperty(cmd, "http_method", this.method().toUpperCase());
   }
 
-  private final JMeterTestImpl setPort(final ImmutableList.Builder<String> cmd) {
+  private final JMeterTestImpl setPort(
+    final ImmutableList.Builder<String> cmd
+  ) {
     return this.setIntProperty(cmd, "port", this.port());
   }
 
-  private final JMeterTestImpl setConfig(final ImmutableList.Builder<String> cmd) {
-    return this.setProperty(cmd, "threads_schedule", this.config());
+  private final JMeterTestImpl setConfig(
+    final ImmutableList.Builder<String> cmd
+  ) {
+    switch ( this.jMeterTestConfig.mode() ) {
+      case "qps":
+      case "QPS":
+        return this.setProfile(cmd);
+      default:
+        return this.setProperty(cmd, "threads_schedule", this.threads());
+    }
   }
 
-  private final JMeterTestImpl setVersion(final ImmutableList.Builder<String> cmd) {
+  private final JMeterTestImpl setVersion(
+    final ImmutableList.Builder<String> cmd
+  ) {
     return this.setProperty(cmd, "jmaas_version", this.version);
   }
 
-  private final JMeterTestImpl setJMeterVersion(final ImmutableList.Builder<String> cmd) {
+  private final JMeterTestImpl setJMeterVersion(
+    final ImmutableList.Builder<String> cmd
+  ) {
     return this.setProperty(cmd, "jm_version", this.jMeterVersion);
   }
 
-  private final JMeterTestImpl setProperties(final ImmutableList.Builder<String> cmd) {
+  private final JMeterTestImpl setProperties(
+    final ImmutableList.Builder<String> cmd
+  ) {
     return this.setIntProperty(cmd, "concurrency", this.jMeterTestConfig.concurrency())
       .setIntProperty(cmd, "duration", this.jMeterTestConfig.duration())
       .setIntProperty(cmd, "rampup_time", this.jMeterTestConfig.rampupTime())
@@ -241,20 +268,147 @@ public class JMeterTestImpl implements JMeterTest {
         .or(this.jmeterTestProvider.get()) + ".jmx";
   }
 
-  private final String config() {
-    final Optional<String> config = this.jMeterTestConfig.config();
-    if (!config.isPresent()) {
-      return "spawn(0,0s,0s,0s,0s)";
+  private final JMeterTestImpl setProfile(
+    final ImmutableList.Builder<String> cmd
+  ) {
+    final Optional<String> profile = this.jMeterTestConfig.profile();
+    if (!profile.isPresent()) {
+      return this;
     }
-    final String value = config.get();
-    return this.config(CONFIG_SPLITTER.splitToList(value));
+    final String value = profile.get();
+    return this.setProfile(cmd, CONFIG_SPLITTER.splitToList(value));
   }
 
-  private final String config(final List<String> config) {
-    int sizeOfConfig = config.size();
+  private final int maxQPS(
+    int maxQPS, int qps
+  ) {
+    if ( qps < 0 ) {
+      return maxQPS;
+    }
+    return Math.max(maxQPS, qps);
+  }
 
-    if ((sizeOfConfig%5)!=0) {
-      // config is incomplete/truncated
+  private final JMeterTestImpl setProfile(
+    final ImmutableList.Builder<String> cmd,
+    final List<String> profile
+  ) {
+    final int sizeOfProfile = profile.size();
+
+    if ((sizeOfProfile%3) != 0) {
+      // profile must be in groups of 3
+      // profile is incomplete/truncated
+      return this;
+    }
+
+    int index = 0;
+    int duration = 0;
+    int lastQPS = 0;
+    int maxQPS = 0;
+
+    final StringBuilder loadProfile = new StringBuilder();
+    while ( index < sizeOfProfile ) {
+      final int i = index%3;
+      switch ( i ) {
+        case 0: 
+        case 1: 
+        default: {
+          String value = profile.get(index);
+          final Optional<Integer> qps = fromNullable(Ints.tryParse(value));
+          if ( !qps.isPresent() ) {
+            logger.error("invalid qps at profile[{}] = '{}'", index+1, value);
+            return this;
+          }
+          int intValue = qps.get().intValue();
+          if ( intValue <= 0 ) {
+            value = "1";
+            intValue = 1;
+          }
+          maxQPS = this.maxQPS(maxQPS, intValue);
+          if ( i == 0 ) {
+            loadProfile.append("line(");
+          } else {
+            lastQPS = intValue;
+          }
+          loadProfile.append(value).append(',');
+          break;
+        }
+
+        case 2: {
+          final String value = profile.get(index);
+          final Integer D = Ints.tryParse(value);
+          if ( D == null ) {
+            logger.error("invalid duration at profile[{}] = '{}' | must be a number", index+1, value);
+            loadProfile.append("0s) ");
+          } else {
+            final int d = D.intValue();
+            if ( d > 0 ) {
+              duration += d;
+              loadProfile.append(d).append("s) ");
+            } else {
+              logger.error("invalid duration at profile[{}] = '{}' | must be a positive integer", index+1, value);
+              loadProfile.append("0s) ");
+            }
+          }
+          break;
+        }
+      }
+      index += 1;
+    }
+
+    if ( duration <= 0 ) {
+      logger.error("produced invalid 'duration': {} != {}", duration);
+      return this;
+    }
+
+    if ( this.jMeterTestConfig.duration() != duration ) {
+      logger.error("invalid 'duration': {} != {}", duration, this.jMeterTestConfig.duration());
+      return this;
+    }
+
+    if ( maxQPS <= 0 ) {
+      logger.error("produced invalid max QPS: {}", maxQPS);
+      return this;
+    }
+
+    if ( lastQPS > 0 ) {
+      // `1s` to drop QPS to 0
+      loadProfile.append("line(").append(lastQPS).append(",0,1s)");
+      duration += 1;
+    } else {
+      // delete last space ( trim-right )
+      loadProfile.deleteCharAt(loadProfile.length()-1);
+    }
+
+    // see: https://jmeter-plugins.org/wiki/ThroughputShapingTimer/#How-Many-Threads-I-Need-To-Produce-Desired-RPS
+    // lit: `RPS * <max response time> / 1000`
+    final int threads = (maxQPS*this.jMeterTestConfig.maxLatency())/1000;
+
+    final String threadsStr = Integer.toString(50*threads, 10);
+    final String durationStr = Integer.toString(duration, 10);
+
+    final String threadsSchedule = "spawn(" + threadsStr + ",0s,0s," + durationStr + "s,1s)";
+
+    return this.setProperty(cmd, "threads_schedule", threadsSchedule)
+                .setProperty(cmd, "load_profile", loadProfile.toString());
+  }
+
+  private final String threads() {
+    final Optional<String> threads = this.jMeterTestConfig.threads();
+    if (!threads.isPresent()) {
+      return "spawn(0,0s,0s,0s,0s)";
+    }
+    final String t = threads.get();
+    return this.threads(CONFIG_SPLITTER.splitToList(t));
+  }
+
+  private final String threads(
+    final List<String> schedule
+  ) {
+    final int sizeOfConfig = schedule.size();
+
+    if ( (sizeOfConfig%5) != 0 ) {
+      // threads must be in groups of 5
+      // threads argument is incomplete/truncated
       return "spawn(0,0s,0s,0s,0s)";
     }
 
@@ -262,19 +416,28 @@ public class JMeterTestImpl implements JMeterTest {
 
     final StringBuilder threadsSchedule = new StringBuilder();
 
-    while (index < sizeOfConfig) {
-      if ((index%5)==0) {
+    while ( index < sizeOfConfig ) {
+      final String value = schedule.get(index);
+
+      final Integer v = Ints.tryParse(value);
+
+      if ( (v == null) || (v.intValue() <= 0) ) {
+        logger.error("invalid value at threads[{}] = '{}'", index+1, value);
+        return "spawn(0,0s,0s,0s,0s)";
+      }
+
+      if ( (index%5) == 0 ) {
         threadsSchedule
           .append("spawn(")
-          .append(config.get(index));
+          .append(value);
       } else {
         threadsSchedule
           .append(',')
-          .append(config.get(index))
+          .append(value)
           .append('s');
       }
 
-      if ((++index%5)==0){
+      if ( (++index%5) == 0 ) {
         threadsSchedule.append(") ");
       }
     }
@@ -283,7 +446,6 @@ public class JMeterTestImpl implements JMeterTest {
     threadsSchedule.deleteCharAt(
       threadsSchedule.length()-1
     );
-
     return threadsSchedule.toString();
   }
 

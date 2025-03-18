@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.2">
+  <hashTree>
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="Test Plan" enabled="true">
+      <boolProp name="TestPlan.functional_mode">false</boolProp>
+      <boolProp name="TestPlan.tearDown_on_shutdown">false</boolProp>
+      <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
+      <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
+        <collectionProp name="Arguments.arguments"/>
+      </elementProp>
+    </TestPlan>
+    <hashTree>
+      <SetupThreadGroup guiclass="SetupThreadGroupGui" testclass="SetupThreadGroup" testname="setup_test" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
+          <stringProp name="LoopController.loops">1</stringProp>
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">1</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">1</stringProp>
+        <boolProp name="ThreadGroup.scheduler">false</boolProp>
+        <stringProp name="ThreadGroup.duration"></stringProp>
+        <stringProp name="ThreadGroup.delay"></stringProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+      </SetupThreadGroup>
+      <hashTree>
+        <Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="test_variables" enabled="true">
+          <collectionProp name="Arguments.arguments">
+            <elementProp name="jmaas.vesrion" elementType="Argument">
+              <stringProp name="Argument.name">jmaas.version</stringProp>
+              <stringProp name="Argument.value">${__P(jmaas_version)}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="jm.vesrion" elementType="Argument">
+              <stringProp name="Argument.name">jm.version</stringProp>
+              <stringProp name="Argument.value">${__P(jm_version)}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="gcp.run.test.id" elementType="Argument">
+              <stringProp name="Argument.name">gcp.run.test.id</stringProp>
+              <stringProp name="Argument.value">${__P(tid)}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="gcp.run.test.http.method" elementType="Argument">
+              <stringProp name="Argument.name">gcp.run.test.http.method</stringProp>
+              <stringProp name="Argument.value">${__P(http_method)}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="gcp.run.test.host" elementType="Argument">
+              <stringProp name="Argument.name">gcp.run.test.host</stringProp>
+              <stringProp name="Argument.value">${__P(host)}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="gcp.run.test.path" elementType="Argument">
+              <stringProp name="Argument.name">gcp.run.test.path</stringProp>
+              <stringProp name="Argument.value">${__P(path)}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="gcp.run.test.concurrency" elementType="Argument">
+              <stringProp name="Argument.name">gcp.run.test.concurrency</stringProp>
+              <stringProp name="Argument.value">${__P(concurrency)}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="gcp.run.test.rampup.time" elementType="Argument">
+              <stringProp name="Argument.name">gcp.run.test.rampup.time</stringProp>
+              <stringProp name="Argument.value">${__P(rampup_time)}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="gcp.run.test.rampup.steps" elementType="Argument">
+              <stringProp name="Argument.name">gcp.run.test.rampup.steps</stringProp>
+              <stringProp name="Argument.value">${__P(rampup_steps)}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="gcp.run.test.duration" elementType="Argument">
+              <stringProp name="Argument.name">gcp.run.test.duration</stringProp>
+              <stringProp name="Argument.value">${__P(duration)}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+          </collectionProp>
+        </Arguments>
+        <hashTree/>
+        <BeanShellSampler guiclass="BeanShellSamplerGui" testclass="BeanShellSampler" testname="BeanShell Sampler" enabled="true">
+          <stringProp name="TestPlan.comments">fetch_1st_token</stringProp>
+          <stringProp name="BeanShellSampler.query">import org.apache.commons.codec.digest.DigestUtils;
+final String tid = vars.get(&quot;gcp.run.test.id&quot;);
+final String command = &quot;/print_id_token https://&quot; + vars.get(&quot;gcp.run.test.host&quot;) + vars.get(&quot;gcp.run.test.path&quot;);
+final Process p = Runtime.getRuntime().exec(command);
+p.waitFor();
+final BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
+final StringBuilder gcloudAuthOutput = new StringBuilder();
+String line;
+while( (line = in.readLine()) != null) {
+      <kg.apc.jmeter.timers.VariableThroughputTimer guiclass="kg.apc.jmeter.timers.VariableThroughputTimerGui" testclass="kg.apc.jmeter.timers.VariableThroughputTimer" testname="gcp/cloud-run/scheduling/rps">
+        <collectionProp name="load_profile"/>
+      </kg.apc.jmeter.timers.VariableThroughputTimer>
+      <hashTree/>
+  gcloudAuthOutput.append(line);
+}
+in.close();
+final String token = gcloudAuthOutput.toString().replaceAll(&quot;\n&quot;, &quot;&quot;);
+final String tokenSHA1 = DigestUtils.sha1Hex(token);
+vars.put(&quot;gcp.run.test.token&quot;, token);
+props.put(&quot;gcp_run_test_token&quot;, token);
+log.info(&quot;token[&quot; + tid + &quot;|0]=&quot; + token.substring(0, 15) + &quot;...|&quot; + tokenSHA1);</stringProp>
+          <boolProp name="BeanShellSampler.resetInterpreter">true</boolProp>
+        </BeanShellSampler>
+        <hashTree/>
+      </hashTree>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="gcp/cloud-run/token-generator" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
+          <intProp name="LoopController.loops">-1</intProp>
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">1</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">1</stringProp>
+        <boolProp name="ThreadGroup.delayedStart">false</boolProp>
+        <boolProp name="ThreadGroup.scheduler">false</boolProp>
+        <stringProp name="ThreadGroup.duration"></stringProp>
+        <stringProp name="ThreadGroup.delay"></stringProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+      </ThreadGroup>
+      <hashTree>
+        <LoopController guiclass="LoopControlPanel" testclass="LoopController" testname="minute_looper" enabled="true">
+          <intProp name="LoopController.loops">-1</intProp>
+        </LoopController>
+        <hashTree>
+          <TestAction guiclass="TestActionGui" testclass="TestAction" testname="wait_1min" enabled="true">
+            <intProp name="ActionProcessor.action">1</intProp>
+            <intProp name="ActionProcessor.target">0</intProp>
+            <stringProp name="ActionProcessor.duration">30000</stringProp>
+          </TestAction>
+          <hashTree/>
+          <CounterConfig guiclass="CounterConfigGui" testclass="CounterConfig" testname="count_minutes" enabled="true">
+            <stringProp name="CounterConfig.start">1</stringProp>
+            <stringProp name="CounterConfig.end"></stringProp>
+            <stringProp name="CounterConfig.incr">1</stringProp>
+            <stringProp name="CounterConfig.name">gcp.run.test.minutes</stringProp>
+            <stringProp name="CounterConfig.format"></stringProp>
+            <boolProp name="CounterConfig.per_user">false</boolProp>
+          </CounterConfig>
+          <hashTree/>
+          <IfController guiclass="IfControllerPanel" testclass="IfController" testname="check_if_minutes_greater_than_duration" enabled="true">
+            <boolProp name="IfController.evaluateAll">false</boolProp>
+            <boolProp name="IfController.useExpression">true</boolProp>
+            <stringProp name="IfController.condition">${__groovy(${gcp.run.test.minutes} &gt; ${gcp.run.test.duration})}</stringProp>
+          </IfController>
+          <hashTree>
+            <TestAction guiclass="TestActionGui" testclass="TestAction" testname="stop_test_if_minutes_greater_than_duration" enabled="true">
+              <intProp name="ActionProcessor.action">2</intProp>
+              <intProp name="ActionProcessor.target">2</intProp>
+              <stringProp name="ActionProcessor.duration">0</stringProp>
+            </TestAction>
+            <hashTree/>
+          </hashTree>
+          <IfController guiclass="IfControllerPanel" testclass="IfController" testname="check_if_10mins_have_passed" enabled="true">
+            <boolProp name="IfController.evaluateAll">false</boolProp>
+            <boolProp name="IfController.useExpression">true</boolProp>
+            <stringProp name="IfController.condition">${__groovy(${gcp.run.test.minutes}%10==0)}</stringProp>
+          </IfController>
+          <hashTree>
+            <BeanShellSampler guiclass="BeanShellSamplerGui" testclass="BeanShellSampler" testname="generate_new_token_after_10mins" enabled="true">
+              <stringProp name="BeanShellSampler.query">import org.apache.commons.codec.digest.DigestUtils;
+final String tid = vars.get(&quot;gcp.run.test.id&quot;);
+final String command = &quot;/print_id_token https://&quot; + vars.get(&quot;gcp.run.test.host&quot;) + vars.get(&quot;gcp.run.test.path&quot;);
+final Process p = Runtime.getRuntime().exec(command);
+p.waitFor();
+final BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
+final StringBuilder gcloudAuthOutput = new StringBuilder();
+String line;
+while( (line = in.readLine()) != null) {
+  gcloudAuthOutput.append(line);
+}
+in.close();
+final String token = gcloudAuthOutput.toString().replaceAll(&quot;\n&quot;, &quot;&quot;);
+final String tokenSHA1 = DigestUtils.sha1Hex(token);
+vars.put(&quot;gcp.run.test.token&quot;, token);
+props.put(&quot;gcp_run_test_token&quot;, token);
+final String strMinutes = vars.get(&quot;gcp.run.test.minutes&quot;);
+final String tokenNumber = Integer.toString(Integer.parseInt(strMinutes, 10)/10, 10);
+log.info(&quot;token[&quot; + tid + &quot;|&quot; + tokenNumber  + &quot;]=&quot; + token.substring(0, 15) + &quot;...|&quot; + tokenSHA1);</stringProp>
+              <boolProp name="BeanShellSampler.resetInterpreter">true</boolProp>
+            </BeanShellSampler>
+            <hashTree/>
+          </hashTree>
+        </hashTree>
+      </hashTree>
+      <kg.apc.jmeter.threads.UltimateThreadGroup guiclass="kg.apc.jmeter.threads.UltimateThreadGroupGui" testclass="kg.apc.jmeter.threads.UltimateThreadGroup" testname="gcp/cloud-run/scheduling/dynamic">
+        <collectionProp name="ultimatethreadgroupdata"/>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">
+          <intProp name="LoopController.loops">-1</intProp>
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+      </kg.apc.jmeter.threads.UltimateThreadGroup>
+      <hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="test_endpoint" enabled="true">
+          <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
+            <collectionProp name="Arguments.arguments"/>
+          </elementProp>
+          <stringProp name="HTTPSampler.domain">${gcp.run.test.host}</stringProp>
+          <stringProp name="HTTPSampler.port">443</stringProp>
+          <stringProp name="HTTPSampler.protocol">https</stringProp>
+          <stringProp name="HTTPSampler.path">${gcp.run.test.path}</stringProp>
+          <stringProp name="HTTPSampler.method">${gcp.run.test.http.method}</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">false</boolProp>
+          <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">false</boolProp>
+          <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+          <boolProp name="HTTPSampler.BROWSER_COMPATIBLE_MULTIPART">false</boolProp>
+          <boolProp name="HTTPSampler.image_parser">false</boolProp>
+          <boolProp name="HTTPSampler.concurrentDwn">false</boolProp>
+          <stringProp name="HTTPSampler.concurrentPool">6</stringProp>
+          <boolProp name="HTTPSampler.md5">false</boolProp>
+          <intProp name="HTTPSampler.ipSourceType">0</intProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="set_authorization_header" enabled="true">
+            <collectionProp name="HeaderManager.headers">
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">User-Agent</stringProp>
+                <stringProp name="Header.value">JMaaS/${jmaas.version} (jmeter/${jm.version})</stringProp>
+              </elementProp>
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">x-jmaas-test-id</stringProp>
+                <stringProp name="Header.value">${gcp.run.test.id}</stringProp>
+              </elementProp>
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">Authorization</stringProp>
+                <stringProp name="Header.value">Bearer ${__property(gcp_run_test_token)}</stringProp>
+              </elementProp>
+            </collectionProp>
+          </HeaderManager>
+          <hashTree/>
+        </hashTree>
+      </hashTree>
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>

@@ -9,18 +9,25 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 
 import static com.google.common.base.Optional.fromNullable;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Strings.isNullOrEmpty;
 
 public class JMeterTestConfig {
 
   private final String id;
   private final Optional<String> jmx;
+  private final String mode;
   private final Optional<String> proto;
   private final Optional<String> method;
   private final String host;
   private final Optional<Integer> port;
   private final Optional<String> path;
 
-  private Optional<String> config;
+  private final int minLatency;
+  private final int maxLatency;
+
+  private Optional<String> threads;
+  private Optional<String> profile;
 
   private int concurrency = 1;
   private int duration = 1;
@@ -29,41 +36,70 @@ public class JMeterTestConfig {
 
   public JMeterTestConfig(
     @CheckForNull @NonNull final String id,
+    @CheckForNull @NonNull final String mode,
     @CheckForNull @NonNull final String host
   ) {
-    this(id, host, null);
+    this(id, mode, host, null);
   }
   
   public JMeterTestConfig(
     @CheckForNull @NonNull final String id,
+    @CheckForNull @NonNull final String mode,
     @CheckForNull @NonNull final String host,
     @Nullable final String path
   ) {
-    this(id, null, null, null, host, null, path);
+    this(id, null, mode, null, null, host, null, path, 1, 1000);
   }
 
   public JMeterTestConfig(
     @CheckForNull @NonNull final String id,
     @Nullable final String jmx,
+    @CheckForNull @NonNull final String mode,
     @Nullable final String proto,
     @Nullable final String method,
     @CheckForNull @NonNull final String host,
     @Nullable final Integer port,
-    @Nullable final String path
+    @Nullable final String path,
+    final int minLatency,
+    final int maxLatency
   ) {
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(host), "host is required");
+    checkArgument(!isNullOrEmpty(id), "id is required");
+    checkArgument(!isNullOrEmpty(host), "host is required");
+    checkArgument(!isNullOrEmpty(mode), "mode is required");
+
+    checkArgument(minLatency > 0, "min_latency must be greater than 0ms");
+    checkArgument(maxLatency >= minLatency, "max_latency must be greater than min_latency");
 
     this.id = id;
     this.jmx = fromNullable(jmx);
+    this.mode = mode;
     this.proto = fromNullable(proto);
     this.method = fromNullable(method);
     this.host = host;
     this.port = fromNullable(port);
     this.path = fromNullable(path);
+    this.minLatency = minLatency;
+    this.maxLatency = maxLatency;
   }
 
   public String id() {
     return this.id;
+  }
+
+  public String mode() {
+    return this.mode;
+  }
+
+  public String host() {
+    return this.host;
+  }
+
+  public int minLatency() {
+    return this.minLatency;
+  }
+
+  public int maxLatency() {
+    return this.maxLatency;
   }
 
   public Optional<String> proto() {
@@ -72,10 +108,6 @@ public class JMeterTestConfig {
 
   public Optional<String> method() {
     return this.method;
-  }
-
-  public String host() {
-    return this.host;
   }
 
   public Optional<Integer> port() {
@@ -90,12 +122,25 @@ public class JMeterTestConfig {
     return this.jmx;
   }
 
-  public Optional<String> config() {
-    return this.config;
+  public Optional<String> threads() {
+    return this.threads;
   }
 
-  public JMeterTestConfig config(@Nullable final String config) {
-    this.config = fromNullable(config);
+  public JMeterTestConfig threads(
+    @Nullable final String threads
+  ) {
+    this.threads = fromNullable(threads);
+    return this;
+  }
+
+  public Optional<String> profile() {
+    return this.profile;
+  }
+
+  public JMeterTestConfig profile(
+    @Nullable final String profile
+  ) {
+    this.profile = fromNullable(profile);
     return this;
   }
 
@@ -103,7 +148,9 @@ public class JMeterTestConfig {
     return this.concurrency;
   }
 
-  public JMeterTestConfig concurrency(final int concurrency) {
+  public JMeterTestConfig concurrency(
+    final int concurrency
+  ) {
     this.concurrency = concurrency;
     return this;
   }
@@ -112,7 +159,9 @@ public class JMeterTestConfig {
     return this.duration;
   }
 
-  public JMeterTestConfig duration(final int duration) {
+  public JMeterTestConfig duration(
+    final int duration
+  ) {
     this.duration = duration;
     return this;
   }
@@ -121,7 +170,9 @@ public class JMeterTestConfig {
     return this.rampupTime;
   }
 
-  public JMeterTestConfig rampupTime(final int rampupTime) {
+  public JMeterTestConfig rampupTime(
+    final int rampupTime
+  ) {
     this.rampupTime = rampupTime;
     return this;
   }
@@ -130,7 +181,9 @@ public class JMeterTestConfig {
     return this.rampupSteps;
   }
 
-  public JMeterTestConfig rampupSteps(final int rampupSteps) {
+  public JMeterTestConfig rampupSteps(
+    final int rampupSteps
+  ) {
     this.rampupSteps = rampupSteps;
     return this;
   }
