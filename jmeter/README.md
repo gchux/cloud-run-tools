@@ -61,7 +61,7 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
 
   - `10,0,0,10,1;10,5,10,10,1`:
 
-    - `step[1]`: immediately start 10 threads, hold the load for 10 seconsa, and stop in 1 second; step duration is 11 seconds.
+    - `step[1]`: immediately start 10 threads, hold the load for 10 seconds, and stop in 1 second; step duration is 11 seconds.
     - `step[2]`: start 10 threads over 10 seconds after 5 seconds of startig the test, hold the load for 10 seconsa, and stop within 1 second; step duration is 21 seconds.
 
     ```
