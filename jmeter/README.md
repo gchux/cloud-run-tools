@@ -21,14 +21,14 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
 
 #### Basic Parameters
 
-- `test`: [`String`, _optional_, default:`test`] [test scenario](src/main/jmeter) to use; without `.jmx` extension.
-- `mode`: [`String`, _optional_, default:`concurrency`] test operation mode; alternatives: `qps` or `concurrency`.
-- `proto`: [`String`, _optional_, default:`https`] protocol to use; alternatives: `http` or `https`.
-- `method`: [`String`, _optional_, default:`GET`] [HTTP method](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods) to use.
-- `host`: [`String`, **required**]: hostname or IP of the remote HTTP server.
-- `port`: [`Integer`, _optional_, default:`443`] TCP port used to connect to the remote HTTP server.
-- `path`: [`String`, _optional_, default:`/`] endpoint to test on the remote HTTP server.
-- `duration`: [`Integer`, **required**] test duration in seconds.
+- **`test`**: [`String`, _optional_, default:`test`] [test scenario](src/main/jmeter) to use; without `.jmx` extension.
+- **`mode`**: [`String`, _optional_, default:`concurrency`] test operation mode; alternatives: `qps` or `concurrency`.
+- **`proto`**: [`String`, _optional_, default:`https`] protocol to use; alternatives: `http` or `https`.
+- **`method`**: [`String`, _optional_, default:`GET`] [HTTP method](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods) to use.
+- **`host`**: [`String`, **required**]: hostname or IP of the remote HTTP server.
+- **`port`**: [`Integer`, _optional_, default:`443`] TCP port used to connect to the remote HTTP server.
+- **`path`**: [`String`, _optional_, default:`/`] endpoint to test on the remote HTTP server.
+- **`duration`**: [`Integer`, **required**] test duration in seconds.
 
 #### Latency Parameters
 
@@ -37,17 +37,17 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
 
 #### `concurrency` mode Parameters
 
-- `steps`: [`List<`**`Tuple<Integer>`**`>`, **required**] list of steps in the form of `5-tuples` containing each step configuration.
+- **`steps`**: [`List<`**`Tuple<Integer>`**`>`, **required**] list of steps in the form of `5-tuples` containing each step configuration.
 
   `5-tuples` are separated by `;`, and tuple items are separated by `,`.
 
   Each `5-tuple` must contain the following information:
 
-  - [1]: `thread_count` - how many threads to use for this step.
-  - [2]: `initial_delay` - number of seconds after which this step should start.
-  - [3]: `rampup_time` – number of seconds required to reach `thread_count`.
-  - [4]: `duration` – number of seconds this step should apply `thread_count` after `rampup_time`.
-  - [5]: `shutdown_time` - number of seconds required to drop `thread_count` to `0`.
+  - [1]: **`thread_count`** - how many threads to use for this step.
+  - [2]: **`initial_delay`** - number of seconds after which this step should start.
+  - [3]: **`rampup_time`** – number of seconds required to reach `thread_count`.
+  - [4]: **`duration`** – number of seconds this step should apply `thread_count` after `rampup_time`.
+  - [5]: **`shutdown_time`** - number of seconds required to drop `thread_count` to `0`.
 
   **`5-tuple` examples**:
 
@@ -76,15 +76,15 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
 
 #### `qps` mode Parameters
 
-- `qps`: [`List<`**`Tuple<Integer>`**`>`, **required**] list of steps in the form of `3-tuples` containing each step configuration.
+- **`qps`**: [`List<`**`Tuple<Integer>`**`>`, **required**] list of steps in the form of `3-tuples` containing each step configuration.
 
   `3-tuples` are separated by `;`, and tuple items are separated by `,`.
 
   Each `3-tuple` must contain the following information:
 
-  - [1]: `start_qps` - initial number of QPS.
-  - [2]: `end_qps` - final number of QPS.
-  - [3]: `duration` – number of seconds over which `end_qps` will be reached, starting from `start_qps`.
+  - [1]: **`start_qps`** - initial number of QPS.
+  - [2]: **`end_qps`** - final number of QPS.
+  - [3]: **`duration`** – number of seconds over which `end_qps` will be reached, starting from `start_qps`.
 
   **`3-tuple` examples**:
 
@@ -106,14 +106,14 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
 
 #### `test` Parameter
 
-Depending on the value of the `mode` parameter, `test` may be one of:
+Depending on the value of the **`mode`** parameter, **`test`** may be one of:
 
-- If `mode` is set to `qps`:
+- If `mode` is set to **`qps`**:
 
   - `cloud_run_qps`
   - `generic_qps`
 
-- If `mode` is set to `concurrency`:
+- If `mode` is set to **`concurrency`**:
 
   - `cloud_run_dynamic`
   - `generic_dynamic`
