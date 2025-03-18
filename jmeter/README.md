@@ -68,11 +68,11 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
     GET /jmeter/test/run?mode=concurrency&steps=10,0,0,10,1;10,5,10,10,1 HTTP/1.1
     ```
 
-  > [!IMPORTANT]  
-  > Query param `duration` must be equal to the sum of `rampup_time + duration + shutdown_time` across all `5-tuples`.
+> [!IMPORTANT]  
+> Query param `duration` must be equal to the sum of `rampup_time + duration + shutdown_time` across all `5-tuples`.
 
-  > [!NOTE]
-  > See: https://jmeter-plugins.org/wiki/UltimateThreadGroup/
+> [!NOTE]
+> See: https://jmeter-plugins.org/wiki/UltimateThreadGroup/
 
 #### `qps` mode Params
 
@@ -98,8 +98,8 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
     GET /jmeter/test/run?mode=qps&qps=1,10,10;10,10,60;10,0,10 HTTP/1.1
     ```
 
-  > [!IMPORTANT]  
-  > Query param `duration` must be equal to the sum `duration`s across all `3-truples`.
+> [!IMPORTANT]  
+> Query param `duration` must be equal to the sum `duration`s across all `3-truples`.
 
-  > [!NOTE]
-  > See: https://jmeter-plugins.org/wiki/ThroughputShapingTimer/
+> [!NOTE]
+> See: https://jmeter-plugins.org/wiki/ThroughputShapingTimer/
