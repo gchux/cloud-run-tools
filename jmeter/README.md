@@ -49,7 +49,7 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
   - `[4]`: **`duration`** – number of seconds this step should apply **`thread_count`** after **`rampup_time`**.
   - `[5]`: **`shutdown_time`** - number of seconds required to drop **`thread_count`** to `0`.
 
-  **`5-tuple` examples**:
+  `5-tuple` examples:
 
   - `10,0,0,10,1`:
 
@@ -86,7 +86,7 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
   - `[2]`: **`end_qps`** - final number of QPS.
   - `[3]`: **`duration`** – number of seconds over which **`end_qps`** will be reached, starting from **`start_qps`**.
 
-  **`3-tuple` examples**:
+  `3-tuple` examples:
 
   - `1,10,10;10,10,60;10,0,10`:
 
