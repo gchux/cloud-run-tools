@@ -1,5 +1,7 @@
 # Google Cloud CLI as a service
 
+Provides a REST interface for [Google Cloud CLI](http://cloud/sdk/docs/release-notes).
+
 ## Pre-Built container images
 
 - ghcr.io/gchux/cloud-run-tools:gcloud-latest
