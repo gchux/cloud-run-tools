@@ -113,7 +113,7 @@ Depending on the value of the `mode` parameter, `test` may be one of:
   - `cloud_run_qps`
   - `generic_qps`
 
-- IF `mode` is set to `concurrency`:
+- If `mode` is set to `concurrency`:
 
   - `cloud_run_dynamic`
   - `generic_dynamic`
