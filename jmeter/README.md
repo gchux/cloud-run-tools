@@ -56,7 +56,7 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
     - `step[1]`: immediately start 10 threads, hold the load for 10 seconsa, and stop in 1 second.
 
     ```
-    GET /jmeter/test/run?mode=concurrency&test=generic_dynamic&steps=10,0,0,10,1 HTTP/1.1
+    GET /jmeter/test/run?mode=concurrency&duration=11&test=generic_dynamic&steps=10,0,0,10,1 HTTP/1.1
     ```
 
   - `10,0,0,10,1;10,5,10,10,1`:
@@ -65,7 +65,7 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
     - `step[2]`: start 10 threads over 10 seconds after 5 seconds of startig the test, hold the load for 10 seconsa, and stop within 1 second; step duration is 21 seconds.
 
     ```
-    GET /jmeter/test/run?mode=concurrency&test=generic_dynamic&steps=10,0,0,10,1;10,5,10,10,1 HTTP/1.1
+    GET /jmeter/test/run?mode=concurrency&duration=32&test=generic_dynamic&steps=10,0,0,10,1;10,5,10,10,1 HTTP/1.1
     ```
 
 > [!IMPORTANT]  
@@ -95,7 +95,7 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
     - `step[3]`: drop QPS from 10 to 0 in 10 seconds.
 
     ```
-    GET /jmeter/test/run?mode=qps&test=generic_qps&qps=1,10,10;10,10,60;10,0,10 HTTP/1.1
+    GET /jmeter/test/run?mode=qps&duration=80&test=generic_qps&qps=1,10,10;10,10,60;10,0,10 HTTP/1.1
     ```
 
 > [!IMPORTANT]  
@@ -117,3 +117,9 @@ Depending on the value of the **`mode`** parameter, **`test`** may be one of:
 
   - `cloud_run_dynamic`
   - `generic_dynamic`
+
+## Samples
+
+![jmaas_test_ui](https://github.com/gchux/jmeter-test-runner/blob/main/jmeter/img/jmaas_test_ui.png?raw=true)
+
+![jmaas_test_shell](https://github.com/gchux/jmeter-test-runner/blob/main/jmeter/img/jmaas_test_shell.png?raw=true)
