@@ -37,7 +37,7 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
 
 #### `concurrency` mode Parameters
 
-- `steps`: [`List<Tuple<Integer>>`, **required**] list of steps in the form of `5-tuples` containing each step configuration.
+- `steps`: [`List<`**`Tuple<Integer>`**`>`, **required**] list of steps in the form of `5-tuples` containing each step configuration.
 
   `5-tuples` are separated by `;`, and tuple items are separated by `,`.
 
@@ -76,7 +76,7 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
 
 #### `qps` mode Parameters
 
-- `qps`: [`List<Tuple<Integer>>`, **required**] list of steps in the form of `3-tuples` containing each step configuration.
+- `qps`: [`List<`**`Tuple<Integer>`**`>`, **required**] list of steps in the form of `3-tuples` containing each step configuration.
 
   `3-tuples` are separated by `;`, and tuple items are separated by `,`.
 
