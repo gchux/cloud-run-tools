@@ -120,7 +120,7 @@ Depending on the value of the **`mode`** parameter, **`test`** may be one of:
 
 ## Pre-Built images
 
-- ghcr.io/gchux/jmeter-test-runner:jmaas-latest
+- ghcr.io/gchux/cloud-run-tools:jmaas-latest
 
 ## Samples
 
