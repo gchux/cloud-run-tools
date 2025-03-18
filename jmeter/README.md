@@ -99,7 +99,7 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
     ```
 
 > [!IMPORTANT]  
-> Query param `duration` must be equal to the sum `duration`s across all `3-truples`.
+> Query param `duration` must be equal to the sum of `duration` across all `3-truples`.
 
 > [!NOTE]
 > See: https://jmeter-plugins.org/wiki/ThroughputShapingTimer/
