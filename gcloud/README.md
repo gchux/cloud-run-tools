@@ -1,4 +1,9 @@
-# Google Cloud SDK as a service
+# Google Cloud CLI as a service
+
+## Pre-Built container images
+
+- ghcr.io/gchux/cloud-run-tools:gcloud-latest
+- ghcr.io/gchux/cloud-run-tools:gcloud-v${GOOGLE_CLOUD_CLI_VERSION}
 
 ## Single command execution:
 
