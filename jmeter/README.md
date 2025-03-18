@@ -43,11 +43,11 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
 
   Each `5-tuple` must contain the following information:
 
-  - [1]: **`thread_count`** - how many threads to use for this step.
-  - [2]: **`initial_delay`** - number of seconds after which this step should start.
-  - [3]: **`rampup_time`** – number of seconds required to reach `thread_count`.
-  - [4]: **`duration`** – number of seconds this step should apply `thread_count` after `rampup_time`.
-  - [5]: **`shutdown_time`** - number of seconds required to drop `thread_count` to `0`.
+  - `[1]`: **`thread_count`** - how many threads to use for this step.
+  - `[2]`: **`initial_delay`** - number of seconds after which this step should start.
+  - `[3]`: **`rampup_time`** – number of seconds required to reach `thread_count`.
+  - `[4]`: **`duration`** – number of seconds this step should apply `thread_count` after `rampup_time`.
+  - `[5]`: **`shutdown_time`** - number of seconds required to drop `thread_count` to `0`.
 
   **`5-tuple` examples**:
 
@@ -82,9 +82,9 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
 
   Each `3-tuple` must contain the following information:
 
-  - [1]: **`start_qps`** - initial number of QPS.
-  - [2]: **`end_qps`** - final number of QPS.
-  - [3]: **`duration`** – number of seconds over which `end_qps` will be reached, starting from `start_qps`.
+  - `[1]`: **`start_qps`** - initial number of QPS.
+  - `[2]`: **`end_qps`** - final number of QPS.
+  - `[3]`: **`duration`** – number of seconds over which `end_qps` will be reached, starting from `start_qps`.
 
   **`3-tuple` examples**:
 
