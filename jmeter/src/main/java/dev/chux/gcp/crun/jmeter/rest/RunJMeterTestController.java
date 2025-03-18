@@ -117,8 +117,8 @@ public class RunJMeterTestController implements Route {
     final Optional<Integer> port   = fromNullable(Ints.tryParse(request.queryParamOrDefault("port", ""), 10));
 
     // dynamic test configuration
-    final Optional<String> threads = fromNullable(request.queryParamOrDefault("threads", null));
-    final Optional<String> profile = fromNullable(request.queryParamOrDefault("profile", null));
+    final Optional<String> threads = fromNullable(request.queryParamOrDefault("steps", null));
+    final Optional<String> profile = fromNullable(request.queryParamOrDefault("qps", null));
 
     if ( (mode.equalsIgnoreCase("qps")) && !profile.isPresent() ) {
       halt(400, "'profile' is required when 'mode' is set to 'qps'");

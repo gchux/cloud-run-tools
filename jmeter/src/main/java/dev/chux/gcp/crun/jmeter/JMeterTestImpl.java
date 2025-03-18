@@ -356,7 +356,7 @@ public class JMeterTestImpl implements JMeterTest {
     }
 
     if ( duration <= 0 ) {
-      logger.error("produced invalid 'duration': {} != {}", duration);
+      logger.error("produced invalid 'duration': {}", duration);
       return this;
     }
 
@@ -413,6 +413,7 @@ public class JMeterTestImpl implements JMeterTest {
     }
 
     int index = 0;
+    int duration = 0;
 
     final StringBuilder threadsSchedule = new StringBuilder();
 
@@ -426,7 +427,9 @@ public class JMeterTestImpl implements JMeterTest {
         return "spawn(0,0s,0s,0s,0s)";
       }
 
-      if ( (index%5) == 0 ) {
+      final int i = index%5;
+
+      if ( i == 0 ) {
         threadsSchedule
           .append("spawn(")
           .append(value);
@@ -437,9 +440,23 @@ public class JMeterTestImpl implements JMeterTest {
           .append('s');
       }
 
+      if ( i >= 2 ) {
+        duration += v.intValue();
+      }
+
       if ( (++index%5) == 0 ) {
         threadsSchedule.append(") ");
       }
+    }
+
+    if ( duration <= 0 ) {
+      logger.error("produced invalid 'duration': {}", duration);
+      return "spawn(0,0s,0s,0s,0s)";
+    }
+
+    if ( this.jMeterTestConfig.duration() != duration ) {
+      logger.error("invalid 'duration': {} != {}", duration, this.jMeterTestConfig.duration());
+      return "spawn(0,0s,0s,0s,0s)";
     }
 
     // delete last space ( trim-right )
