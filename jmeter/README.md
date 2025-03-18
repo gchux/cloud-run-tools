@@ -120,6 +120,11 @@ Depending on the value of the **`mode`** parameter, **`test`** may be one of:
 
 ## Samples
 
+```shell
+curl -ivL \
+  '0:8080/jmeter/test/run?mode=qps&test=cloud_run_qps&host=hello-0000000000.us-central1.run.app&path=/&duration=375&qps=1,100,5;100,100,120;100,50,5;50,50,120;50,10,5;10,10,120'
+```
+
 ![jmaas_test_ui](https://github.com/gchux/jmeter-test-runner/blob/main/jmeter/img/jmaas_test_ui.png?raw=true)
 
 ![jmaas_test_shell](https://github.com/gchux/jmeter-test-runner/blob/main/jmeter/img/jmaas_test_shell.png?raw=true)
