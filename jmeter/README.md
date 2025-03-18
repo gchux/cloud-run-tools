@@ -17,11 +17,11 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
 
 ## How to use
 
-### Query Params
+### Query Parameters
 
-#### Basic Params
+#### Basic Parameters
 
-- `jmx`: [`String`, _optional_, default:`test`] [test scenario](src/main/jmeter) to use; without `.jmx` extension.
+- `test`: [`String`, _optional_, default:`test`] [test scenario](src/main/jmeter) to use; without `.jmx` extension.
 - `mode`: [`String`, _optional_, default:`concurrency`] test operation mode; alternatives: `qps` or `concurrency`.
 - `proto`: [`String`, _optional_, default:`https`] protocol to use; alternatives: `http` or `https`.
 - `method`: [`String`, _optional_, default:`GET`] [HTTP method](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods) to use.
@@ -30,12 +30,12 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
 - `path`: [`String`, _optional_, default:`/`] endpoint to test on the remote HTTP server.
 - `duration`: [`Integer`, **required**] test duration in seconds.
 
-#### Latency Params
+#### Latency Parameters
 
 - `min_latency`: [`Integer`, _optional_, default:`1`] remote service minimum response time in milliseconds.
 - `max_latency`: [`Integer`, _optional_, default:`1000`] remote service maxium response time in milliseconds.
 
-#### `concurrency` mode Params
+#### `concurrency` mode Parameters
 
 - `steps`: [`List<Tuple<Integer>>`, **required**] list of steps in the form of `5-tuples` containing each step configuration.
 
@@ -56,7 +56,7 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
     - `step[1]`: immediately start 10 threads, hold the load for 10 seconsa, and stop in 1 second.
 
     ```
-    GET /jmeter/test/run?mode=concurrency&steps=10,0,0,10,1 HTTP/1.1
+    GET /jmeter/test/run?mode=concurrency&test=generic_dynamic&steps=10,0,0,10,1 HTTP/1.1
     ```
 
   - `10,0,0,10,1;10,5,10,10,1`:
@@ -65,7 +65,7 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
     - `step[2]`: start 10 threads over 10 seconds after 5 seconds of startig the test, hold the load for 10 seconsa, and stop within 1 second; step duration is 21 seconds.
 
     ```
-    GET /jmeter/test/run?mode=concurrency&steps=10,0,0,10,1;10,5,10,10,1 HTTP/1.1
+    GET /jmeter/test/run?mode=concurrency&test=generic_dynamic&steps=10,0,0,10,1;10,5,10,10,1 HTTP/1.1
     ```
 
 > [!IMPORTANT]  
@@ -74,7 +74,7 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
 > [!NOTE]
 > See: https://jmeter-plugins.org/wiki/UltimateThreadGroup/
 
-#### `qps` mode Params
+#### `qps` mode Parameters
 
 - `qps`: [`List<Tuple<Integer>>`, **required**] list of steps in the form of `3-tuples` containing each step configuration.
 
@@ -95,7 +95,7 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
     - `step[3]`: drop QPS from 10 to 0 in 10 seconds.
 
     ```
-    GET /jmeter/test/run?mode=qps&qps=1,10,10;10,10,60;10,0,10 HTTP/1.1
+    GET /jmeter/test/run?mode=qps&test=generic_qps&qps=1,10,10;10,10,60;10,0,10 HTTP/1.1
     ```
 
 > [!IMPORTANT]  
@@ -103,3 +103,17 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
 
 > [!NOTE]
 > See: https://jmeter-plugins.org/wiki/ThroughputShapingTimer/
+
+#### `test` Parameter
+
+Depending on the value of the `mode` parameter, `test` may be one of:
+
+- If `mode` is set to `qps`:
+
+  - `cloud_run_qps`
+  - `generic_qps`
+
+- IF `mode` is set to `concurrency`:
+
+  - `cloud_run_qps`
+  - `cloud_run_dynamic`

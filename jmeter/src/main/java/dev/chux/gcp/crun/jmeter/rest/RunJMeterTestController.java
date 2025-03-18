@@ -102,7 +102,7 @@ public class RunJMeterTestController implements Route {
     }
 
     // test to execute base on the name of JMX files ( case sensitive ).
-    final Optional<String> jmx     = fromNullable(request.queryParamOrDefault("jmx", null));
+    final Optional<String> jmx     = fromNullable(request.queryParamOrDefault("test", null));
     //
     // may be `http` ot `https` ( case insensitive ).
     final Optional<String> proto   = fromNullable(request.queryParamOrDefault("proto", null));
@@ -148,15 +148,15 @@ public class RunJMeterTestController implements Route {
       toStringHelper("request")
       .add("id", testId)
       .add("output", output)
-      .add("jmx", jmx)
+      .add("test", jmx)
       .add("mode", mode)
       .add("proto", proto)
       .add("method", method)
       .add("host", host)
       .add("port", port)
       .add("path", path)
-      .add("threads", threads)
-      .add("profile", profile)
+      .add("steps", threads)
+      .add("qps", profile)
       .add("concurrency", concurrency)
       .add("duration", duration)
       .add("rampup_time", rampupTime)
