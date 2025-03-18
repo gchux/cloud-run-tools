@@ -32,8 +32,8 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
 
 #### Latency Parameters
 
-- `min_latency`: [`Integer`, _optional_, default:`1`] remote service minimum response time in milliseconds.
-- `max_latency`: [`Integer`, _optional_, default:`1000`] remote service maxium response time in milliseconds.
+- **`min_latency`**: [`Integer`, _optional_, default:`1`] remote service minimum response time in milliseconds.
+- **`max_latency`**: [`Integer`, _optional_, default:`1000`] remote service maxium response time in milliseconds.
 
 #### `concurrency` mode Parameters
 
@@ -69,7 +69,7 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
     ```
 
 > [!IMPORTANT]  
-> Query param `duration` must be equal to the sum of `rampup_time + duration + shutdown_time` across all `5-tuples`.
+> Query param **`duration`** must be equal to the sum of _`rampup_time + duration + shutdown_time`_ across all `5-tuples`.
 
 > [!NOTE]
 > See: https://jmeter-plugins.org/wiki/UltimateThreadGroup/
@@ -99,7 +99,7 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
     ```
 
 > [!IMPORTANT]  
-> Query param `duration` must be equal to the sum of `duration` across all `3-truples`.
+> Query param **`duration`** must be equal to the sum of _`duration`_ across all `3-truples`.
 
 > [!NOTE]
 > See: https://jmeter-plugins.org/wiki/ThroughputShapingTimer/
@@ -108,12 +108,12 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
 
 Depending on the value of the **`mode`** parameter, **`test`** may be one of:
 
-- If `mode` is set to **`qps`**:
+- If **`mode`** is set to **`qps`**:
 
   - `cloud_run_qps`
   - `generic_qps`
 
-- If `mode` is set to **`concurrency`**:
+- If **`mode`** is set to **`concurrency`**:
 
   - `cloud_run_dynamic`
   - `generic_dynamic`
