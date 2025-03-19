@@ -14,6 +14,7 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
 
 - hosting JMeter as a Cloud Run service.
 - load test Cloud Run services that require authentication.
+- Propagate [cloud trace context](https://cloud.google.com/trace/docs/trace-context) to show load test traffic in [Cloud Trace Explorer](https://cloud.google.com/trace/docs/finding-traces).
 
 ## How to use
 
