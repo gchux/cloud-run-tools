@@ -31,18 +31,18 @@ public class JMeterTestService {
     this.jmeterTestProvider = jmeterTestProvider;
   }
 
-  public void start(final String id, final Optional<String> jmx,
+  public void start(final String id, final Optional<String> traceID, final Optional<String> jmx,
     final String mode, final Optional<String> proto, final Optional<String> method,
     final String host, final Optional<Integer> port, final Optional<String> path,
     final Optional<String> threads, final Optional<String> profile,
     final int concurrency, final int duration, final int rampupTime, final int rampupSteps,
     final int minLatency, final int maxLatency) {
-    this.start(id, jmx, mode, proto, method, host, port, path,
+    this.start(id, traceID, jmx, mode, proto, method, host, port, path,
       threads, profile, concurrency, duration, rampupTime, rampupSteps,
       System.out, false, minLatency, maxLatency);
   }
 
-  public void start(final String id, final Optional<String> jmx,
+  public void start(final String id, final Optional<String> traceID, final Optional<String> jmx,
     final String mode, final Optional<String> proto, final Optional<String> method,
     final String host, final Optional<Integer> port, final Optional<String> path,
     final Optional<String> threads, final Optional<String> profile,
@@ -57,7 +57,7 @@ public class JMeterTestService {
       this.jmx(jmx), mode, proto.orNull(),
       method.orNull(), host, port.orNull(), path.orNull(),
       minLatency, maxLatency
-    ).threads(threads.orNull()).profile(profile.orNull())
+    ).traceID(traceID.orNull()).threads(threads.orNull()).profile(profile.orNull())
       .concurrency(concurrency).duration(duration).rampupTime(rampupTime).rampupSteps(rampupSteps);
 
     final JMeterTest test = this.newJMeterTest(cfg, outputStream, closeableOutputStream);

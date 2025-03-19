@@ -8,7 +8,9 @@ import javax.servlet.ServletOutputStream;
 
 import com.google.inject.Inject;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Optional;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Ints;
 
@@ -22,8 +24,10 @@ import dev.chux.gcp.crun.jmeter.JMeterTestService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.google.common.base.Optional.fromNullable;
+import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.base.Optional.fromNullable;
+import static com.google.common.base.Strings.emptyToNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
 import static spark.Spark.*;
@@ -32,6 +36,9 @@ public class RunJMeterTestController implements Route {
   private static final Logger logger = LoggerFactory.getLogger(RunJMeterTestController.class);
 
   public static final String PROPERTY_JMETER_MODES = "jmeter.modes";
+
+  static final CharMatcher TRACE_MATCHER = CharMatcher.anyOf("/;-");
+  static final Splitter TRACE_SPLITTER = Splitter.on(TRACE_MATCHER).trimResults().omitEmptyStrings().limit(3);
 
   private static final String SYS_OUT = "sys";
 
@@ -59,6 +66,32 @@ public class RunJMeterTestController implements Route {
     return configService.getMultivalueAppProp(PROPERTY_JMETER_MODES);
   }
 
+  private String traceID(final Request request) {
+    final Optional<String> xCloudTraceCtx = fromNullable(
+      emptyToNull(request.headers("x-cloud-trace-context"))
+    );
+    final Optional<String> traceparent = fromNullable(
+      emptyToNull(request.headers("traceparent"))
+    );
+    final String traceContext = firstNonNull(
+      traceparent.orNull(),
+      xCloudTraceCtx.or("00000000000000000000000000000000/0000000000000000;o=0")
+    );
+
+    final List<String> parts = TRACE_SPLITTER.splitToList(traceContext);
+    if ( parts.size() < 2 ) {
+      return "00000000000000000000000000000000";
+    }
+
+    if  ( traceparent.isPresent() ) {
+      // trace context extracted from `traceparent`
+      // sample: `00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01`
+      return emptyToNull(parts.get(1));
+    }
+    // trace context extracted from `x-cloud-trace-context`
+    return emptyToNull(parts.get(0));
+  }
+
   public void register(final String basePath) {
     path(basePath, () -> {
       path("/jmeter", () -> {
@@ -74,12 +107,16 @@ public class RunJMeterTestController implements Route {
   }
 
   public Object handle(final Request request, final Response response) throws Exception {
-    final String testId = UUID.randomUUID().toString();
+    final Optional<String> traceID = fromNullable(this.traceID(request));
+    final String testID = UUID.randomUUID().toString();
     final String output = request.queryParamOrDefault("output", "res"); 
     final ServletOutputStream responseOutput = response.raw().getOutputStream();
 
     response.type("text/plain");
-    response.header("x-jmeter-test", testId);
+    response.header("x-jmaas-test-id", testID);
+    if ( traceID.isPresent() ) {
+      response.header("x-cloud-trace-id", traceID.get());
+    }
 
     // FQDN, hostname or IP of the remote service.
     final String host = request.queryParamOrDefault("host", null);
@@ -146,7 +183,7 @@ public class RunJMeterTestController implements Route {
 
     logger.info(
       toStringHelper("request")
-      .add("id", testId)
+      .add("id", testID)
       .add("output", output)
       .add("test", jmx)
       .add("mode", mode)
@@ -166,24 +203,24 @@ public class RunJMeterTestController implements Route {
       .toString()
     );
 
-    responseOutput.println("---- starting: " + testId + " ----");
-    logger.info("starting: {}", testId);
+    responseOutput.println("---- starting: " + testID + " ----");
+    logger.info("starting: {}", testID);
 
     if( output != null && output.equalsIgnoreCase(SYS_OUT) ) {
-      this.jMeterTestService.start(testId, jmx, mode,
-        proto, method, host, port, path, threads, profile,
+      this.jMeterTestService.start(testID, traceID, jmx,
+        mode, proto, method, host, port, path, threads, profile,
         concurrency, duration, rampupTime, rampupSteps,
         minLatency, maxLatency);
     } else {
-      this.jMeterTestService.start(testId, jmx, mode,
-        proto, method, host, port, path, threads, profile,
+      this.jMeterTestService.start(testID, traceID, jmx,
+        mode, proto, method, host, port, path, threads, profile,
         concurrency, duration, rampupTime, rampupSteps,
         responseOutput, false /* closeable */,
         minLatency, maxLatency);
     }
     
-    logger.info("finished: {}", testId);
-    return "---- finished: " + testId + " ----";
+    logger.info("finished: {}", testID);
+    return "---- finished: " + testID + " ----";
   }
 
 }

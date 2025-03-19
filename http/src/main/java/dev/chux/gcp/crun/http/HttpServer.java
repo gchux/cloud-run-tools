@@ -17,8 +17,8 @@ import org.slf4j.LoggerFactory;
 public class HttpServer {
   private static final Logger logger = LoggerFactory.getLogger(HttpServer.class);
 
-  private static final String ENV__SERVER_PORT = "";
-  private static final String PROPERTY__SERVER_PORT = "";
+  private static final String ENV__SERVER_PORT = "PORT";
+  private static final String PROPERTY__SERVER_PORT = "server.port";
 
   private static final int DEFAULT__SERVER_PORT = 8080;
 
@@ -26,7 +26,7 @@ public class HttpServer {
   private final Optional<Integer> serverPortEnv;
   private final Optional<Integer> serverPortProp;
 
-  @Configuration("env.Port")
+  @Configuration("env.PORT")
   private int _serverPortEnv;
 
   @Configuration("server.port")

@@ -15,6 +15,8 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 public class JMeterTestConfig {
 
   private final String id;
+  private Optional<String> traceID;
+
   private final Optional<String> jmx;
   private final String mode;
   private final Optional<String> proto;
@@ -120,6 +122,17 @@ public class JMeterTestConfig {
 
   public Optional<String> jmx() {
     return this.jmx;
+  }
+
+  public Optional<String> traceID() {
+    return this.traceID;
+  }
+
+  public JMeterTestConfig traceID(
+    @Nullable final String traceID
+  ) {
+    this.traceID = fromNullable(traceID);
+    return this;
   }
 
   public Optional<String> threads() {

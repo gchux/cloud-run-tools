@@ -153,7 +153,8 @@ public class JMeterTestImpl implements JMeterTest {
       .setConfig(cmd)
       .setProperties(cmd)
       .setVersion(cmd)
-      .setJMeterVersion(cmd);
+      .setJMeterVersion(cmd)
+      .setTraceID(cmd);
     return cmd.build();
   }
 
@@ -204,16 +205,19 @@ public class JMeterTestImpl implements JMeterTest {
     return this.setIntProperty(cmd, "port", this.port());
   }
 
+  private final JMeterTestImpl setTraceID(
+    final ImmutableList.Builder<String> cmd
+  ) {
+    return this.setProperty(cmd, "trace_id", this.traceID());
+  }
+
   private final JMeterTestImpl setConfig(
     final ImmutableList.Builder<String> cmd
   ) {
-    switch ( this.jMeterTestConfig.mode() ) {
-      case "qps":
-      case "QPS":
-        return this.setProfile(cmd);
-      default:
-        return this.setProperty(cmd, "threads_schedule", this.threads());
+    if ( this.mode().equalsIgnoreCase("qps") ) {
+      return this.setProfile(cmd);
     }
+    return this.setProperty(cmd, "threads_schedule", this.threads());
   }
 
   private final JMeterTestImpl setVersion(
@@ -235,6 +239,10 @@ public class JMeterTestImpl implements JMeterTest {
       .setIntProperty(cmd, "duration", this.jMeterTestConfig.duration())
       .setIntProperty(cmd, "rampup_time", this.jMeterTestConfig.rampupTime())
       .setIntProperty(cmd, "rampup_steps", this.jMeterTestConfig.rampupSteps());
+  }
+
+  private final String mode() {
+    return this.jMeterTestConfig.mode().toLowerCase();
   }
 
   private final String host() {
@@ -266,6 +274,11 @@ public class JMeterTestImpl implements JMeterTest {
     return this.jmeterTestDirProvider.get() + "/" +
       this.jMeterTestConfig.jmx()
         .or(this.jmeterTestProvider.get()) + ".jmx";
+  }
+
+  private final String traceID() {
+    final Optional<String> traceId = this.jMeterTestConfig.traceID();
+    return traceId.or("00000000000000000000000000000000");
   }
 
   private final JMeterTestImpl setProfile(
