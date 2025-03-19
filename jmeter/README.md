@@ -33,7 +33,7 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
 #### Latency Parameters
 
 - **`min_latency`**: [`Integer`, _optional_, default:`1`] remote service minimum response time in milliseconds.
-- **`max_latency`**: [`Integer`, _optional_, default:`1000`] remote service maxium response time in milliseconds.
+- **`max_latency`**: [`Integer`, _optional_, default:`1000`] remote service maximum response time in milliseconds.
 
 #### `concurrency` mode Parameters
 
@@ -121,6 +121,51 @@ Depending on the value of the **`mode`** parameter, **`test`** may be one of:
 ## Pre-Built images
 
 - ghcr.io/gchux/cloud-run-tools:jmaas-latest
+
+## Hosting in Cloud Run
+
+1. Pull the pre-built image and upload it to Artifact Registry:
+
+```sh
+export GCP_PROJECT_ID='...'
+export ARTIFACT_REGISTRY_REGION='...'
+export ARTIFACT_REGISTRY_REPOSITORY='...'
+export ARTIFACT_REGISTRY_IMAGE_URI="${ARTIFACT_REGISTRY_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${ARTIFACT_REGISTRY_REPOSITORY}/cloud-run-tools:jmaas-latest"
+
+docker pull ghcr.io/gchux/cloud-run-tools:jmaas-latest
+docker tag ghcr.io/gchux/cloud-run-tools:jmaas-latest ${IMAGE_URI_FULL}
+docker push ${ARTIFACT_REGISTRY_IMAGE_URI}
+```
+
+2. Deploy the container into Cloud Run:
+
+```sh
+export CLOUD_RUN_SERVICE_NAME='...'
+export CLOUD_RUN_SERVICE_REGION='...'
+export CLOUD_RUN_SERVICE_ACCOUNT='...@iam.gserviceaccount.com'
+
+gcloud run deploy ${CLOUD_RUN_SERVICE_NAME} \
+  --image=${ARTIFACT_REGISTRY_IMAGE_URI} \
+  --region=${CLOUD_RUN_SERVICE_REGION} \
+  --service-account=${CLOUD_RUN_SERVICE_ACCOUNT} \
+  --execution-environment=gen2 \
+  --no-use-http2 \
+  --no-cpu-throttling \
+  --no-allow-unauthenticated \
+  --concurrency=1 \
+  --min-instances=0 \
+  --max-instances=10 \
+  --cpu=2 \
+  --memory=2Gi \
+  --timeout=3600s \
+  --port=8080
+```
+
+> [!IMPORTANT]
+> Make sure that the [Service Identity](https://cloud.google.com/run/docs/securing/service-identity) given by `CLOUD_RUN_SERVICE_ACCOUNT` has enough permissions to invoke the remote service.
+
+> [!TIP]
+> It is recommended to set [maximum concurrency](https://cloud.google.com/run/docs/about-concurrency) to 1, and allocate enough CPU and Memory according to the amount of traffic required to be prodiced by a single instance.
 
 ## Samples
 
