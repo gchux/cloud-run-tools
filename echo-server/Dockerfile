@@ -30,7 +30,7 @@ VOLUME /tmp
 
 RUN apk add --update --no-cache bash
 
-COPY --from=build ${DEPENDENCY} /x/rest_app
+COPY --from=build ${DEPENDENCY} /x/app
 
 COPY ./echo-server/echo-server.properties /x/echo-server.properties
 COPY ./echo-server/entrypoint.sh /entrypoint.sh
