@@ -1,6 +1,12 @@
 package dev.chux.gcp.crun.echo.rest;
 
+import java.util.List;
+import java.util.Map;
+
 import com.google.inject.Inject;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import spark.Request;
 import spark.Response;
@@ -12,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Optional.fromNullable;
+import static com.google.common.base.Strings.emptyToNull;
 
 import static spark.Spark.*;
 
@@ -41,22 +48,33 @@ public class EchoController implements Route {
     return "* " + root + "/request";
   }
 
-  public Object handle(final Request request, final Response response) throws Exception {
+  public Object handle(
+    final Request request,
+    final Response response
+  ) throws Exception {
+    final String body = request.body();
+
+    final ImmutableMap.Builder<String, String> headers = ImmutableMap.<String, String>builder();
+    for (final String header : request.headers()) {
+      headers.put(header, request.headers(header));
+    }
+
+    final ImmutableMap.Builder<String, List<String>> query = ImmutableMap.<String, List<String>>builder();
+    for(final Map.Entry<String, String[]> entry : request.queryMap().toMap().entrySet()) {
+      query.put(entry.getKey(), ImmutableList.<String>copyOf(entry.getValue()));
+    }
+
     logger.info(
-      toStringHelper(request.url())
+      toStringHelper(request.matchedPath())
+      .add("protocol", request.protocol())
       .add("method", request.requestMethod())
-      .add("H[User-Agent]", 
-        fromNullable(request.userAgent())
-      )
-      .add("H[x-cloud-trace-context]", 
-        fromNullable(request.headers("X-Cloud-Trace-Context"))
-      )
-      .add("H[traceparent]",
-        fromNullable(request.headers("traceparent"))
-      )
+      .add("url", request.url())
+      .add("query", query.build())
+      .add("headers", headers.build())
+      .addValue(fromNullable(emptyToNull(body)))
       .toString()
     );
-    return request.body();
+    return body;
   }
 
 }
