@@ -143,7 +143,7 @@ docker push ${ARTIFACT_REGISTRY_IMAGE_URI}
 ```sh
 export CLOUD_RUN_SERVICE_NAME='...'
 export CLOUD_RUN_SERVICE_REGION='...'
-export CLOUD_RUN_SERVICE_ACCOUNT='...@iam.gserviceaccount.com'
+export CLOUD_RUN_SERVICE_ACCOUNT='...@<project-id>.iam.gserviceaccount.com'
 
 gcloud run deploy ${CLOUD_RUN_SERVICE_NAME} \
   --image=${ARTIFACT_REGISTRY_IMAGE_URI} \
