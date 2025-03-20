@@ -170,6 +170,6 @@ gcloud run deploy ${CLOUD_RUN_SERVICE_NAME} \
 
 ## Samples
 
-- `mode=qps` `&` `duration=1560` `&` `qps=` `1,50,60` `;` `50,100,60` `;` `100,100,300` `;` `100,50,60` `;` `50,50,300` `;` `50,100,60` `;` `100,100,300` `;` `100,50,60` `;` `50,50,300` `;` `50,0,60`
+- `mode=qps` `&` `duration=1800` `&` `qps=` `1,50,60` `;` `50,100,60` `;` `100,100,300` `;` `100,50,60` `;` `50,50,300` `;` `50,100,60` `;` `100,100,300` `;` `100,50,60` `;` `50,50,300` `;` `50,0,300`
 
   > ![jmaas_test_ui](https://github.com/gchux/jmeter-test-runner/blob/main/jmeter/img/jmaas_test_ui.png?raw=true)
