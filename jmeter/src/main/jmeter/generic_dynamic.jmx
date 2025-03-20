@@ -86,6 +86,11 @@
               <stringProp name="Argument.value">${__P(duration)}</stringProp>
               <stringProp name="Argument.metadata">=</stringProp>
             </elementProp>
+            <elementProp name="x.cloud.trace.id" elementType="Argument">
+              <stringProp name="Argument.name">x.cloud.trace.id</stringProp>
+              <stringProp name="Argument.value">${__P(trace_id)}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
           </collectionProp>
         </Arguments>
         <hashTree/>
@@ -221,6 +226,10 @@ log.info(&quot;TEST[&quot; + tid + &quot;] = &quot; + http_method + &quot; &quot
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">x-jmaas-test-method</stringProp>
                 <stringProp name="Header.value">${gcp.run.test.http.method}</stringProp>
+              </elementProp>
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">X-Cloud-Trace-Context</stringProp>
+                <stringProp name="Header.value">${x.cloud.trace.id}/${__Random(100000,999999)}${__Random(1000000000,2147483647)};o=1</stringProp>
               </elementProp>
             </collectionProp>
           </HeaderManager>

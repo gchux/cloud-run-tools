@@ -233,7 +233,7 @@ log.info(&quot;token[&quot; + tid + &quot;|&quot; + tokenNumber  + &quot;]=&quot
               </elementProp>
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">X-Cloud-Trace-Context</stringProp>
-                <stringProp name="Header.value">${x.cloud.trace.id}/${__Random(1,2147483647)};o=1</stringProp>
+                <stringProp name="Header.value">${x.cloud.trace.id}/${__Random(100000,999999)}${__Random(1000000000,2147483647)};o=1</stringProp>
               </elementProp>
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">Authorization</stringProp>
