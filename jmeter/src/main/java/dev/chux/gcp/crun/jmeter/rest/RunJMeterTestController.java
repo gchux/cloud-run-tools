@@ -12,6 +12,8 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 import com.google.common.primitives.Ints;
 
 import spark.Request;
@@ -44,6 +46,7 @@ public class RunJMeterTestController implements Route {
 
   private final JMeterTestService jMeterTestService;
   private final Set<String> modes;
+  private final String instanceID;
 
   @Inject
   public RunJMeterTestController(
@@ -52,12 +55,32 @@ public class RunJMeterTestController implements Route {
   ) {
     this.jMeterTestService = jMeterTestService;
     this.modes = this.jmeterModes(configService);
+    this.instanceID = this.instanceID(configService);
+    logger.info("com.google.cloud.run.instance.id={}", this.instanceID);
   }
 
   private Set<String> jmeterModes(
     final ConfigService configService
   ) {
     return ImmutableSet.copyOf(jmeterModesProperty(configService));
+  }
+
+  private String instanceID(
+    final ConfigService configService
+  ) {
+    return configService
+      .getOptionalSysProp("com.google.cloud.run.instance.id")
+      .or(this.newInstanceID());
+  }
+
+  private String newInstanceID() {
+    final UUID uuid = UUID.randomUUID();
+    final Hasher h = Hashing.sha256().newHasher();
+    return h
+      .putLong(uuid.getMostSignificantBits())
+      .putLong(uuid.getLeastSignificantBits())
+      .putLong(uuid.timestamp())
+      .hash().toString();
   }
   
   private final List<String> jmeterModesProperty(
@@ -208,13 +231,13 @@ public class RunJMeterTestController implements Route {
     logger.info("starting: {}", testID);
 
     if( output != null && output.equalsIgnoreCase(SYS_OUT) ) {
-      this.jMeterTestService.start(testID, traceID, jmx,
-        mode, proto, method, host, port, path, threads, profile,
+      this.jMeterTestService.start(this.instanceID, testID, traceID,
+        jmx, mode, proto, method, host, port, path, threads, profile,
         concurrency, duration, rampupTime, rampupSteps,
         minLatency, maxLatency);
     } else {
-      this.jMeterTestService.start(testID, traceID, jmx,
-        mode, proto, method, host, port, path, threads, profile,
+      this.jMeterTestService.start(this.instanceID, testID, traceID,
+        jmx, mode, proto, method, host, port, path, threads, profile,
         concurrency, duration, rampupTime, rampupSteps,
         responseOutput, false /* closeable */,
         minLatency, maxLatency);

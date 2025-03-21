@@ -31,19 +31,19 @@ public class JMeterTestService {
     this.jmeterTestProvider = jmeterTestProvider;
   }
 
-  public void start(final String id, final Optional<String> traceID, final Optional<String> jmx,
-    final String mode, final Optional<String> proto, final Optional<String> method,
+  public void start(final String instanceID, final String id, final Optional<String> traceID,
+    final Optional<String> jmx, final String mode, final Optional<String> proto, final Optional<String> method,
     final String host, final Optional<Integer> port, final Optional<String> path,
     final Optional<String> threads, final Optional<String> profile,
     final int concurrency, final int duration, final int rampupTime, final int rampupSteps,
     final int minLatency, final int maxLatency) {
-    this.start(id, traceID, jmx, mode, proto, method, host, port, path,
+    this.start(instanceID, id, traceID, jmx, mode, proto, method, host, port, path,
       threads, profile, concurrency, duration, rampupTime, rampupSteps,
       System.out, false, minLatency, maxLatency);
   }
 
-  public void start(final String id, final Optional<String> traceID, final Optional<String> jmx,
-    final String mode, final Optional<String> proto, final Optional<String> method,
+  public void start(final String instanceID, final String id, final Optional<String> traceID,
+    final Optional<String> jmx, final String mode, final Optional<String> proto, final Optional<String> method,
     final String host, final Optional<Integer> port, final Optional<String> path,
     final Optional<String> threads, final Optional<String> profile,
     final int concurrency, final int duration, final int rampupTime, final int rampupSteps,
@@ -53,8 +53,8 @@ public class JMeterTestService {
     checkArgument(!isNullOrEmpty(host), "host is required");
     checkArgument(!isNullOrEmpty(mode), "mode is required");
 
-    final JMeterTestConfig cfg = new JMeterTestConfig(id,
-      this.jmx(jmx), mode, proto.orNull(),
+    final JMeterTestConfig cfg = new JMeterTestConfig(
+      instanceID, id, this.jmx(jmx), mode, proto.orNull(),
       method.orNull(), host, port.orNull(), path.orNull(),
       minLatency, maxLatency
     ).traceID(traceID.orNull()).threads(threads.orNull()).profile(profile.orNull())

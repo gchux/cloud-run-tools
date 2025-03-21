@@ -154,7 +154,8 @@ public class JMeterTestImpl implements JMeterTest {
       .setProperties(cmd)
       .setVersion(cmd)
       .setJMeterVersion(cmd)
-      .setTraceID(cmd);
+      .setTraceID(cmd)
+      .setInstanceID(cmd);
     return cmd.build();
   }
 
@@ -209,6 +210,13 @@ public class JMeterTestImpl implements JMeterTest {
     final ImmutableList.Builder<String> cmd
   ) {
     return this.setProperty(cmd, "trace_id", this.traceID());
+  }
+
+  private final JMeterTestImpl setInstanceID(
+    final ImmutableList.Builder<String> cmd
+  ) {
+    return this.setProperty(cmd, "instance_id",
+      this.jMeterTestConfig.instanceID());
   }
 
   private final JMeterTestImpl setConfig(

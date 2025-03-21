@@ -91,6 +91,11 @@
               <stringProp name="Argument.value">${__P(trace_id)}</stringProp>
               <stringProp name="Argument.metadata">=</stringProp>
             </elementProp>
+            <elementProp name="gcp.run.instance.id" elementType="Argument">
+              <stringProp name="Argument.name">gcp.run.instance.id</stringProp>
+              <stringProp name="Argument.value">${__P(instance_id)}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
           </collectionProp>
         </Arguments>
         <hashTree/>
@@ -221,6 +226,10 @@ log.info(&quot;TEST[&quot; + tid + &quot;] = &quot; + http_method + &quot; &quot
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">x-jmaas-test-id</stringProp>
                 <stringProp name="Header.value">${gcp.run.test.id}</stringProp>
+              </elementProp>
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">x-jmaas-instance-id</stringProp>
+                <stringProp name="Header.value">${gcp.run.instance.id}</stringProp>
               </elementProp>
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">x-jmaas-test-url</stringProp>

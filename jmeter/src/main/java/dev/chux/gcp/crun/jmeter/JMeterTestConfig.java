@@ -14,6 +14,7 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 
 public class JMeterTestConfig {
 
+  private final String instanceID;
   private final String id;
   private Optional<String> traceID;
 
@@ -37,23 +38,26 @@ public class JMeterTestConfig {
   private int rampupSteps = 1;
 
   public JMeterTestConfig(
+    @CheckForNull @NonNull final String instanceID,
     @CheckForNull @NonNull final String id,
     @CheckForNull @NonNull final String mode,
     @CheckForNull @NonNull final String host
   ) {
-    this(id, mode, host, null);
+    this(instanceID, id, mode, host, null);
   }
   
   public JMeterTestConfig(
+    @CheckForNull @NonNull final String instanceID,
     @CheckForNull @NonNull final String id,
     @CheckForNull @NonNull final String mode,
     @CheckForNull @NonNull final String host,
     @Nullable final String path
   ) {
-    this(id, null, mode, null, null, host, null, path, 1, 1000);
+    this(instanceID, id, null, mode, null, null, host, null, path, 1, 1000);
   }
 
   public JMeterTestConfig(
+    @CheckForNull @NonNull final String instanceID,
     @CheckForNull @NonNull final String id,
     @Nullable final String jmx,
     @CheckForNull @NonNull final String mode,
@@ -65,6 +69,7 @@ public class JMeterTestConfig {
     final int minLatency,
     final int maxLatency
   ) {
+    checkArgument(!isNullOrEmpty(instanceID), "instance_id is required");
     checkArgument(!isNullOrEmpty(id), "id is required");
     checkArgument(!isNullOrEmpty(host), "host is required");
     checkArgument(!isNullOrEmpty(mode), "mode is required");
@@ -72,6 +77,7 @@ public class JMeterTestConfig {
     checkArgument(minLatency > 0, "min_latency must be greater than 0ms");
     checkArgument(maxLatency >= minLatency, "max_latency must be greater than min_latency");
 
+    this.instanceID = instanceID;
     this.id = id;
     this.jmx = fromNullable(jmx);
     this.mode = mode;
@@ -82,6 +88,10 @@ public class JMeterTestConfig {
     this.path = fromNullable(path);
     this.minLatency = minLatency;
     this.maxLatency = maxLatency;
+  }
+
+  public String instanceID() {
+    return this.instanceID;
   }
 
   public String id() {
