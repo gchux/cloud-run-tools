@@ -1,4 +1,4 @@
-FROM eclipse-temurin:17-jdk-alpine as build
+FROM eclipse-temurin:17-jdk-alpine AS build
 WORKDIR /workspace/app
 
 COPY mvnw .
@@ -27,8 +27,8 @@ FROM eclipse-temurin:17
 ARG DEPENDENCY=/workspace/app/target/dependency
 ARG JMETER_VERSION="5.6.3"
 
-ENV JMETER_HOME /opt/apache-jmeter-${JMETER_VERSION}
-ENV	JMETER_BIN ${JMETER_HOME}/bin
+ENV JMETER_HOME=/opt/apache-jmeter-${JMETER_VERSION}
+ENV	JMETER_BIN=${JMETER_HOME}/bin
 
 VOLUME /tmp
 
@@ -67,6 +67,6 @@ COPY ./jmeter/src/main/jmeter/print_id_token /print_id_token
 COPY ./jmeter/entrypoint.sh /entrypoint.sh
 COPY ./jmeter/src/main/jmeter/*.jmx /jmx/
 
-ENV PATH $PATH:$JMETER_BIN
+ENV PATH=$PATH:$JMETER_BIN
 
 ENTRYPOINT ["/entrypoint.sh"]
