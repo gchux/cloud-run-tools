@@ -108,9 +108,11 @@ public class RunJMeterTestController implements Route {
 
   public Object handle(final Request request, final Response response) throws Exception {
     final Optional<String> traceID = fromNullable(this.traceID(request));
-    final String testID = UUID.randomUUID().toString();
     final String output = request.queryParamOrDefault("output", "res"); 
     final ServletOutputStream responseOutput = response.raw().getOutputStream();
+
+    final Optional<String> id = fromNullable(request.queryParamOrDefault("id", null));
+    final String testID = id.or(UUID.randomUUID().toString());
 
     response.type("text/plain");
     response.header("x-jmaas-test-id", testID);
