@@ -22,6 +22,7 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
 
 #### Basic Parameters
 
+- **`id`**: [`String`, _optional_] test ID passed to the remote service via HTTP request header `x-jmaas-test-id`; if not present, a random `UUID` will be used.
 - **`test`**: [`String`, _optional_, default:`test`] [test scenario](src/main/jmeter) to use; without `.jmx` extension.
 - **`mode`**: [`String`, _optional_, default:`concurrency`] test operation mode; alternatives: `qps` or `concurrency`.
 - **`proto`**: [`String`, _optional_, default:`https`] protocol to use; alternatives: `http` or `https`.
