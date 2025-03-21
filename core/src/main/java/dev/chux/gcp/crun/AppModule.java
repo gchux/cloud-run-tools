@@ -47,6 +47,7 @@ class AppModule extends AbstractModule implements BootstrapModule {
 
   private final Map<String, String> environmentMap;
   private final Map<String, String> propertiesMap;
+  private final Map<String, String> systemPropertiesMap;
 
   AppModule(@NonNull @CheckForNull final String propertiesFile, @CheckForNull Optional<Module> module) {
     checkArgument(!isNullOrEmpty(propertiesFile), "full path to properties file is required");
@@ -55,6 +56,7 @@ class AppModule extends AbstractModule implements BootstrapModule {
 
     this.environmentMap = loadEnvironment();
     this.propertiesMap = loadProperties(propertiesFile);
+    this.systemPropertiesMap = Maps.fromProperties(System.getProperties());
   }
 
   private static final String SERVER_PORT_ENV = "PORT";
@@ -83,6 +85,10 @@ class AppModule extends AbstractModule implements BootstrapModule {
     logger.debug("binding properties: {}", this.propertiesMap);
     Names.bindProperties(binder(), this.propertiesMap);
     bindConfiguration("app://properties", this.propertiesMap);
+
+    logger.debug("binding system properties: {}", this.systemPropertiesMap);
+    Names.bindProperties(binder(), this.systemPropertiesMap);
+    bindConfiguration("sys://properties", this.systemPropertiesMap);
 
     bind(ConfigService.class).to(ConfigServiceImpl.class).asEagerSingleton();
 
@@ -118,7 +124,7 @@ class AppModule extends AbstractModule implements BootstrapModule {
 
     final Map<String, String> environmentMap = env.build();
 
-    logger.info("loaded environment: {}", environmentMap);
+    logger.debug("loaded environment: {}", environmentMap);
 
     return environmentMap;
   }
@@ -139,7 +145,7 @@ class AppModule extends AbstractModule implements BootstrapModule {
     Map<String, String> propertiesMap = Maps.<String, String>fromProperties(properties);
     propertiesMap = ImmutableMap.<String, String>copyOf(propertiesMap);
 
-    logger.info("loaded properties: {}", propertiesMap);
+    logger.debug("loaded properties: {}", propertiesMap);
 
     return propertiesMap;
   }

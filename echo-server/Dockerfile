@@ -28,10 +28,11 @@ ARG DEPENDENCY=/workspace/app/target/dependency
 
 VOLUME /tmp
 
-RUN apk add --update --no-cache bash
+RUN apk add --update --no-cache bash curl
 
 COPY --from=build ${DEPENDENCY} /x/app
 
+COPY ./cloud_run.rc /.cloud_run.rc
 COPY ./echo-server/echo-server.properties /x/echo-server.properties
 COPY ./echo-server/entrypoint.sh /entrypoint.sh
 

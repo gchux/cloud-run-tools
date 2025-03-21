@@ -28,14 +28,17 @@ public class ConfigServiceImpl implements ConfigService, Provider<ConfigService>
 
   private final Map<String, String> environment;
   private final Map<String, String> properties;
+  private final Map<String, String> systemProperties;
 
   @Inject
   ConfigServiceImpl(
     @Named("app://environment") Map<String, String> environment,
-    @Named("app://properties") Map<String, String> properties
+    @Named("app://properties") Map<String, String> properties,
+    @Named("sys://properties") Map<String, String> systemProperties
   ) {
     this.environment = environment;
     this.properties = properties;
+    this.systemProperties = systemProperties;
   }
 
   @Override
@@ -165,6 +168,46 @@ public class ConfigServiceImpl implements ConfigService, Provider<ConfigService>
   @Override
   public String getAppPropOrDefault(final String name, final String defaultValue) {
     return this.getOrDefault(this.properties, name, defaultValue);
+  }
+
+  @Override
+  public String getSysProp(final String name) {
+    return this.get(this.systemProperties, name);
+  }
+
+  @Override
+  public List<String> getMultivalueSysProp(final String name) {
+    return this.getMultivalued(this.systemProperties, name);
+  }
+
+  @Override
+  public Optional<Integer> getIntSysProp(final String name) {
+    return this.parseIntValue(this.getSysProp(name));
+  }
+
+  @Override
+  public Optional<Long> getLongSysProp(final String name) {
+    return this.parseLongValue(this.getSysProp(name));
+  }
+
+  @Override
+  public Optional<Double> getDoubleSysProp(final String name) {
+    return this.parseDoubleValue(this.getSysProp(name));
+  }
+
+  @Override
+  public Optional<Boolean> getBooleanSysProp(final String name) {
+    return this.parseBooleanValue(this.getSysProp(name));
+  }
+
+  @Override
+  public Optional<String> getOptionalSysProp(final String name) {
+    return fromNullable(this.getSysProp(name));
+  }
+
+  @Override
+  public String getSysPropOrDefault(final String name, final String defaultValue) {
+    return this.getOrDefault(this.systemProperties, name, defaultValue);
   }
   
 }

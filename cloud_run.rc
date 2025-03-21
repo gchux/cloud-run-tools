@@ -1,0 +1,10 @@
+MDS_URL='http://metadata.google.internal/computeMetadata/v1'
+MDS_CURL="curl -s -H Metadata-Flavor:Google ${MDS_URL}"
+
+export GCP_PROJECT_ID=$(${MDS_CURL}/project/project-id)
+export GCP_PROJECT_NUM=$(${MDS_CURL}/project/numeric-project-id)
+
+X_GCP_REGION=$(${MDS_CURL}/instance/region)
+export GCP_REGION=${X_GCP_REGION##*/}
+
+export CLOUD_RUN_INSTANCE_ID=$(${MDS_CURL}/instance/id)

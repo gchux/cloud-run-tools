@@ -24,4 +24,13 @@ public interface ConfigService {
   public Optional<String> getOptionalAppProp(final String name);
   public String getAppPropOrDefault(final String name, final String defaultValue);
 
+  public String getSysProp(final String name);
+  public List<String> getMultivalueSysProp(final String name);
+  public Optional<Integer> getIntSysProp(final String name);
+  public Optional<Long> getLongSysProp(final String name);
+  public Optional<Double> getDoubleSysProp(final String name);
+  public Optional<Boolean> getBooleanSysProp(final String name);
+  public Optional<String> getOptionalSysProp(final String name);
+  public String getSysPropOrDefault(final String name, final String defaultValue);
+
 }

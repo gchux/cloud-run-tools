@@ -19,6 +19,7 @@ import com.google.gson.Gson;
 import spark.Request;
 import spark.Response;
 
+import dev.chux.gcp.crun.ConfigService;
 import dev.chux.gcp.crun.rest.Route;
 
 import org.slf4j.Logger;
@@ -38,15 +39,34 @@ public class EchoController implements Route {
   public static final String PROPERTIES_PREFIX = RestModule.PROPERTIES_PREFIX + ".echo.request";
 
   private final Gson gson;
+  private final Map<String, String> cloudRun;
 
   @Inject
-  public EchoController(final Gson gson) {
+  public EchoController(
+    final ConfigService configService,
+    final Gson gson
+  ) {
     this.gson = gson;
+    this.cloudRun = this.cloudRun(configService);
+  }
+
+  private final Map<String, String> cloudRun(
+    final ConfigService configService
+  ) {
+    return ImmutableMap.<String, String>builder()
+      .put("project_id", configService.getSysProp("com.google.cloud.project.id"))
+      .put("project_num", configService.getSysProp("com.google.cloud.project.num"))
+      .put("region", configService.getSysProp("com.google.cloud.run.region"))
+      .put("service", configService.getSysProp("com.google.cloud.run.service"))
+      .put("revision", configService.getSysProp("com.google.cloud.run.revision"))
+      .put("instance", configService.getSysProp("com.google.cloud.run.instance.id"))
+      .build();
   }
 
   public void register(final String root) {
     path(root, () -> {
       get("/request", "*/*", this);
+      head("/request", "*/*", this);
       post("/request", "*/*", this);
       put("/request", "*/*", this);
       patch("/request", "*/*", this);
@@ -75,21 +95,22 @@ public class EchoController implements Route {
       query.put(entry.getKey(), ImmutableList.<String>copyOf(entry.getValue()));
     }
 
-    final ImmutableMap<String, Object> reply =
+    final ImmutableMap.Builder<String, Object> reply =
       ImmutableMap.<String, Object>builder()
         .put("proto", request.protocol())
         .put("method", request.requestMethod())
         .put("url", request.url())
         .put("query", query.build())
         .put("headers", headers.build())
-        .put("body", body.or(""))
-        .build();
+        .put("body", body.or(""));
 
-    logger.info("Request[{}]", toStringHelper(request.matchedPath()).addValue(reply));
+    logger.debug("Request[{}]", toStringHelper(request.matchedPath()).addValue(reply.build()));
+
+    reply.put("cloud_run", this.cloudRun);
 
     final OutputStream stream = response.raw().getOutputStream();
     final OutputStreamWriter writer = new OutputStreamWriter(stream, StandardCharsets.UTF_8);
-    this.gson.toJson(reply, writer);
+    this.gson.toJson(reply.build(), writer);
     writer.flush();
     return null;
   }
