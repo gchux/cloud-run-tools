@@ -43,6 +43,7 @@ public class RunJMeterTestController implements Route {
   static final Splitter TRACE_SPLITTER = Splitter.on(TRACE_MATCHER).trimResults().omitEmptyStrings().limit(3);
 
   private static final String SYS_OUT = "sys";
+  private static final String RES_OUT = "res";
 
   private final JMeterTestService jMeterTestService;
   private final Set<String> modes;
@@ -79,7 +80,7 @@ public class RunJMeterTestController implements Route {
     return h
       .putLong(uuid.getMostSignificantBits())
       .putLong(uuid.getLeastSignificantBits())
-      .putLong(uuid.timestamp())
+      .putLong(System.nanoTime())
       .hash().toString();
   }
   

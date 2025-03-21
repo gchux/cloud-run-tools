@@ -50,6 +50,8 @@ public class JMeterTestService {
     final OutputStream outputStream, final boolean closeableOutputStream,
     final int minLatency, final int maxLatency) {
 
+    checkArgument(!isNullOrEmpty(instanceID), "instanceID is required");
+    checkArgument(!isNullOrEmpty(id), "ID is required");
     checkArgument(!isNullOrEmpty(host), "host is required");
     checkArgument(!isNullOrEmpty(mode), "mode is required");
 
