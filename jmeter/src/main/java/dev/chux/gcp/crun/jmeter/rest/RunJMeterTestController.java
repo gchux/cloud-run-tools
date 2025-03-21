@@ -208,6 +208,7 @@ public class RunJMeterTestController implements Route {
 
     logger.info(
       toStringHelper(testID)
+      .add("instance", this.instanceID)
       .add("output", output)
       .add("test", jmx)
       .add("mode", mode)
