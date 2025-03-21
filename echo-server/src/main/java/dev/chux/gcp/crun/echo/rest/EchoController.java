@@ -1,12 +1,20 @@
 package dev.chux.gcp.crun.echo.rest;
 
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+
+import java.nio.charset.StandardCharsets;
+
 import java.util.List;
 import java.util.Map;
 
 import com.google.inject.Inject;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+
+import com.google.gson.Gson;
 
 import spark.Request;
 import spark.Response;
@@ -28,10 +36,13 @@ public class EchoController implements Route {
   public static final String NAMESPACE = RestModule.NAMESPACE + "/http/request";
 
   public static final String PROPERTIES_PREFIX = RestModule.PROPERTIES_PREFIX + ".echo.request";
-  public static final String PROPERTY_ALLOWED_RUNTIMES = PROPERTIES_PREFIX + ".echo.request";
+
+  private final Gson gson;
 
   @Inject
-  public EchoController() {}
+  public EchoController(final Gson gson) {
+    this.gson = gson;
+  }
 
   public void register(final String root) {
     path(root, () -> {
@@ -52,7 +63,7 @@ public class EchoController implements Route {
     final Request request,
     final Response response
   ) throws Exception {
-    final String body = request.body();
+    final Optional<String> body = fromNullable(emptyToNull(request.body()));
 
     final ImmutableMap.Builder<String, String> headers = ImmutableMap.<String, String>builder();
     for (final String header : request.headers()) {
@@ -64,17 +75,23 @@ public class EchoController implements Route {
       query.put(entry.getKey(), ImmutableList.<String>copyOf(entry.getValue()));
     }
 
-    logger.info(
-      toStringHelper(request.matchedPath())
-      .add("protocol", request.protocol())
-      .add("method", request.requestMethod())
-      .add("url", request.url())
-      .add("query", query.build())
-      .add("headers", headers.build())
-      .addValue(fromNullable(emptyToNull(body)))
-      .toString()
-    );
-    return body;
+    final ImmutableMap<String, Object> reply =
+      ImmutableMap.<String, Object>builder()
+        .put("proto", request.protocol())
+        .put("method", request.requestMethod())
+        .put("url", request.url())
+        .put("query", query.build())
+        .put("headers", headers.build())
+        .put("body", body.or(""))
+        .build();
+
+    logger.info("Request[{}]", toStringHelper(request.matchedPath()).addValue(reply));
+
+    final OutputStream stream = response.raw().getOutputStream();
+    final OutputStreamWriter writer = new OutputStreamWriter(stream, StandardCharsets.UTF_8);
+    this.gson.toJson(reply, writer);
+    writer.flush();
+    return null;
   }
 
 }
