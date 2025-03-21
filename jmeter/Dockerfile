@@ -48,7 +48,9 @@ RUN curl -L -O https://repo1.maven.org/maven2/kg/apc/cmdrunner/2.3/cmdrunner-2.3
 WORKDIR /opt/apache-jmeter-${JMETER_VERSION}/lib/ext/
 
 RUN curl -L -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-manager/1.9/jmeter-plugins-manager-1.9.jar \
-    && curl -L -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-casutg/2.10/jmeter-plugins-casutg-2.10.jar \
+    && curl -L -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-casutg/3.0/jmeter-plugins-casutg-3.0.jar \
+    && curl -L -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-tst/2.6/jmeter-plugins-tst-2.6.jar \
+    && curl -L -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-functions/2.2/jmeter-plugins-functions-2.2.jar \
     && curl -L -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-fifo/0.2/jmeter-plugins-fifo-0.2.jar \
     && curl -L -O https://github.com/QAInsights/validate-thread-group/releases/download/v1.0.1/validatetg-1.0.1.jar \
     && java -cp jmeter-plugins-manager-1.9.jar org.jmeterplugins.repository.PluginManagerCMDInstaller
