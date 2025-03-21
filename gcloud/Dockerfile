@@ -48,6 +48,7 @@ RUN wget -nv -q -P / \
 
 ENV PATH $PATH:${GOOGLE_CLOUD_SDK_BIN}
 
+COPY ./cloud_run.rc /.cloud_run.rc
 COPY ./gcloud/gcloud /x/gcloud
 COPY ./gcloud/gcloud-command-runner.properties /gcloud-command-runner.properties
 COPY ./gcloud/entrypoint.sh /entrypoint.sh
