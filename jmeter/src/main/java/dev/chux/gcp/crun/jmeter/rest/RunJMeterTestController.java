@@ -184,8 +184,7 @@ public class RunJMeterTestController implements Route {
     final int rampupSteps = Integer.parseInt(request.queryParamOrDefault("rampup_steps", "1"), 10);
 
     logger.info(
-      toStringHelper("request")
-      .add("id", testID)
+      toStringHelper(testID)
       .add("output", output)
       .add("test", jmx)
       .add("mode", mode)
