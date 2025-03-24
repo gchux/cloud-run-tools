@@ -294,6 +294,8 @@ public class RunJMeterTestController implements Route {
       .add("host", host)
       .add("port", port)
       .add("path", path)
+      .add("query", query)
+      .add("headers", headers)
       .add("body", body)
       .add("steps", threads)
       .add("qps", profile)
