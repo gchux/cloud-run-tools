@@ -1,5 +1,9 @@
 package dev.chux.gcp.crun.jmeter.rest;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -26,11 +30,14 @@ import dev.chux.gcp.crun.jmeter.JMeterTestService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.base.Strings.emptyToNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static com.google.common.base.Throwables.getStackTraceAsString;
 
 import static spark.Spark.*;
 
@@ -44,6 +51,9 @@ public class RunJMeterTestController implements Route {
 
   private static final String SYS_OUT = "sys";
   private static final String RES_OUT = "res";
+
+  private static final String DEFAULT_TRACE_ID = "00000000000000000000000000000000";
+  private static final String DEFAULT_TRACE_CONTEXT = DEFAULT_TRACE_ID + "/0000000000000000;o=0";
 
   private final JMeterTestService jMeterTestService;
   private final Set<String> modes;
@@ -83,6 +93,13 @@ public class RunJMeterTestController implements Route {
       .putLong(System.nanoTime())
       .hash().toString();
   }
+
+  private String newID(final String testID) {
+    final Hasher h = Hashing.crc32c().newHasher();
+    return h.putString(testID, UTF_8)
+      .putLong(System.currentTimeMillis())
+      .hash().toString();
+  }
   
   private final List<String> jmeterModesProperty(
     final ConfigService configService
@@ -99,12 +116,12 @@ public class RunJMeterTestController implements Route {
     );
     final String traceContext = firstNonNull(
       traceparent.orNull(),
-      xCloudTraceCtx.or("00000000000000000000000000000000/0000000000000000;o=0")
+      xCloudTraceCtx.or(DEFAULT_TRACE_CONTEXT)
     );
 
     final List<String> parts = TRACE_SPLITTER.splitToList(traceContext);
     if ( parts.size() < 2 ) {
-      return "00000000000000000000000000000000";
+      return DEFAULT_TRACE_ID;
     }
 
     if  ( traceparent.isPresent() ) {
@@ -116,11 +133,64 @@ public class RunJMeterTestController implements Route {
     return emptyToNull(parts.get(0));
   }
 
+  private final Path writeRequestFile(
+    final String testID,
+    final Optional<String> method,
+    final String host,
+    final Optional<String> path,
+    final String body
+  ) {
+    final String lineBreak = System.lineSeparator();
+
+    // ToDo:
+    //   1. add support for more headers and query params
+    //   2. move request file builder to its own `class`
+    final StringBuilder content = new StringBuilder(lineBreak)
+      .append(method.or("get").toUpperCase())
+        .append(' ').append(path.or("/")).append("HTTP/1.1")
+    .append(lineBreak)
+      .append("Host: ").append(host)
+    .append(lineBreak)
+      .append("Connection: keep-alive")
+    .append(lineBreak)
+      .append("x-jmaas-test-id: ").append(testID)
+    .append(lineBreak)
+    .append(lineBreak)
+      .append(body)
+    .append(lineBreak);
+    
+    content.insert(0, content.length()-lineBreak.length());
+
+    logger.info("request file: {}", content);
+
+    try {
+      final Path filePath = Paths.get("/tmp/" + this.newID(testID));
+      return Files.writeString(filePath, content, UTF_8);
+    } catch(final Exception e) {
+      logger.error("failed to write request file: {}", getStackTraceAsString(e));
+    }
+    return null;
+  }
+
+  private final boolean deleteRequestFile(
+    final Optional<Path> requestFilePath
+  ) {
+    if ( requestFilePath.isPresent() ) {
+      try {
+        return Files.deleteIfExists(requestFilePath.get());
+      } catch(final Exception e) {
+        logger.error("failed to delete request file: {}", getStackTraceAsString(e));
+      }
+    }
+    return false;
+  }
+
   public void register(final String basePath) {
     path(basePath, () -> {
       path("/jmeter", () -> {
         path("/test", () -> {
           get("/run", this);
+          post("/run", "*/*", this);
         });
       });
     });
@@ -131,8 +201,10 @@ public class RunJMeterTestController implements Route {
   }
 
   public Object handle(final Request request, final Response response) throws Exception {
+    final String body = request.body();
+
     final Optional<String> traceID = fromNullable(this.traceID(request));
-    final String output = request.queryParamOrDefault("output", "res"); 
+    final String output = request.queryParamOrDefault("output", RES_OUT); 
     final ServletOutputStream responseOutput = response.raw().getOutputStream();
 
     final Optional<String> id = fromNullable(request.queryParamOrDefault("id", null));
@@ -179,6 +251,10 @@ public class RunJMeterTestController implements Route {
     // TCP port where the remote service accepts HTTP requests.
     final Optional<Integer> port   = fromNullable(Ints.tryParse(request.queryParamOrDefault("port", ""), 10));
 
+    final Optional<Path> requestFilePath = fromNullable(
+      this.writeRequestFile(testID, method, host, path, body)
+    );
+
     // dynamic test configuration
     final Optional<String> threads = fromNullable(request.queryParamOrDefault("steps", null));
     final Optional<String> profile = fromNullable(request.queryParamOrDefault("qps", null));
@@ -202,8 +278,8 @@ public class RunJMeterTestController implements Route {
       return null;
     }
 
-    final int concurrency = Integer.parseInt(request.queryParamOrDefault("concurrency", "1"), 10);
     final int duration    = Integer.parseInt(request.queryParamOrDefault("duration", "1"), 10);
+    final int concurrency = Integer.parseInt(request.queryParamOrDefault("concurrency", "1"), 10);
     final int rampupTime  = Integer.parseInt(request.queryParamOrDefault("rampup_time", "1"), 10);
     final int rampupSteps = Integer.parseInt(request.queryParamOrDefault("rampup_steps", "1"), 10);
 
@@ -243,6 +319,10 @@ public class RunJMeterTestController implements Route {
         concurrency, duration, rampupTime, rampupSteps,
         responseOutput, false /* closeable */,
         minLatency, maxLatency);
+    }
+
+    if ( this.deleteRequestFile(requestFilePath) ) {
+      logger.info("deleted request file: {}", requestFilePath.get());
     }
     
     logger.info("finished: {}", testID);

@@ -1,4 +1,5 @@
 FROM eclipse-temurin:17-jdk-alpine AS build
+
 WORKDIR /workspace/app
 
 COPY mvnw .
@@ -28,7 +29,7 @@ ARG DEPENDENCY=/workspace/app/target/dependency
 ARG JMETER_VERSION="5.6.3"
 
 ENV JMETER_HOME=/opt/apache-jmeter-${JMETER_VERSION}
-ENV	JMETER_BIN=${JMETER_HOME}/bin
+ENV JMETER_BIN=${JMETER_HOME}/bin
 
 VOLUME /tmp
 
@@ -51,13 +52,14 @@ RUN curl -L -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-manager/1.9/
     && curl -L -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-casutg/3.0/jmeter-plugins-casutg-3.0.jar \
     && curl -L -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-tst/2.6/jmeter-plugins-tst-2.6.jar \
     && curl -L -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-functions/2.2/jmeter-plugins-functions-2.2.jar \
+    && curl -L -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-httpraw/0.1/jmeter-plugins-httpraw-0.1.jar \
     && curl -L -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-fifo/0.2/jmeter-plugins-fifo-0.2.jar \
     && curl -L -O https://github.com/QAInsights/validate-thread-group/releases/download/v1.0.1/validatetg-1.0.1.jar \
     && java -cp jmeter-plugins-manager-1.9.jar org.jmeterplugins.repository.PluginManagerCMDInstaller
 
 WORKDIR /opt/apache-jmeter-${JMETER_VERSION}/bin
 
-RUN ./PluginsManagerCMD.sh install jpgc-casutg,jpgc-tst,jpgc-fifo,jpgc-functions,jpgc-json
+RUN ./PluginsManagerCMD.sh install jpgc-casutg,jpgc-tst,jpgc-fifo,jpgc-functions,jpgc-json,jpgc-httpraw
 
 WORKDIR /
 
