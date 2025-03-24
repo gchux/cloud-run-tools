@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -15,6 +16,7 @@ import com.google.inject.Inject;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -46,13 +48,22 @@ public class RunJMeterTestController implements Route {
 
   public static final String PROPERTY_JMETER_MODES = "jmeter.modes";
 
-  static final CharMatcher TRACE_MATCHER = CharMatcher.anyOf("/;-");
-  static final Splitter TRACE_SPLITTER = Splitter.on(TRACE_MATCHER).trimResults().omitEmptyStrings().limit(3);
+  static final Splitter TRACE_SPLITTER = 
+    Splitter.on(CharMatcher.anyOf("/;-")).trimResults().omitEmptyStrings().limit(3);
+  
+  static final Splitter.MapSplitter METADATA_SPLITTER =
+    Splitter.on(CharMatcher.is(';')).trimResults().omitEmptyStrings().withKeyValueSeparator(':');
 
   private static final String SYS_OUT = "sys";
   private static final String RES_OUT = "res";
 
-  private static final String DEFAULT_TRACE_ID = "00000000000000000000000000000000";
+  private static final Integer INTEGER_0 = Integer.valueOf(0);
+  private static final Integer INTEGER_1 = Integer.valueOf(1);
+
+  private static final Integer DEFAULT_MIN_LATENCY = Integer.valueOf(1);
+  private static final Integer DEFAULT_MAX_LATENCY = Integer.valueOf(1000);
+
+  public static final String DEFAULT_TRACE_ID = "00000000000000000000000000000000";
   private static final String DEFAULT_TRACE_CONTEXT = DEFAULT_TRACE_ID + "/0000000000000000;o=0";
 
   private final JMeterTestService jMeterTestService;
@@ -86,18 +97,10 @@ public class RunJMeterTestController implements Route {
 
   private String newInstanceID() {
     final UUID uuid = UUID.randomUUID();
-    final Hasher h = Hashing.sha256().newHasher();
-    return h
+    return Hashing.sha256().newHasher()
       .putLong(uuid.getMostSignificantBits())
       .putLong(uuid.getLeastSignificantBits())
       .putLong(System.nanoTime())
-      .hash().toString();
-  }
-
-  private String newID(final String testID) {
-    final Hasher h = Hashing.crc32c().newHasher();
-    return h.putString(testID, UTF_8)
-      .putLong(System.currentTimeMillis())
       .hash().toString();
   }
   
@@ -133,56 +136,53 @@ public class RunJMeterTestController implements Route {
     return emptyToNull(parts.get(0));
   }
 
-  private final Path writeRequestFile(
-    final String testID,
-    final Optional<String> method,
-    final String host,
-    final Optional<String> path,
-    final String body
+  private Optional<Integer> optionalIntParam(
+    final Request request,
+    final String param
   ) {
-    final String lineBreak = System.lineSeparator();
-
-    // ToDo:
-    //   1. add support for more headers and query params
-    //   2. move request file builder to its own `class`
-    final StringBuilder content = new StringBuilder(lineBreak)
-      .append(method.or("get").toUpperCase())
-        .append(' ').append(path.or("/")).append("HTTP/1.1")
-    .append(lineBreak)
-      .append("Host: ").append(host)
-    .append(lineBreak)
-      .append("Connection: keep-alive")
-    .append(lineBreak)
-      .append("x-jmaas-test-id: ").append(testID)
-    .append(lineBreak)
-    .append(lineBreak)
-      .append(body)
-    .append(lineBreak);
-    
-    content.insert(0, content.length()-lineBreak.length());
-
-    logger.info("request file: {}", content);
-
-    try {
-      final Path filePath = Paths.get("/tmp/" + this.newID(testID));
-      return Files.writeString(filePath, content, UTF_8);
-    } catch(final Exception e) {
-      logger.error("failed to write request file: {}", getStackTraceAsString(e));
-    }
-    return null;
+    return fromNullable(
+      Ints.tryParse(
+        request.queryParamOrDefault(param, "")
+      )
+    );
   }
 
-  private final boolean deleteRequestFile(
-    final Optional<Path> requestFilePath
+  private int optionalIntParamOr(
+    final Request request,
+    final String param,
+    final Integer defaultValue
   ) {
-    if ( requestFilePath.isPresent() ) {
-      try {
-        return Files.deleteIfExists(requestFilePath.get());
-      } catch(final Exception e) {
-        logger.error("failed to delete request file: {}", getStackTraceAsString(e));
-      }
+    return optionalIntParam(request, param).or(defaultValue).intValue();
+  }
+
+  private Optional<String> optionalParam(
+    final Request request,
+    final String param
+  ) {
+    return fromNullable(
+      emptyToNull(
+        request.queryParamOrDefault(param, null)
+      )
+    );
+  }
+
+  private String optionalParamOr(
+    final Request request,
+    final String param,
+    final String defaultValue
+  ) {
+    return optionalParam(request, param).or(defaultValue);
+  }
+
+  private Map<String, String> metadata(
+    final Request request,
+    final String param
+  ) {
+    final Optional<String> metadata = optionalParam(request, param);
+    if ( metadata.isPresent() ) {
+      return METADATA_SPLITTER.split(metadata.get());
     }
-    return false;
+    return ImmutableMap.of();
   }
 
   public void register(final String basePath) {
@@ -201,13 +201,13 @@ public class RunJMeterTestController implements Route {
   }
 
   public Object handle(final Request request, final Response response) throws Exception {
-    final String body = request.body();
+    final Optional<String> body = fromNullable(emptyToNull(request.body()));
 
     final Optional<String> traceID = fromNullable(this.traceID(request));
     final String output = request.queryParamOrDefault("output", RES_OUT); 
     final ServletOutputStream responseOutput = response.raw().getOutputStream();
 
-    final Optional<String> id = fromNullable(request.queryParamOrDefault("id", null));
+    final Optional<String> id = optionalParam(request, "id");
     final String testID = id.or(UUID.randomUUID().toString());
 
     response.type("text/plain");
@@ -224,7 +224,7 @@ public class RunJMeterTestController implements Route {
     }
 
     // Operation mode of the Load Test, may be: `qps` or `concurrency`.
-    final String mode = request.queryParamOrDefault("mode", "concurrency").toLowerCase();
+    final String mode = optionalParamOr(request, "mode", "concurrency").toLowerCase();
 
     if ( isNullOrEmpty(mode) ) {
       halt(400, "mode is required");
@@ -237,36 +237,36 @@ public class RunJMeterTestController implements Route {
     }
 
     // test to execute base on the name of JMX files ( case sensitive ).
-    final Optional<String> jmx     = fromNullable(request.queryParamOrDefault("test", null));
-    //
+    final Optional<String> jmx        = optionalParam(request, "jmx");
+
     // may be `http` ot `https` ( case insensitive ).
-    final Optional<String> proto   = fromNullable(request.queryParamOrDefault("proto", null));
+    final Optional<String> proto      = optionalParam(request, "proto");
 
     // HTTP method to use ( case insensitive ).
-    final Optional<String> method  = fromNullable(request.queryParamOrDefault("method", null));
+    final Optional<String> method     = optionalParam(request, "method");
 
     // URL path ( aka endpoint ) of the remote service.
-    final Optional<String> path    = fromNullable(request.queryParamOrDefault("path", null));
+    final Optional<String> path       = optionalParam(request, "path");
+
+    // request metadata ( query params, and headers )
+    final Map<String, String> query   = metadata(request, "query");
+    final Map<String, String> headers = metadata(request, "headers");
 
     // TCP port where the remote service accepts HTTP requests.
-    final Optional<Integer> port   = fromNullable(Ints.tryParse(request.queryParamOrDefault("port", ""), 10));
-
-    final Optional<Path> requestFilePath = fromNullable(
-      this.writeRequestFile(testID, method, host, path, body)
-    );
+    final Optional<Integer> port      = optionalIntParam(request, "port");
 
     // dynamic test configuration
-    final Optional<String> threads = fromNullable(request.queryParamOrDefault("steps", null));
-    final Optional<String> profile = fromNullable(request.queryParamOrDefault("qps", null));
+    final Optional<String> threads    = optionalParam(request, "steps");
+    final Optional<String> profile    = optionalParam(request, "qps");
 
     if ( (mode.equalsIgnoreCase("qps")) && !profile.isPresent() ) {
-      halt(400, "'profile' is required when 'mode' is set to 'qps'");
+      halt(400, "parameter 'qps' is required when 'mode' is set to 'qps'");
       return null;
     }
 
     // expected min/max response time of the service to load test
-    final int minLatency  = Integer.parseInt(request.queryParamOrDefault("min_latency", "1"), 10);
-    final int maxLatency  = Integer.parseInt(request.queryParamOrDefault("max_latency", "1000"), 10);
+    final int minLatency  = optionalIntParamOr(request, "min_latency", DEFAULT_MIN_LATENCY);
+    final int maxLatency  = optionalIntParamOr(request, "max_latency", DEFAULT_MAX_LATENCY);
 
     if ( minLatency <= 0 ) {
       halt(400, "'min_latency' must be greater than 0 milli seconds");
@@ -278,10 +278,10 @@ public class RunJMeterTestController implements Route {
       return null;
     }
 
-    final int duration    = Integer.parseInt(request.queryParamOrDefault("duration", "1"), 10);
-    final int concurrency = Integer.parseInt(request.queryParamOrDefault("concurrency", "1"), 10);
-    final int rampupTime  = Integer.parseInt(request.queryParamOrDefault("rampup_time", "1"), 10);
-    final int rampupSteps = Integer.parseInt(request.queryParamOrDefault("rampup_steps", "1"), 10);
+    final int duration    = optionalIntParamOr(request, "duration", INTEGER_0);
+    final int concurrency = optionalIntParamOr(request, "concurrency", INTEGER_1);
+    final int rampupTime  = optionalIntParamOr(request, "rampup_time", INTEGER_1);
+    final int rampupSteps = optionalIntParamOr(request, "rampup_steps", INTEGER_1);
 
     logger.info(
       toStringHelper(testID)
@@ -294,14 +294,15 @@ public class RunJMeterTestController implements Route {
       .add("host", host)
       .add("port", port)
       .add("path", path)
+      .add("body", body)
       .add("steps", threads)
       .add("qps", profile)
-      .add("concurrency", concurrency)
       .add("duration", duration)
-      .add("rampup_time", rampupTime)
-      .add("rampup_steps", rampupSteps)
       .add("min_latency", minLatency)
       .add("max_latency", maxLatency)
+      .add("concurrency", concurrency)
+      .add("rampup_time", rampupTime)
+      .add("rampup_steps", rampupSteps)
       .toString()
     );
 
@@ -309,20 +310,20 @@ public class RunJMeterTestController implements Route {
     logger.info("starting: {}", testID);
 
     if( output != null && output.equalsIgnoreCase(SYS_OUT) ) {
-      this.jMeterTestService.start(this.instanceID, testID, traceID,
-        jmx, mode, proto, method, host, port, path, threads, profile,
+      this.jMeterTestService.start(
+        this.instanceID, testID, traceID,
+        jmx, mode, proto, method, host, port, path,
+        query, headers, body, threads, profile,
         concurrency, duration, rampupTime, rampupSteps,
         minLatency, maxLatency);
     } else {
-      this.jMeterTestService.start(this.instanceID, testID, traceID,
-        jmx, mode, proto, method, host, port, path, threads, profile,
+      this.jMeterTestService.start(
+        this.instanceID, testID, traceID,
+        jmx, mode, proto, method, host, port, path,
+        query, headers, body, threads, profile,
         concurrency, duration, rampupTime, rampupSteps,
         responseOutput, false /* closeable */,
         minLatency, maxLatency);
-    }
-
-    if ( this.deleteRequestFile(requestFilePath) ) {
-      logger.info("deleted request file: {}", requestFilePath.get());
     }
     
     logger.info("finished: {}", testID);

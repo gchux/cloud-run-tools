@@ -1,6 +1,9 @@
 package dev.chux.gcp.crun.jmeter;
 
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -12,7 +15,9 @@ import com.google.inject.assistedinject.Assisted;
 
 import com.google.common.base.Optional;
 import com.google.common.base.CharMatcher;
+import com.google.common.base.Function;
 import com.google.common.base.Splitter;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
 
@@ -22,14 +27,17 @@ import dev.chux.gcp.crun.process.ProcessProvider;
 import dev.chux.gcp.crun.process.ProcessOutput;
 import dev.chux.gcp.crun.process.ProcessOutputFactory;
 
-import static com.google.common.base.Optional.absent;
-import static com.google.common.base.Optional.fromNullable;
-import static com.google.common.base.Strings.isNullOrEmpty;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JMeterTestImpl implements JMeterTest {
+import static com.google.common.base.Optional.absent;
+import static com.google.common.base.Optional.fromNullable;
+import static com.google.common.base.Strings.isNullOrEmpty;
+import static com.google.common.base.Throwables.getStackTraceAsString;
+
+import static dev.chux.gcp.crun.jmeter.rest.RunJMeterTestController.DEFAULT_TRACE_ID;
+
+public class JMeterTestImpl implements JMeterTest, Supplier<JMeterTestConfig> {
   private static final Logger logger = LoggerFactory.getLogger(JMeterTestImpl.class);
 
   private static final String JMETER_BIN = "jmeter";
@@ -43,6 +51,7 @@ public class JMeterTestImpl implements JMeterTest {
   private final JMeterTestConfig jMeterTestConfig;
   private final Optional<OutputStream> stream;
   private final boolean closeable;
+  private final Function<Supplier<JMeterTestConfig>, Optional<Path>> requestFileGenerator;
   private final ProcessOutputFactory processOutputFactory;
 
   private final Provider<String> jmeterTestDirProvider;
@@ -52,43 +61,47 @@ public class JMeterTestImpl implements JMeterTest {
 
   @AssistedInject
   public JMeterTestImpl(
-    final ProcessOutputFactory processOutputFactory,
     final ConfigService configService,
+    final RequestFileGenerator requestFileGenerator,
+    final ProcessOutputFactory processOutputFactory,
     @Named("jmeter://jmx.dir") Provider<String> jmeterTestDirProvider,
     @Named("jmeter://test.jmx") Provider<String> jmeterTestProvider,
     @Assisted JMeterTestConfig jMeterTestConfig
   ) {
-    this(processOutputFactory, configService, jmeterTestDirProvider, jmeterTestProvider, jMeterTestConfig, absent(), false);
+    this(configService, requestFileGenerator, processOutputFactory, jmeterTestDirProvider, jmeterTestProvider, jMeterTestConfig, absent(), false);
   }
 
   @AssistedInject
   public JMeterTestImpl(
-    final ProcessOutputFactory processOutputFactory, 
     final ConfigService configService,
+    final RequestFileGenerator requestFileGenerator,
+    final ProcessOutputFactory processOutputFactory, 
     @Named("jmeter://jmx.dir") Provider<String> jmeterTestDirProvider,
     @Named("jmeter://test.jmx") Provider<String> jmeterTestProvider,
     @Assisted JMeterTestConfig jMeterTestConfig, 
     @Assisted OutputStream stream
   ) {
-    this(processOutputFactory, configService, jmeterTestDirProvider, jmeterTestProvider, jMeterTestConfig, fromNullable(stream), false);
+    this(configService, requestFileGenerator, processOutputFactory, jmeterTestDirProvider, jmeterTestProvider, jMeterTestConfig, fromNullable(stream), false);
   }
 
   @AssistedInject
   public JMeterTestImpl(
-    final ProcessOutputFactory processOutputFactory, 
     final ConfigService configService,
+    final RequestFileGenerator requestFileGenerator,
+    final ProcessOutputFactory processOutputFactory, 
     @Named("jmeter://jmx.dir") Provider<String> jmeterTestDirProvider,
     @Named("jmeter://test.jmx") Provider<String> jmeterTestProvider,
     @Assisted JMeterTestConfig jMeterTestConfig, 
     @Assisted OutputStream stream, 
     @Assisted boolean closeable
   ) {
-    this(processOutputFactory, configService, jmeterTestDirProvider, jmeterTestProvider, jMeterTestConfig, fromNullable(stream), closeable);
+    this(configService, requestFileGenerator, processOutputFactory, jmeterTestDirProvider, jmeterTestProvider, jMeterTestConfig, fromNullable(stream), closeable);
   }
 
   public JMeterTestImpl(
-    final ProcessOutputFactory processOutputFactory,
     final ConfigService configService,
+    final RequestFileGenerator requestFileGenerator,
+    final ProcessOutputFactory processOutputFactory,
     final Provider<String> jmeterTestDirProvider,
     final Provider<String> jmeterTestProvider,
     final JMeterTestConfig jMeterTestConfig,
@@ -101,12 +114,18 @@ public class JMeterTestImpl implements JMeterTest {
     this.jMeterTestConfig = jMeterTestConfig;
     this.stream = stream;
     this.closeable = closeable;
+    this.requestFileGenerator = requestFileGenerator;
     this.processOutputFactory = processOutputFactory;
     this.started = new AtomicBoolean(false);
 
     this.jmeterTestDirProvider = jmeterTestDirProvider;
     this.jmeterTestProvider = jmeterTestProvider;
   }
+
+  @Override
+  public JMeterTestConfig get() {
+    return this.jMeterTestConfig;
+  } 
 
   @Override
   public ProcessBuilder getBuilder() {
@@ -140,11 +159,12 @@ public class JMeterTestImpl implements JMeterTest {
 
     logger.debug("JMX: {}", jmx);
 
-    this.setID(cmd
-      .add(JMETER_BIN, "-n",
+    this.setID(
+      cmd.add(JMETER_BIN, "-n",
         "-l", "/dev/stdout",
         "-j", "/dev/stdout",
-        "-t", jmx))
+        "-t", jmx)
+      )
       .setProto(cmd)
       .setMethod(cmd)
       .setHost(cmd)
@@ -155,7 +175,9 @@ public class JMeterTestImpl implements JMeterTest {
       .setVersion(cmd)
       .setJMeterVersion(cmd)
       .setTraceID(cmd)
-      .setInstanceID(cmd);
+      .setInstanceID(cmd)
+      .setRequestFile(cmd);
+
     return cmd.build();
   }
 
@@ -191,13 +213,13 @@ public class JMeterTestImpl implements JMeterTest {
   private final JMeterTestImpl setProto(
     final ImmutableList.Builder<String> cmd
   ) {
-    return this.setProperty(cmd, "proto", this.proto().toLowerCase());
+    return this.setProperty(cmd, "proto", this.proto());
   }
 
   private final JMeterTestImpl setMethod(
     final ImmutableList.Builder<String> cmd
   ) {
-    return this.setProperty(cmd, "http_method", this.method().toUpperCase());
+    return this.setProperty(cmd, "http_method", this.method());
   }
 
   private final JMeterTestImpl setPort(
@@ -240,6 +262,33 @@ public class JMeterTestImpl implements JMeterTest {
     return this.setProperty(cmd, "jm_version", this.jMeterVersion);
   }
 
+  private final JMeterTestImpl setRequestFile(
+    final ImmutableList.Builder<String> cmd
+  ) {
+    final Optional<Path> requestFilePath = this.requestFileGenerator.apply(this);
+    this.deleteRequestFile(requestFilePath);
+    if ( requestFilePath.isPresent() ) {
+      final Path path = requestFilePath.get();
+      return this.setProperty(cmd, "request_file", path.toString());
+    }
+    return this;
+  }
+
+  private final void deleteRequestFile(
+    final Optional<Path> requestFilePath
+  ) {
+    if ( requestFilePath.isPresent() ) {
+      final Path path = requestFilePath.get();
+      try {
+        if ( Files.deleteIfExists(path) ) {
+          logger.info("deleted request file: {}", path);
+        }
+      } catch(final Exception e) {
+        logger.error("failed to delete request file: {}", getStackTraceAsString(e));
+      }
+    }
+  }
+
   private final JMeterTestImpl setProperties(
     final ImmutableList.Builder<String> cmd
   ) {
@@ -262,11 +311,11 @@ public class JMeterTestImpl implements JMeterTest {
   }
 
   private final String proto() {
-    return this.jMeterTestConfig.proto().or("https");
+    return this.jMeterTestConfig.proto().or("https").toLowerCase();
   }
 
   private final String method() {
-    return this.jMeterTestConfig.method().or("get");
+    return this.jMeterTestConfig.method().or("get").toUpperCase();
   }
 
   private final int port() {
@@ -285,8 +334,7 @@ public class JMeterTestImpl implements JMeterTest {
   }
 
   private final String traceID() {
-    final Optional<String> traceId = this.jMeterTestConfig.traceID();
-    return traceId.or("00000000000000000000000000000000");
+    return this.jMeterTestConfig.traceID().or(DEFAULT_TRACE_ID);
   }
 
   private final JMeterTestImpl setProfile(

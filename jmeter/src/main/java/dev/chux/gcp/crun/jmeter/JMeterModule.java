@@ -28,6 +28,7 @@ public class JMeterModule extends AbstractModule {
       .implement(JMeterTest.class, JMeterTestImpl.class)
       .build(JMeterTestFactory.class));
 
+    bind(RequestFileGenerator.class).in(Scopes.SINGLETON);
     bind(JMeterTestService.class).in(Scopes.SINGLETON);
 
     final MapBinder<String, Route> routesBinder =

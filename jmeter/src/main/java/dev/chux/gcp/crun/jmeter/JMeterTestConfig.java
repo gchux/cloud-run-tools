@@ -1,5 +1,7 @@
 package dev.chux.gcp.crun.jmeter;
 
+import java.util.Map;
+
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -25,6 +27,9 @@ public class JMeterTestConfig {
   private final String host;
   private final Optional<Integer> port;
   private final Optional<String> path;
+  private final Optional<Map<String, String>> query;
+  private final Optional<Map<String, String>> headers;
+  private final Optional<String> body;
 
   private final int minLatency;
   private final int maxLatency;
@@ -53,7 +58,7 @@ public class JMeterTestConfig {
     @CheckForNull @NonNull final String host,
     @Nullable final String path
   ) {
-    this(instanceID, id, null, mode, null, null, host, null, path, 1, 1000);
+    this(instanceID, id, null, mode, null, null, host, null, path, null, null, null, 1, 1000);
   }
 
   public JMeterTestConfig(
@@ -66,6 +71,9 @@ public class JMeterTestConfig {
     @CheckForNull @NonNull final String host,
     @Nullable final Integer port,
     @Nullable final String path,
+    @Nullable final Map<String, String> query,
+    @Nullable final Map<String, String> headers,
+    @Nullable final String body,
     final int minLatency,
     final int maxLatency
   ) {
@@ -86,6 +94,10 @@ public class JMeterTestConfig {
     this.host = host;
     this.port = fromNullable(port);
     this.path = fromNullable(path);
+    this.query = fromNullable(query);
+    this.headers = fromNullable(headers);
+    this.body = fromNullable(body);
+
     this.minLatency = minLatency;
     this.maxLatency = maxLatency;
   }
@@ -130,12 +142,24 @@ public class JMeterTestConfig {
     return this.path;
   }
 
+  public Optional<String> body() {
+    return this.body;
+  }
+
   public Optional<String> jmx() {
     return this.jmx;
   }
 
   public Optional<String> traceID() {
     return this.traceID;
+  }
+
+  public Optional<Map<String, String>> query() {
+    return this.query;
+  }
+
+  public Optional<Map<String, String>> headers() {
+    return this.headers;
   }
 
   public JMeterTestConfig traceID(
