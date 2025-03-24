@@ -4,7 +4,7 @@ This service accepts HTTP/1.1 requests and responds with a JSON object including
 
 - protocol
 - method
-- url
+- URL
 - query params
 - headers
 - body
