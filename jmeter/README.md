@@ -34,7 +34,7 @@ Request payload is automatically propagated from the original request.
 - **`host`**: [`String`, **required**]: hostname or IP of the remote HTTP server.
 - **`port`**: [`Integer`, _optional_, default:`443`] TCP port used to connect to the remote HTTP server.
 - **`path`**: [`String`, _optional_, default:`/`] endpoint to test on the remote HTTP server.
-- **`query`**: [`Map<String, String>`, _optional_] query parameters to send; sample: `query=paramA:A;paramB:B`.
+- **`params`**: [`Map<String, String>`, _optional_] query parameters to send; sample: `params=paramA:A;paramB:B`.
 - **`headers`**: [`Map<String, string>`, _optional_] headers to send; sample: `headers=headerA:A;headerB:B`.
 - **`duration`**: [`Integer`, **required**] test duration in seconds.
 

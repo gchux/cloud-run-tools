@@ -249,7 +249,7 @@ public class RunJMeterTestController implements Route {
     final Optional<String> path       = optionalParam(request, "path");
 
     // request metadata ( query params, and headers )
-    final Map<String, String> query   = metadata(request, "query");
+    final Map<String, String> query   = metadata(request, "params");
     final Map<String, String> headers = metadata(request, "headers");
 
     // TCP port where the remote service accepts HTTP requests.
