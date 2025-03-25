@@ -10,7 +10,7 @@
       </elementProp>
     </TestPlan>
     <hashTree>
-      <SetupThreadGroup guiclass="SetupThreadGroupGui" testclass="SetupThreadGroup" testname="setup_test" enabled="true">
+      <SetupThreadGroup guiclass="SetupThreadGroupGui" testclass="SetupThreadGroup" testname="gcp/cloud-run/setup" enabled="true">
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
           <stringProp name="LoopController.loops">1</stringProp>
@@ -24,7 +24,7 @@
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
       </SetupThreadGroup>
       <hashTree>
-        <Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="test_variables" enabled="true">
+        <Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="gcp/cloud-run/variables" enabled="true">
           <collectionProp name="Arguments.arguments">
             <elementProp name="jmaas.vesrion" elementType="Argument">
               <stringProp name="Argument.name">jmaas.version</stringProp>
@@ -96,10 +96,15 @@
               <stringProp name="Argument.value">${__P(instance_id)}</stringProp>
               <stringProp name="Argument.metadata">=</stringProp>
             </elementProp>
+            <elementProp name="gcp.run.test.request.timeout" elementType="Argument">
+              <stringProp name="Argument.name">gcp.run.test.request.timeout</stringProp>
+              <stringProp name="Argument.value">${__P(request_timeout)}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
           </collectionProp>
         </Arguments>
         <hashTree/>
-        <BeanShellSampler guiclass="BeanShellSamplerGui" testclass="BeanShellSampler" testname="BeanShell Sampler" enabled="true">
+        <BeanShellSampler guiclass="BeanShellSamplerGui" testclass="BeanShellSampler" testname="gcp/cloud-run/token" enabled="true">
           <stringProp name="TestPlan.comments">fetch_1st_token</stringProp>
           <stringProp name="BeanShellSampler.query">final String tid = vars.get(&quot;gcp.run.test.id&quot;);
 final String http_method = vars.get(&quot;gcp.run.test.http.method&quot;);
@@ -183,7 +188,7 @@ log.info(&quot;TEST[&quot; + tid + &quot;] = &quot; + http_method + &quot; &quot
           </hashTree>
         </hashTree>
       </hashTree>
-      <kg.apc.jmeter.timers.VariableThroughputTimer guiclass="kg.apc.jmeter.timers.VariableThroughputTimerGui" testclass="kg.apc.jmeter.timers.VariableThroughputTimer" testname="gcp/cloud-run/scheduling/rps">
+      <kg.apc.jmeter.timers.VariableThroughputTimer guiclass="kg.apc.jmeter.timers.VariableThroughputTimerGui" testclass="kg.apc.jmeter.timers.VariableThroughputTimer" testname="gcp/cloud-run/scheduling/qps">
         <collectionProp name="load_profile"/>
       </kg.apc.jmeter.timers.VariableThroughputTimer>
       <hashTree/>
@@ -196,7 +201,7 @@ log.info(&quot;TEST[&quot; + tid + &quot;] = &quot; + http_method + &quot; &quot
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
       </kg.apc.jmeter.threads.UltimateThreadGroup>
       <hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="test_endpoint" enabled="true">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="gcp/cloud-run/test/http/request" enabled="true">
           <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
             <collectionProp name="Arguments.arguments"/>
@@ -206,7 +211,7 @@ log.info(&quot;TEST[&quot; + tid + &quot;] = &quot; + http_method + &quot; &quot
           <stringProp name="HTTPSampler.protocol">${gcp.run.test.proto}</stringProp>
           <stringProp name="HTTPSampler.path">${gcp.run.test.path}</stringProp>
           <stringProp name="HTTPSampler.method">${gcp.run.test.http.method}</stringProp>
-          <boolProp name="HTTPSampler.follow_redirects">false</boolProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
           <boolProp name="HTTPSampler.use_keepalive">false</boolProp>
           <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
@@ -218,7 +223,7 @@ log.info(&quot;TEST[&quot; + tid + &quot;] = &quot; + http_method + &quot; &quot
           <intProp name="HTTPSampler.ipSourceType">0</intProp>
         </HTTPSamplerProxy>
         <hashTree>
-          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="set_authorization_header" enabled="true">
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="gcp/cloud-run/test/http/request/headers" enabled="true">
             <collectionProp name="HeaderManager.headers">
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">User-Agent</stringProp>

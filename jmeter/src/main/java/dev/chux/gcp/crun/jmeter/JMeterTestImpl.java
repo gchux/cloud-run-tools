@@ -30,6 +30,7 @@ import dev.chux.gcp.crun.process.ProcessOutputFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Optional.absent;
 import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.base.Strings.isNullOrEmpty;
@@ -38,6 +39,7 @@ import static com.google.common.base.Throwables.getStackTraceAsString;
 import static dev.chux.gcp.crun.jmeter.rest.RunJMeterTestController.DEFAULT_TRACE_ID;
 
 public class JMeterTestImpl implements JMeterTest, Supplier<JMeterTestConfig> {
+
   private static final Logger logger = LoggerFactory.getLogger(JMeterTestImpl.class);
 
   private static final String JMETER_BIN = "jmeter";
@@ -123,6 +125,11 @@ public class JMeterTestImpl implements JMeterTest, Supplier<JMeterTestConfig> {
   }
 
   @Override
+  public String toString() {
+    return toStringHelper(this).addValue(this.get()).toString();
+  }
+
+  @Override
   public JMeterTestConfig get() {
     return this.jMeterTestConfig;
   } 
@@ -176,6 +183,7 @@ public class JMeterTestImpl implements JMeterTest, Supplier<JMeterTestConfig> {
       .setJMeterVersion(cmd)
       .setTraceID(cmd)
       .setInstanceID(cmd)
+      .setRequestTimeout(cmd)
       .setRequestFile(cmd);
 
     return cmd.build();
@@ -262,31 +270,21 @@ public class JMeterTestImpl implements JMeterTest, Supplier<JMeterTestConfig> {
     return this.setProperty(cmd, "jm_version", this.jMeterVersion);
   }
 
+  private final JMeterTestImpl setRequestTimeout(
+    final ImmutableList.Builder<String> cmd
+  ) {
+    return this.setIntProperty(cmd, "request_timeout", this.requestTimeout());
+  }
+
   private final JMeterTestImpl setRequestFile(
     final ImmutableList.Builder<String> cmd
   ) {
     final Optional<Path> requestFilePath = this.requestFileGenerator.apply(this);
-    this.deleteRequestFile(requestFilePath);
     if ( requestFilePath.isPresent() ) {
       final Path path = requestFilePath.get();
       return this.setProperty(cmd, "request_file", path.toString());
     }
     return this;
-  }
-
-  private final void deleteRequestFile(
-    final Optional<Path> requestFilePath
-  ) {
-    if ( requestFilePath.isPresent() ) {
-      final Path path = requestFilePath.get();
-      try {
-        if ( Files.deleteIfExists(path) ) {
-          logger.info("deleted request file: {}", path);
-        }
-      } catch(final Exception e) {
-        logger.error("failed to delete request file: {}", getStackTraceAsString(e));
-      }
-    }
   }
 
   private final JMeterTestImpl setProperties(
@@ -335,6 +333,10 @@ public class JMeterTestImpl implements JMeterTest, Supplier<JMeterTestConfig> {
 
   private final String traceID() {
     return this.jMeterTestConfig.traceID().or(DEFAULT_TRACE_ID);
+  }
+
+  private final int requestTimeout() {
+    return this.jMeterTestConfig.maxLatency() + 1000;
   }
 
   private final JMeterTestImpl setProfile(

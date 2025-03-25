@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.2">
   <hashTree>
-    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="generic_dynamic" enabled="true">
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="generic_dynamic_full" enabled="true">
       <boolProp name="TestPlan.functional_mode">false</boolProp>
       <boolProp name="TestPlan.tearDown_on_shutdown">false</boolProp>
       <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
@@ -101,6 +101,11 @@
               <stringProp name="Argument.value">${__P(request_timeout)}</stringProp>
               <stringProp name="Argument.metadata">=</stringProp>
             </elementProp>
+            <elementProp name="gcp.run.test.request.file" elementType="Argument">
+              <stringProp name="Argument.name">gcp.run.test.request.file</stringProp>
+              <stringProp name="Argument.value">${__P(request_file)}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
           </collectionProp>
         </Arguments>
         <hashTree/>
@@ -197,58 +202,30 @@ log.info(&quot;TEST[&quot; + tid + &quot;] = &quot; + http_method + &quot; &quot
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
       </kg.apc.jmeter.threads.UltimateThreadGroup>
       <hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="gcp/cloud-run/test/http/request" enabled="true">
-          <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
-          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
-            <collectionProp name="Arguments.arguments"/>
-          </elementProp>
-          <stringProp name="HTTPSampler.domain">${gcp.run.test.host}</stringProp>
-          <stringProp name="HTTPSampler.port">${gcp.run.test.port}</stringProp>
-          <stringProp name="HTTPSampler.protocol">${gcp.run.test.proto}</stringProp>
-          <stringProp name="HTTPSampler.path">${gcp.run.test.path}</stringProp>
-          <stringProp name="HTTPSampler.method">${gcp.run.test.http.method}</stringProp>
-          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
-          <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
-          <boolProp name="HTTPSampler.use_keepalive">false</boolProp>
-          <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
-          <boolProp name="HTTPSampler.BROWSER_COMPATIBLE_MULTIPART">false</boolProp>
-          <boolProp name="HTTPSampler.image_parser">false</boolProp>
-          <boolProp name="HTTPSampler.concurrentDwn">false</boolProp>
-          <stringProp name="HTTPSampler.concurrentPool">6</stringProp>
-          <boolProp name="HTTPSampler.md5">false</boolProp>
-          <intProp name="HTTPSampler.ipSourceType">0</intProp>
-        </HTTPSamplerProxy>
-        <hashTree>
-          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="gcp/cloud-run/test/http/request/headers" enabled="true">
-            <collectionProp name="HeaderManager.headers">
-              <elementProp name="" elementType="Header">
-                <stringProp name="Header.name">User-Agent</stringProp>
-                <stringProp name="Header.value">JMaaS/${jmaas.version} (jmeter/${jm.version})</stringProp>
-              </elementProp>
-              <elementProp name="" elementType="Header">
-                <stringProp name="Header.name">x-jmaas-test-id</stringProp>
-                <stringProp name="Header.value">${gcp.run.test.id}</stringProp>
-              </elementProp>
-              <elementProp name="" elementType="Header">
-                <stringProp name="Header.name">x-jmaas-instance-id</stringProp>
-                <stringProp name="Header.value">${gcp.run.instance.id}</stringProp>
-              </elementProp>
-              <elementProp name="" elementType="Header">
-                <stringProp name="Header.name">x-jmaas-test-url</stringProp>
-                <stringProp name="Header.value">${__property(gcp_run_test_url)}</stringProp>
-              </elementProp>
-              <elementProp name="" elementType="Header">
-                <stringProp name="Header.name">x-jmaas-test-method</stringProp>
-                <stringProp name="Header.value">${gcp.run.test.http.method}</stringProp>
-              </elementProp>
-              <elementProp name="" elementType="Header">
-                <stringProp name="Header.name">X-Cloud-Trace-Context</stringProp>
-                <stringProp name="Header.value">${x.cloud.trace.id}/${__Random(100000,999999)}${__Random(1000000000,2147483647)};o=1</stringProp>
-              </elementProp>
-            </collectionProp>
-          </HeaderManager>
-          <hashTree/>
-        </hashTree>
+        <kg.apc.jmeter.modifiers.RawRequestSourcePreProcessor guiclass="kg.apc.jmeter.modifiers.RawRequestSourcePreProcessorGui" testclass="kg.apc.jmeter.modifiers.RawRequestSourcePreProcessor" testname="gcp/cloud-run/test/http/request/file">
+          <boolProp name="rewind">true</boolProp>
+          <stringProp name="variable_name">gcp.run.test.request</stringProp>
+          <stringProp name="filename">${gcp.run.test.request.file}</stringProp>
+          <boolProp name="isHex">false</boolProp>
+        </kg.apc.jmeter.modifiers.RawRequestSourcePreProcessor>
+        <hashTree/>
+        <kg.apc.jmeter.samplers.HTTPRawSampler guiclass="kg.apc.jmeter.samplers.HTTPRawSamplerGui" testclass="kg.apc.jmeter.samplers.HTTPRawSampler" testname="gcp/cloud-run/test/http/request">
+          <stringProp name="hostname">${gcp.run.test.host}</stringProp>
+          <stringProp name="port">${gcp.run.test.port}</stringProp>
+          <boolProp name="keepalive">false</boolProp>
+          <stringProp name="timeout">${gcp.run.test.request.timeout}</stringProp>
+          <stringProp name="data">${gcp.run.test.request}&#xd;
+Host: ${gcp.run.test.host}&#xd;
+User-Agent: JMaaS/${jmaas.version} (jmeter/${jm.version})&#xd;
+x-jmaas-test-id: ${gcp.run.test.id}&#xd;
+x-jmaas-instance-id: ${gcp.run.instance.id}&#xd;
+x-cloud-trace-context: ${x.cloud.trace.id}/${__Random(100000,999999)}${__Random(1000000000,2147483647)};o=1&#xd;
+&#xd;
+</stringProp>
+          <stringProp name="fileName">${gcp.run.test.request.file}_body</stringProp>
+          <boolProp name="parse">true</boolProp>
+        </kg.apc.jmeter.samplers.HTTPRawSampler>
+        <hashTree/>
       </hashTree>
     </hashTree>
   </hashTree>

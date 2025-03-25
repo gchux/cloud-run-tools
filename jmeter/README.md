@@ -18,6 +18,10 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
 
 ## How to use
 
+### Request Payload
+
+Request payload is automatically propagated from the original request.
+
 ### Query Parameters
 
 #### Basic Parameters
@@ -30,6 +34,8 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
 - **`host`**: [`String`, **required**]: hostname or IP of the remote HTTP server.
 - **`port`**: [`Integer`, _optional_, default:`443`] TCP port used to connect to the remote HTTP server.
 - **`path`**: [`String`, _optional_, default:`/`] endpoint to test on the remote HTTP server.
+- **`query`**: [`Map<String, String>`, _optional_] query parameters to send; sample: `query=paramA:A;paramB:B`.
+- **`headers`**: [`Map<String, string>`, _optional_] headers to send; sample: `headers=headerA:A;headerB:B`.
 - **`duration`**: [`Integer`, **required**] test duration in seconds.
 
 #### Latency Parameters
@@ -113,12 +119,19 @@ Depending on the value of the **`mode`** parameter, **`test`** may be one of:
 - If **`mode`** is set to **`qps`**:
 
   - `cloud_run_qps`
+  - `cloud_run_qps_full`
   - `generic_qps`
+  - `generic_qps_full`
 
 - If **`mode`** is set to **`concurrency`**:
 
   - `cloud_run_dynamic`
+  - `cloud_run_dynamic_full`
   - `generic_dynamic`
+  - `generic_dynamic_full`
+
+> [!IMPORTANT]
+> Only `*_full` tests support: query parameters, headers and body.
 
 ## Pre-Built images
 

@@ -10,12 +10,14 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
 public class JMeterTestConfig {
 
+  private final String name;
   private final String instanceID;
   private final String id;
   private Optional<String> traceID;
@@ -43,25 +45,28 @@ public class JMeterTestConfig {
   private int rampupSteps = 1;
 
   public JMeterTestConfig(
+    @CheckForNull @NonNull final String name,
     @CheckForNull @NonNull final String instanceID,
     @CheckForNull @NonNull final String id,
     @CheckForNull @NonNull final String mode,
     @CheckForNull @NonNull final String host
   ) {
-    this(instanceID, id, mode, host, null);
+    this(name, instanceID, id, mode, host, null);
   }
   
   public JMeterTestConfig(
+    @CheckForNull @NonNull final String name,
     @CheckForNull @NonNull final String instanceID,
     @CheckForNull @NonNull final String id,
     @CheckForNull @NonNull final String mode,
     @CheckForNull @NonNull final String host,
     @Nullable final String path
   ) {
-    this(instanceID, id, null, mode, null, null, host, null, path, null, null, null, 1, 1000);
+    this(name, instanceID, id, null, mode, null, null, host, null, path, null, null, null, 1, 1000);
   }
 
   public JMeterTestConfig(
+    @CheckForNull @NonNull final String name,
     @CheckForNull @NonNull final String instanceID,
     @CheckForNull @NonNull final String id,
     @Nullable final String jmx,
@@ -77,6 +82,7 @@ public class JMeterTestConfig {
     final int minLatency,
     final int maxLatency
   ) {
+    checkArgument(!isNullOrEmpty(name), "name is required");
     checkArgument(!isNullOrEmpty(instanceID), "instance_id is required");
     checkArgument(!isNullOrEmpty(id), "id is required");
     checkArgument(!isNullOrEmpty(host), "host is required");
@@ -85,6 +91,7 @@ public class JMeterTestConfig {
     checkArgument(minLatency > 0, "min_latency must be greater than 0ms");
     checkArgument(maxLatency >= minLatency, "max_latency must be greater than min_latency");
 
+    this.name = name;
     this.instanceID = instanceID;
     this.id = id;
     this.jmx = fromNullable(jmx);
@@ -100,6 +107,22 @@ public class JMeterTestConfig {
 
     this.minLatency = minLatency;
     this.maxLatency = maxLatency;
+  }
+
+  @Override
+  public String toString() {
+    return toStringHelper(this)
+      .add("instance", this.instanceID())
+      .add("name", this.name())
+      .add("id", this.id())
+      .add("jmx", this.jmx())
+      .add("mode", this.mode())
+      .add("host", this.host())
+      .toString();
+  }
+
+  public String name() {
+    return this.name;
   }
 
   public String instanceID() {
