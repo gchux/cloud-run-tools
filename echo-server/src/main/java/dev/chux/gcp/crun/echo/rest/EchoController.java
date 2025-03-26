@@ -54,12 +54,12 @@ public class EchoController implements Route {
     final ConfigService configService
   ) {
     return ImmutableMap.<String, String>builder()
-      .put("project_id", configService.getSysProp("com.google.cloud.project.id"))
-      .put("project_num", configService.getSysProp("com.google.cloud.project.num"))
-      .put("region", configService.getSysProp("com.google.cloud.run.region"))
-      .put("service", configService.getSysProp("com.google.cloud.run.service"))
-      .put("revision", configService.getSysProp("com.google.cloud.run.revision"))
-      .put("instance", configService.getSysProp("com.google.cloud.run.instance.id"))
+      .put("project_id", configService.getSysPropOrDefault("com.google.cloud.project.id", "undefined"))
+      .put("project_num", configService.getSysPropOrDefault("com.google.cloud.project.num", "0"))
+      .put("region", configService.getSysPropOrDefault("com.google.cloud.run.region", "undefined"))
+      .put("service", configService.getSysPropOrDefault("com.google.cloud.run.service", "undefined"))
+      .put("revision", configService.getSysPropOrDefault("com.google.cloud.run.revision", "undefined"))
+      .put("instance", configService.getSysPropOrDefault("com.google.cloud.run.instance.id", "0a1b2c3d4e5f"))
       .build();
   }
 
