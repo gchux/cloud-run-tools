@@ -11,12 +11,17 @@ import java.net.StandardSocketOptions;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.AbstractSelectableChannel;
 import java.nio.charset.StandardCharsets;
 
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Scanner;
 import java.util.regex.Pattern;
@@ -28,6 +33,8 @@ import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SNIHostName;
 
 import kg.apc.io.SocketChannelWithTimeouts;
+
+import com.google.common.io.ByteStreams;
 
 import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
@@ -70,7 +77,7 @@ public class HTTPRawSampler extends AbstractIPSampler {
     }
     
     protected byte[] readResponse(final ByteChannel channel, SampleResult res) throws IOException {
-        ByteArrayOutputStream response = new ByteArrayOutputStream();
+        final ByteArrayOutputStream response = new ByteArrayOutputStream();
         
         ByteBuffer recvBuf = getRecvBuf();
         recvBuf.clear();
@@ -252,7 +259,8 @@ public class HTTPRawSampler extends AbstractIPSampler {
     protected SocketChannel getChannel() throws IOException {
         int t = getTimeoutAsInt();
         if (t > 0) {
-            SocketChannelWithTimeouts res = (SocketChannelWithTimeouts) SocketChannelWithTimeouts.open();
+            SocketChannelWithTimeouts res =
+                (SocketChannelWithTimeouts) SocketChannelWithTimeouts.open();
             res.setConnectTimeout(t);
             res.setReadTimeout(t);
             return res;
@@ -306,24 +314,19 @@ public class HTTPRawSampler extends AbstractIPSampler {
         return true;
     }
     
-    private void sendFile(String filename, final ByteChannel sock) throws IOException {
+    private void sendFile(
+        final String filename,
+        final ByteChannel socket
+    ) throws IOException {
         if (filename.isEmpty()) {
             return;
         }
         
-        FileInputStream is = new FileInputStream(new File(filename));
-        FileChannel source = is.getChannel();
-        
-        ByteBuffer sendBuf = ByteBuffer.allocateDirect(fileSendingChunk);
-        while (source.read(sendBuf) > 0) {
-            sendBuf.flip();
-            if (log.isDebugEnabled()) {
-                log.debug("Sending " + sendBuf);
-            }
-            sock.write(sendBuf);
-            sendBuf.rewind();
-        }
-        
+        final ReadableByteChannel source = Files.newByteChannel(
+            Paths.get(filename), EnumSet.of(StandardOpenOption.READ)
+        );
+
+        ByteStreams.copy(source, socket);
         source.close();
     }
 }
