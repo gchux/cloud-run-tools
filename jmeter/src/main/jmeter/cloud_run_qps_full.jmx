@@ -241,7 +241,7 @@ Connection: close&#xd;
 &#xd;
 </stringProp>
           <stringProp name="fileName">${gcp.run.test.request.file}_body</stringProp>
-          <boolProp name="parse">true</boolProp>
+          <boolProp name="parse">false</boolProp>
           <boolProp name="https">true</boolProp>
         </kg.apc.jmeter.samplers.HTTPRawSampler>
         <hashTree/>
