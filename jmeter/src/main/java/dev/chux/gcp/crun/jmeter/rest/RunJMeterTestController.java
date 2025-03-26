@@ -337,7 +337,7 @@ public class RunJMeterTestController implements Route {
 
     // request metadata ( query params, and headers )
     final Map<String, String> query   = this.params(request);
-    final Map<String, String> headers = this.params(request);
+    final Map<String, String> headers = this.headers(request);
 
     // TCP port where the remote service accepts HTTP requests.
     final Optional<Integer> port      = this.port(request);
@@ -384,8 +384,8 @@ public class RunJMeterTestController implements Route {
       .add("query", query)
       .add("headers", headers)
       .add("body", body)
-      .add("steps", threads)
-      .add("qps", profile)
+      .add(MODE_CONCURRENCY, threads)
+      .add(MODE_QPS, profile)
       .add("duration", duration)
       .add("min_latency", minLatency)
       .add("max_latency", maxLatency)

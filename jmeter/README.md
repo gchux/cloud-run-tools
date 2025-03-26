@@ -26,6 +26,9 @@ Request payload is automatically propagated from the original request.
 
 Test parameters are passed as URL query parameters by default; however, it is also possible to pass them as request headers prefixed by `x-jmaas-test-`.
 
+> [!TIP]
+> You may combine query and headers test params in the same request; query test params are checked first, and headers are used as a fallback.
+
 ### Query Parameters
 
 #### Basic Parameters
