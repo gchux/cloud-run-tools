@@ -51,6 +51,11 @@
               <stringProp name="Argument.value">${__P(proto)}</stringProp>
               <stringProp name="Argument.metadata">=</stringProp>
             </elementProp>
+            <elementProp name="gcp.run.test.https" elementType="Argument">
+              <stringProp name="Argument.name">gcp.run.test.https</stringProp>
+              <stringProp name="Argument.value">${__P(https)}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
             <elementProp name="gcp.run.test.host" elementType="Argument">
               <stringProp name="Argument.name">gcp.run.test.host</stringProp>
               <stringProp name="Argument.value">${__P(host)}</stringProp>
@@ -231,6 +236,7 @@ Connection: close&#xd;
 </stringProp>
           <stringProp name="fileName">${gcp.run.test.request.file}_body</stringProp>
           <boolProp name="parse">false</boolProp>
+          <boolProp name="https">${gcp.run.test.https}</boolProp>
         </kg.apc.jmeter.samplers.HTTPRawSampler>
         <hashTree/>
       </hashTree>

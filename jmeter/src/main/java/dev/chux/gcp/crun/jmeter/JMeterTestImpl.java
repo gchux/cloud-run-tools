@@ -43,6 +43,7 @@ public class JMeterTestImpl implements JMeterTest, Supplier<JMeterTestConfig> {
   private static final Logger logger = LoggerFactory.getLogger(JMeterTestImpl.class);
 
   private static final String JMETER_BIN = "jmeter";
+  private static final String HTTPS = "https";
 
   private static final CharMatcher CONFIG_SEPARATOR = CharMatcher.anyOf(",;:_-|");
   private static final Splitter CONFIG_SPLITTER = Splitter.on(CONFIG_SEPARATOR).omitEmptyStrings().trimResults();
@@ -201,6 +202,11 @@ public class JMeterTestImpl implements JMeterTest, Supplier<JMeterTestConfig> {
       return this.setProperty(cmd, key, Integer.toString(value, 10));
   }
 
+  private final JMeterTestImpl setBoolProperty(
+    final ImmutableList.Builder<String> cmd, final String key, final boolean value) {
+      return this.setProperty(cmd, key, Boolean.toString(value));
+  }
+
   private final JMeterTestImpl setID(
     final ImmutableList.Builder<String> cmd
   ) {
@@ -228,7 +234,9 @@ public class JMeterTestImpl implements JMeterTest, Supplier<JMeterTestConfig> {
   private final JMeterTestImpl setProto(
     final ImmutableList.Builder<String> cmd
   ) {
-    return this.setProperty(cmd, "proto", this.proto());
+    final String proto = this.proto();
+    return this.setProperty(cmd, "proto", proto)
+      .setBoolProperty(cmd, "https", proto.equalsIgnoreCase(HTTPS));
   }
 
   private final JMeterTestImpl setMethod(
@@ -316,11 +324,11 @@ public class JMeterTestImpl implements JMeterTest, Supplier<JMeterTestConfig> {
   }
 
   private final String proto() {
-    return this.jMeterTestConfig.proto().or("https").toLowerCase();
+    return this.jMeterTestConfig.proto().or(HTTPS).toLowerCase();
   }
 
   private final String method() {
-    return this.jMeterTestConfig.method().or("get").toUpperCase();
+    return this.jMeterTestConfig.method().or("GET").toUpperCase();
   }
 
   private final int port() {
