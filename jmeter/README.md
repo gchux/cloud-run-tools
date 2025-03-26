@@ -22,6 +22,10 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
 
 Request payload is automatically propagated from the original request.
 
+### Test Parameters
+
+Test parameters are passed as URL query parameters by default; however, it is also possible to pass them as request headers prefixed by `x-jmaas-test-`.
+
 ### Query Parameters
 
 #### Basic Parameters
@@ -38,6 +42,9 @@ Request payload is automatically propagated from the original request.
 - **`headers`**: [`Map<String, string>`, _optional_] headers to send; sample: `headers=headerA:A;headerB:B`.
 - **`duration`**: [`Integer`, **required**] test duration in seconds.
 
+> [!NOTE]
+> When passing test parameters as request headers, replace all underscores (`_`) by dashes (`-`).
+
 #### Latency Parameters
 
 - **`min_latency`**: [`Integer`, _optional_, default:`1`] remote service minimum response time in milliseconds.
@@ -45,7 +52,7 @@ Request payload is automatically propagated from the original request.
 
 #### `concurrency` mode Parameters
 
-- **`steps`**: [`List<`**`Tuple<Integer>`**`>`, **required**] list of steps in the form of `5-tuples` containing each step configuration.
+- **`concurrency`**: [`List<`**`Tuple<Integer>`**`>`, **required**] list of steps in the form of `5-tuples` containing each step configuration.
 
   `5-tuples` are separated by `;`, and tuple items are separated by `,`.
 
@@ -79,7 +86,7 @@ Request payload is automatically propagated from the original request.
 > [!IMPORTANT]
 > Query param **`duration`** must be equal to the sum of _`rampup_time + duration + shutdown_time`_ across all `5-tuples`.
 
-> [!NOTE]
+> [!TIP]
 > See: https://jmeter-plugins.org/wiki/UltimateThreadGroup/
 
 #### `qps` mode Parameters
@@ -109,7 +116,7 @@ Request payload is automatically propagated from the original request.
 > [!IMPORTANT]
 > Query param **`duration`** must be equal to the sum of _`duration`_ across all `3-truples`.
 
-> [!NOTE]
+> [!TIP]
 > See: https://jmeter-plugins.org/wiki/ThroughputShapingTimer/
 
 #### `test` Parameter
