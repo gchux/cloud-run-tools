@@ -14,6 +14,7 @@ import javax.servlet.ServletOutputStream;
 import com.google.inject.Inject;
 
 import com.google.common.base.CharMatcher;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
@@ -48,14 +49,23 @@ public class RunJMeterTestController implements Route {
 
   public static final String PROPERTY_JMETER_MODES = "jmeter.modes";
 
-  static final Splitter TRACE_SPLITTER = 
+  private static final Splitter TRACE_SPLITTER = 
     Splitter.on(CharMatcher.anyOf("/;-")).trimResults().omitEmptyStrings().limit(3);
   
-  static final Splitter.MapSplitter METADATA_SPLITTER =
+  private static final Splitter.MapSplitter METADATA_SPLITTER =
     Splitter.on(CharMatcher.is(';')).trimResults().omitEmptyStrings().withKeyValueSeparator(':');
+
+  private static final Joiner HEADER_JOINER = Joiner.on('-').skipNulls();
+
+  private static final CharMatcher UNDERSCORE = CharMatcher.is('_');
+
+  private static final String HEADER_PREFIX = "x-jmaas-test";
 
   private static final String SYS_OUT = "sys";
   private static final String RES_OUT = "res";
+
+  private static final String MODE_QPS = "qps";
+  private static final String MODE_CONCURRENCY = "concurrency";
 
   private static final Integer INTEGER_0 = Integer.valueOf(0);
   private static final Integer INTEGER_1 = Integer.valueOf(1);
@@ -79,6 +89,23 @@ public class RunJMeterTestController implements Route {
     this.modes = this.jmeterModes(configService);
     this.instanceID = this.instanceID(configService);
     logger.info("com.google.cloud.run.instance.id={}", this.instanceID);
+  }
+
+  public void register(final String basePath) {
+    path(
+      basePath, () -> {
+        path("/jmeter", () -> {
+          path("/test", () -> {
+            get("/run", this);
+            post("/run", "*/*", this);
+          });
+        });
+      }
+    );
+  }
+
+  public String endpoint(final String basePath) {
+    return "GET " + basePath + "/jmeter/test/run";
   }
 
   private Set<String> jmeterModes(
@@ -110,30 +137,11 @@ public class RunJMeterTestController implements Route {
     return configService.getMultivalueAppProp(PROPERTY_JMETER_MODES);
   }
 
-  private String traceID(final Request request) {
-    final Optional<String> xCloudTraceCtx = fromNullable(
-      emptyToNull(request.headers("x-cloud-trace-context"))
+  private final String toHeaderName(final String param) {
+    return HEADER_JOINER.join(
+      HEADER_PREFIX,
+      UNDERSCORE.replaceFrom(param, '-')
     );
-    final Optional<String> traceparent = fromNullable(
-      emptyToNull(request.headers("traceparent"))
-    );
-    final String traceContext = firstNonNull(
-      traceparent.orNull(),
-      xCloudTraceCtx.or(DEFAULT_TRACE_CONTEXT)
-    );
-
-    final List<String> parts = TRACE_SPLITTER.splitToList(traceContext);
-    if ( parts.size() < 2 ) {
-      return DEFAULT_TRACE_ID;
-    }
-
-    if  ( traceparent.isPresent() ) {
-      // trace context extracted from `traceparent`
-      // sample: `00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01`
-      return emptyToNull(parts.get(1));
-    }
-    // trace context extracted from `x-cloud-trace-context`
-    return emptyToNull(parts.get(0));
   }
 
   private Optional<Integer> optionalIntParam(
@@ -143,6 +151,18 @@ public class RunJMeterTestController implements Route {
     return fromNullable(
       Ints.tryParse(
         request.queryParamOrDefault(param, "")
+      )
+    ).or(
+      fromNullable(
+        Ints.tryParse(
+          firstNonNull(
+            emptyToNull(
+              request.headers(
+                toHeaderName(param)
+              )
+            ), ""
+          )
+        )
       )
     );
   }
@@ -162,6 +182,14 @@ public class RunJMeterTestController implements Route {
     return fromNullable(
       emptyToNull(
         request.queryParamOrDefault(param, null)
+      )
+    ).or(
+      fromNullable(
+        emptyToNull(
+          request.headers(
+            toHeaderName(param)
+          )
+        )
       )
     );
   }
@@ -184,47 +212,106 @@ public class RunJMeterTestController implements Route {
     }
     return ImmutableMap.of();
   }
-
-  public void register(final String basePath) {
-    path(basePath, () -> {
-      path("/jmeter", () -> {
-        path("/test", () -> {
-          get("/run", this);
-          post("/run", "*/*", this);
-        });
-      });
-    });
+  
+  private String host(final Request request) {
+    return optionalParam(request, "host").orNull();
   }
 
-  public String endpoint(final String basePath) {
-    return "GET " + basePath + "/jmeter/test/run";
+  private Optional<String> id(final Request request) {
+    return optionalParam(request, "id");
+  }
+
+  private String mode(final Request request) {
+    return optionalParamOr(request, "mode", MODE_CONCURRENCY).toLowerCase();
+  }
+
+  private String output(final Request request) {
+    return optionalParamOr(request, "output", RES_OUT).toLowerCase();
+  }
+
+  private Optional<String> test(final Request request) {
+    return optionalParam(request, "test");
+  }
+
+  private Optional<String> proto(final Request request) {
+    return optionalParam(request, "proto");
+  }
+
+  private Optional<Integer> port(final Request request) {
+    return optionalIntParam(request, "port");
+  }
+
+  private Optional<String> endpoint(final Request request) {
+    return optionalParam(request, "path");
+  }
+
+  private Optional<String> method(final Request request) {
+    return optionalParam(request, "method");
+  }
+
+  private Optional<String> traceID(final Request request) {
+    final Optional<String> xCloudTraceCtx = fromNullable(
+      emptyToNull(request.headers("x-cloud-trace-context"))
+    );
+    final Optional<String> traceparent = fromNullable(
+      emptyToNull(request.headers("traceparent"))
+    );
+
+    final String traceContext = firstNonNull(
+      traceparent.orNull(),
+      xCloudTraceCtx.or(DEFAULT_TRACE_CONTEXT)
+    );
+
+    final List<String> parts = TRACE_SPLITTER.splitToList(traceContext);
+    if ( parts.size() < 2 ) {
+      return Optional.of(DEFAULT_TRACE_ID);
+    }
+
+    if  ( traceparent.isPresent() ) {
+      // trace context extracted from `traceparent`
+      // sample: `00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01`
+      return fromNullable(emptyToNull(parts.get(1)));
+    }
+    // trace context extracted from `x-cloud-trace-context`
+    return fromNullable(emptyToNull(parts.get(0)));
+  }
+
+  private Map<String, String> params(final Request request) {
+    return metadata(request, "params");
+  }
+
+  private Map<String, String> headers(final Request request) {
+    return metadata(request, "headers");
+  }
+
+  private Optional<String> body(final Request request) {
+    return fromNullable(emptyToNull(request.body()));
   }
 
   public Object handle(final Request request, final Response response) throws Exception {
-    final Optional<String> body = fromNullable(emptyToNull(request.body()));
-
-    final Optional<String> traceID = fromNullable(this.traceID(request));
-    final String output = request.queryParamOrDefault("output", RES_OUT); 
+    final Optional<String> body = this.body(request);
     final ServletOutputStream responseOutput = response.raw().getOutputStream();
 
-    final Optional<String> id = optionalParam(request, "id");
+    final String output = this.output(request);
+    final Optional<String> traceID = this.traceID(request);
+    final Optional<String> id = this.id(request);
     final String testID = id.or(UUID.randomUUID().toString());
 
     response.type("text/plain");
-    response.header("x-jmaas-test-id", testID);
+    response.header(toHeaderName("id"), testID);
     if ( traceID.isPresent() ) {
       response.header("x-cloud-trace-id", traceID.get());
     }
 
     // FQDN, hostname or IP of the remote service.
-    final String host = request.queryParamOrDefault("host", null);
+    final String host = this.host(request);
     if ( isNullOrEmpty(host) ) {
       response.status(400);
       return "host is required";
     }
 
     // Operation mode of the Load Test, may be: `qps` or `concurrency`.
-    final String mode = optionalParamOr(request, "mode", "concurrency").toLowerCase();
+    final String mode = this.mode(request);
 
     if ( isNullOrEmpty(mode) ) {
       halt(400, "mode is required");
@@ -232,34 +319,34 @@ public class RunJMeterTestController implements Route {
     }
 
     if ( !this.modes.contains(mode) ) {
-      halt(404, "invalid mode: " + mode);
+      halt(400, "invalid mode: " + mode);
       return null;
     }
 
     // test to execute base on the name of JMX files ( case sensitive ).
-    final Optional<String> jmx        = optionalParam(request, "jmx");
+    final Optional<String> jmx        = this.test(request);
 
     // may be `http` ot `https` ( case insensitive ).
-    final Optional<String> proto      = optionalParam(request, "proto");
+    final Optional<String> proto      = this.proto(request);
 
     // HTTP method to use ( case insensitive ).
-    final Optional<String> method     = optionalParam(request, "method");
+    final Optional<String> method     = this.method(request);
 
     // URL path ( aka endpoint ) of the remote service.
-    final Optional<String> path       = optionalParam(request, "path");
+    final Optional<String> path       = this.endpoint(request);
 
     // request metadata ( query params, and headers )
-    final Map<String, String> query   = metadata(request, "params");
-    final Map<String, String> headers = metadata(request, "headers");
+    final Map<String, String> query   = this.params(request);
+    final Map<String, String> headers = this.params(request);
 
     // TCP port where the remote service accepts HTTP requests.
-    final Optional<Integer> port      = optionalIntParam(request, "port");
+    final Optional<Integer> port      = this.port(request);
 
     // dynamic test configuration
-    final Optional<String> threads    = optionalParam(request, "steps");
-    final Optional<String> profile    = optionalParam(request, "qps");
+    final Optional<String> threads    = optionalParam(request, MODE_CONCURRENCY);
+    final Optional<String> profile    = optionalParam(request, MODE_QPS);
 
-    if ( (mode.equalsIgnoreCase("qps")) && !profile.isPresent() ) {
+    if ( (mode.equalsIgnoreCase(MODE_QPS)) && !profile.isPresent() ) {
       halt(400, "parameter 'qps' is required when 'mode' is set to 'qps'");
       return null;
     }
