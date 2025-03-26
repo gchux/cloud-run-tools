@@ -61,6 +61,7 @@ RUN curl -sSL -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-manager/1.
     && curl -sSL -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-tst/2.6/jmeter-plugins-tst-2.6.jar \
     && curl -sSL -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-functions/2.2/jmeter-plugins-functions-2.2.jar \
     && curl -sSL -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-httpraw/0.1/jmeter-plugins-httpraw-0.1.jar \
+    && curl -sSL -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-common-io/0.2/jmeter-plugins-common-io-0.2.jar \
     && curl -sSL -O https://repo1.maven.org/maven2/com/github/marianobarrios/tls-channel/0.9.1/tls-channel-0.9.1.jar \
     && curl -sSL -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-fifo/0.2/jmeter-plugins-fifo-0.2.jar \
     && curl -sSL -O https://github.com/QAInsights/validate-thread-group/releases/download/v1.0.1/validatetg-1.0.1.jar \

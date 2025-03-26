@@ -196,8 +196,6 @@ public class HTTPRawSampler extends AbstractIPSampler {
         final String serverName = getHostName();
         final InetSocketAddress address = new InetSocketAddress(serverName, port);
 
-        log.info("address: {}", address);
-
         if ( isHTTPS() ) {
             // bypass to support HTTPS
             return getSecureChannel(address);
@@ -224,6 +222,8 @@ public class HTTPRawSampler extends AbstractIPSampler {
         s.setKeepAlive(false);
         s.setSoTimeout(t);
         s.connect(address, t);
+
+        log.info("{} > {}", s.getLocalSocketAddress(), address);
 
         final SSLContext sslContext = SSLContext.getDefault();
 
