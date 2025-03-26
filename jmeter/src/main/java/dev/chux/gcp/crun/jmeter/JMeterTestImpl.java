@@ -172,6 +172,7 @@ public class JMeterTestImpl implements JMeterTest, Supplier<JMeterTestConfig> {
         "-j", "/dev/stdout",
         "-t", jmx)
       )
+      .setName(cmd)
       .setProto(cmd)
       .setMethod(cmd)
       .setHost(cmd)
@@ -204,6 +205,12 @@ public class JMeterTestImpl implements JMeterTest, Supplier<JMeterTestConfig> {
     final ImmutableList.Builder<String> cmd
   ) {
     return this.setProperty(cmd, "tid", this.jMeterTestConfig.id());
+  }
+
+  private final JMeterTestImpl setName(
+    final ImmutableList.Builder<String> cmd
+  ) {
+    return this.setProperty(cmd, "test_name", this.jMeterTestConfig.name());
   }
 
   private final JMeterTestImpl setHost(

@@ -16,7 +16,9 @@ COPY http http
 
 COPY jmeter jmeter
 
-RUN --mount=type=cache,target=/root/.m2 ./mvnw -Pjmeter clean install -DskipTests
+RUN --mount=type=cache,target=/root/.m2 ./mvnw -B -ntp -Pjmeter clean install -DskipTests -Dmaven.test.skip=true
+RUN --mount=type=cache,target=/root/.m2 ./mvnw -B -ntp -f jmeter/httpraw/pom.xml clean install -DskipTests -Dmaven.test.skip=true
+
 RUN mkdir -p target/dependency
 
 WORKDIR /workspace/app/target/dependency
@@ -24,6 +26,8 @@ WORKDIR /workspace/app/target/dependency
 RUN jar -xf /workspace/app/jmeter/target/jmeter.jar
 
 FROM eclipse-temurin:17
+
+ARG DEBIAN_FRONTEND=noninteractive
 
 ARG DEPENDENCY=/workspace/app/target/dependency
 ARG JMETER_VERSION="5.6.3"
@@ -35,7 +39,11 @@ VOLUME /tmp
 
 COPY --from=build ${DEPENDENCY} /app
 
-RUN curl -L https://dlcdn.apache.org//jmeter/binaries/apache-jmeter-${JMETER_VERSION}.tgz > /tmp/jmeter.tgz \
+RUN apt-get -qq update  > /dev/null \
+    && apt-get -qq -yy install ca-certificates > /dev/null \
+    && apt-get -qq clean > /dev/null
+
+RUN curl -sSL https://dlcdn.apache.org//jmeter/binaries/apache-jmeter-${JMETER_VERSION}.tgz > /tmp/jmeter.tgz \
     && mkdir -p /opt \
     && tar -xvf /tmp/jmeter.tgz -C /opt \
     && rm /tmp/jmeter.tgz \
@@ -44,22 +52,26 @@ RUN curl -L https://dlcdn.apache.org//jmeter/binaries/apache-jmeter-${JMETER_VER
 
 WORKDIR /opt/apache-jmeter-${JMETER_VERSION}/lib
 
-RUN curl -L -O https://repo1.maven.org/maven2/kg/apc/cmdrunner/2.3/cmdrunner-2.3.jar
+RUN curl -sSL -O https://repo1.maven.org/maven2/kg/apc/cmdrunner/2.3/cmdrunner-2.3.jar
 
 WORKDIR /opt/apache-jmeter-${JMETER_VERSION}/lib/ext/
 
-RUN curl -L -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-manager/1.9/jmeter-plugins-manager-1.9.jar \
-    && curl -L -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-casutg/3.0/jmeter-plugins-casutg-3.0.jar \
-    && curl -L -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-tst/2.6/jmeter-plugins-tst-2.6.jar \
-    && curl -L -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-functions/2.2/jmeter-plugins-functions-2.2.jar \
-    && curl -L -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-httpraw/0.1/jmeter-plugins-httpraw-0.1.jar \
-    && curl -L -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-fifo/0.2/jmeter-plugins-fifo-0.2.jar \
-    && curl -L -O https://github.com/QAInsights/validate-thread-group/releases/download/v1.0.1/validatetg-1.0.1.jar \
+RUN curl -sSL -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-manager/1.9/jmeter-plugins-manager-1.9.jar \
+    && curl -sSL -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-casutg/3.0/jmeter-plugins-casutg-3.0.jar \
+    && curl -sSL -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-tst/2.6/jmeter-plugins-tst-2.6.jar \
+    && curl -sSL -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-functions/2.2/jmeter-plugins-functions-2.2.jar \
+    && curl -sSL -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-httpraw/0.1/jmeter-plugins-httpraw-0.1.jar \
+    && curl -sSL -O https://repo1.maven.org/maven2/com/github/marianobarrios/tls-channel/0.9.1/tls-channel-0.9.1.jar \
+    && curl -sSL -O https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-fifo/0.2/jmeter-plugins-fifo-0.2.jar \
+    && curl -sSL -O https://github.com/QAInsights/validate-thread-group/releases/download/v1.0.1/validatetg-1.0.1.jar \
     && java -cp jmeter-plugins-manager-1.9.jar org.jmeterplugins.repository.PluginManagerCMDInstaller
 
 WORKDIR /opt/apache-jmeter-${JMETER_VERSION}/bin
 
 RUN ./PluginsManagerCMD.sh install jpgc-casutg,jpgc-tst,jpgc-fifo,jpgc-functions,jpgc-json,jpgc-httpraw
+
+# override httpraw plugin
+COPY --from=build /workspace/app/jmeter/httpraw/target/jmeter-plugins-httpraw-0.1.jar /opt/apache-jmeter-${JMETER_VERSION}/lib/ext/
 
 WORKDIR /
 

@@ -172,6 +172,9 @@ public class RequestFileGenerator implements Function<Supplier<JMeterTestConfig>
   ) {
     final JMeterTestConfig config = checkNotNull(supplier.get());
     final StringBuilder content = new StringBuilder(LINE_BREAK);
+    // create a temporary file containing
+    // the absolute minimum amount of request details;
+    // JMeter will take care of everything else...
     return this
       .setLine(config, content)
       .setHeaders(config, content)

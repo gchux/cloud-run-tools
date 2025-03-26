@@ -17,7 +17,7 @@
           <boolProp name="LoopController.continue_forever">false</boolProp>
         </elementProp>
         <stringProp name="ThreadGroup.num_threads">1</stringProp>
-        <stringProp name="ThreadGroup.ramp_time">1</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">0</stringProp>
         <boolProp name="ThreadGroup.scheduler">false</boolProp>
         <stringProp name="ThreadGroup.duration"></stringProp>
         <stringProp name="ThreadGroup.delay"></stringProp>
@@ -39,6 +39,11 @@
             <elementProp name="gcp.run.test.id" elementType="Argument">
               <stringProp name="Argument.name">gcp.run.test.id</stringProp>
               <stringProp name="Argument.value">${__P(tid)}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="gcp.run.test.name" elementType="Argument">
+              <stringProp name="Argument.name">gcp.run.test.name</stringProp>
+              <stringProp name="Argument.value">${__P(test_name)}</stringProp>
               <stringProp name="Argument.metadata">=</stringProp>
             </elementProp>
             <elementProp name="gcp.run.test.proto" elementType="Argument">
@@ -126,7 +131,7 @@ log.info(&quot;TEST[&quot; + tid + &quot;] = &quot; + http_method + &quot; &quot
           <boolProp name="LoopController.continue_forever">false</boolProp>
         </elementProp>
         <stringProp name="ThreadGroup.num_threads">1</stringProp>
-        <stringProp name="ThreadGroup.ramp_time">1</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">0</stringProp>
         <boolProp name="ThreadGroup.delayedStart">false</boolProp>
         <boolProp name="ThreadGroup.scheduler">false</boolProp>
         <stringProp name="ThreadGroup.duration"></stringProp>
@@ -226,12 +231,20 @@ log.info(&quot;TEST[&quot; + tid + &quot;] = &quot; + http_method + &quot; &quot
           <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="gcp/cloud-run/test/http/request/headers" enabled="true">
             <collectionProp name="HeaderManager.headers">
               <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">Host</stringProp>
+                <stringProp name="Header.value">${gcp.run.test.host}:${gcp.run.test.port}</stringProp>
+              </elementProp>
+              <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">User-Agent</stringProp>
                 <stringProp name="Header.value">JMaaS/${jmaas.version} (jmeter/${jm.version})</stringProp>
               </elementProp>
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">x-jmaas-test-id</stringProp>
                 <stringProp name="Header.value">${gcp.run.test.id}</stringProp>
+              </elementProp>
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">x-jmaas-test-name</stringProp>
+                <stringProp name="Header.value">${gcp.run.test.name}</stringProp>
               </elementProp>
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">x-jmaas-instance-id</stringProp>
@@ -248,6 +261,10 @@ log.info(&quot;TEST[&quot; + tid + &quot;] = &quot; + http_method + &quot; &quot
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">X-Cloud-Trace-Context</stringProp>
                 <stringProp name="Header.value">${x.cloud.trace.id}/${__Random(100000,999999)}${__Random(1000000000,2147483647)};o=1</stringProp>
+              </elementProp>
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">Connection</stringProp>
+                <stringProp name="Header.value">close</stringProp>
               </elementProp>
             </collectionProp>
           </HeaderManager>

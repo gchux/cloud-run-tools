@@ -17,7 +17,7 @@
           <boolProp name="LoopController.continue_forever">false</boolProp>
         </elementProp>
         <stringProp name="ThreadGroup.num_threads">1</stringProp>
-        <stringProp name="ThreadGroup.ramp_time">1</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">0</stringProp>
         <boolProp name="ThreadGroup.scheduler">false</boolProp>
         <stringProp name="ThreadGroup.duration"></stringProp>
         <stringProp name="ThreadGroup.delay"></stringProp>
@@ -41,6 +41,11 @@
               <stringProp name="Argument.value">${__P(tid)}</stringProp>
               <stringProp name="Argument.metadata">=</stringProp>
             </elementProp>
+            <elementProp name="gcp.run.test.name" elementType="Argument">
+              <stringProp name="Argument.name">gcp.run.test.name</stringProp>
+              <stringProp name="Argument.value">${__P(test_name)}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
             <elementProp name="gcp.run.test.http.method" elementType="Argument">
               <stringProp name="Argument.name">gcp.run.test.http.method</stringProp>
               <stringProp name="Argument.value">${__P(http_method)}</stringProp>
@@ -49,6 +54,11 @@
             <elementProp name="gcp.run.test.host" elementType="Argument">
               <stringProp name="Argument.name">gcp.run.test.host</stringProp>
               <stringProp name="Argument.value">${__P(host)}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="gcp.run.test.port" elementType="Argument">
+              <stringProp name="Argument.name">gcp.run.test.port</stringProp>
+              <stringProp name="Argument.value">${__P(port)}</stringProp>
               <stringProp name="Argument.metadata">=</stringProp>
             </elementProp>
             <elementProp name="gcp.run.test.path" elementType="Argument">
@@ -133,7 +143,7 @@ log.info(&quot;token[&quot; + tid + &quot;|0]=&quot; + token.substring(0, 15) + 
           <boolProp name="LoopController.continue_forever">false</boolProp>
         </elementProp>
         <stringProp name="ThreadGroup.num_threads">1</stringProp>
-        <stringProp name="ThreadGroup.ramp_time">1</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">0</stringProp>
         <boolProp name="ThreadGroup.delayedStart">false</boolProp>
         <boolProp name="ThreadGroup.scheduler">false</boolProp>
         <stringProp name="ThreadGroup.duration"></stringProp>
@@ -223,16 +233,18 @@ log.info(&quot;token[&quot; + tid + &quot;|&quot; + tokenNumber  + &quot;]=&quot
         <hashTree/>
         <kg.apc.jmeter.samplers.HTTPRawSampler guiclass="kg.apc.jmeter.samplers.HTTPRawSamplerGui" testclass="kg.apc.jmeter.samplers.HTTPRawSampler" testname="gcp/cloud-run/test/http/request">
           <stringProp name="hostname">${gcp.run.test.host}</stringProp>
-          <stringProp name="port">443</stringProp>
+          <stringProp name="port">${gcp.run.test.port}</stringProp>
           <boolProp name="keepalive">false</boolProp>
           <stringProp name="timeout">${gcp.run.test.request.timeout}</stringProp>
           <stringProp name="data">${gcp.run.test.request}&#xd;
-Host: ${gcp.run.test.host}&#xd;
+Host: ${gcp.run.test.host}:${gcp.run.test.port}&#xd;
 User-Agent: JMaaS/${jmaas.version} (jmeter/${jm.version})&#xd;
+Authorization: Bearer ${__property(gcp_run_test_token)}&#xd;
 x-jmaas-test-id: ${gcp.run.test.id}&#xd;
+x-jmaas-test-name: ${gcp.run.test.name}&#xd;
 x-jmaas-instance-id: ${gcp.run.instance.id}&#xd;
 x-cloud-trace-context: ${x.cloud.trace.id}/${__Random(100000,999999)}${__Random(1000000000,2147483647)};o=1&#xd;
-Authorization: Bearer ${__property(gcp_run_test_token)}&#xd;
+Connection: close&#xd;
 &#xd;
 </stringProp>
           <stringProp name="fileName">${gcp.run.test.request.file}_body</stringProp>

@@ -17,7 +17,7 @@
           <boolProp name="LoopController.continue_forever">false</boolProp>
         </elementProp>
         <stringProp name="ThreadGroup.num_threads">1</stringProp>
-        <stringProp name="ThreadGroup.ramp_time">1</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">0</stringProp>
         <boolProp name="ThreadGroup.scheduler">false</boolProp>
         <stringProp name="ThreadGroup.duration"></stringProp>
         <stringProp name="ThreadGroup.delay"></stringProp>
@@ -39,6 +39,11 @@
             <elementProp name="gcp.run.test.id" elementType="Argument">
               <stringProp name="Argument.name">gcp.run.test.id</stringProp>
               <stringProp name="Argument.value">${__P(tid)}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="gcp.run.test.name" elementType="Argument">
+              <stringProp name="Argument.name">gcp.run.test.name</stringProp>
+              <stringProp name="Argument.value">${__P(test_name)}</stringProp>
               <stringProp name="Argument.metadata">=</stringProp>
             </elementProp>
             <elementProp name="gcp.run.test.http.method" elementType="Argument">
@@ -119,7 +124,7 @@ log.info(&quot;token[&quot; + tid + &quot;|0]=&quot; + token.substring(0, 15) + 
           <boolProp name="LoopController.continue_forever">false</boolProp>
         </elementProp>
         <stringProp name="ThreadGroup.num_threads">1</stringProp>
-        <stringProp name="ThreadGroup.ramp_time">1</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">0</stringProp>
         <boolProp name="ThreadGroup.delayedStart">false</boolProp>
         <boolProp name="ThreadGroup.scheduler">false</boolProp>
         <stringProp name="ThreadGroup.duration"></stringProp>
@@ -228,12 +233,20 @@ log.info(&quot;token[&quot; + tid + &quot;|&quot; + tokenNumber  + &quot;]=&quot
           <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="set_authorization_header" enabled="true">
             <collectionProp name="HeaderManager.headers">
               <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">Host</stringProp>
+                <stringProp name="Header.value">${gcp.run.test.host}:${gcp.run.test.port}</stringProp>
+              </elementProp>
+              <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">User-Agent</stringProp>
                 <stringProp name="Header.value">JMaaS/${jmaas.version} (jmeter/${jm.version})</stringProp>
               </elementProp>
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">x-jmaas-test-id</stringProp>
                 <stringProp name="Header.value">${gcp.run.test.id}</stringProp>
+              </elementProp>
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">x-jmaas-test-name</stringProp>
+                <stringProp name="Header.value">${gcp.run.test.name}</stringProp>
               </elementProp>
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">x-jmaas-instance-id</stringProp>
@@ -246,6 +259,10 @@ log.info(&quot;token[&quot; + tid + &quot;|&quot; + tokenNumber  + &quot;]=&quot
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">Authorization</stringProp>
                 <stringProp name="Header.value">Bearer ${__property(gcp_run_test_token)}</stringProp>
+              </elementProp>
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">Connection</stringProp>
+                <stringProp name="Header.value">close</stringProp>
               </elementProp>
             </collectionProp>
           </HeaderManager>
