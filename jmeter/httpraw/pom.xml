@@ -29,6 +29,10 @@
             <name>jmeter-plugins.org</name>
             <email>jmeter-plugins@googlegroups.com</email>
         </developer>
+        <developer>
+            <id>chux</id>
+            <name>ChuxV</name>
+        </developer>
     </developers>
 
     <properties>
@@ -36,6 +40,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
+
     <dependencies>
         <dependency>
             <groupId>kg.apc</groupId>
@@ -64,5 +69,25 @@
             <version>33.4.6-jre</version>
         </dependency>
     </dependencies>
+
+
+    <build>
+      <plugins>
+        <plugin>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <executions>
+            <execution>
+              <phase>install</phase>
+              <goals>
+                <goal>copy-dependencies</goal>
+              </goals>
+              <configuration>
+                <outputDirectory>${project.build.directory}/lib</outputDirectory>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+    </build>
 
 </project>

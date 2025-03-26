@@ -11,6 +11,7 @@ import java.net.StandardSocketOptions;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
+import java.nio.channels.Channels;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -35,6 +36,7 @@ import javax.net.ssl.SNIHostName;
 import kg.apc.io.SocketChannelWithTimeouts;
 
 import com.google.common.io.ByteStreams;
+import com.google.common.primitives.UnsignedLong;
 
 import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
@@ -76,37 +78,20 @@ public class HTTPRawSampler extends AbstractIPSampler {
         return res;
     }
     
-    protected byte[] readResponse(final ByteChannel channel, SampleResult res) throws IOException {
+    protected byte[] readResponse(
+        final ByteChannel channel,
+        SampleResult res
+    ) throws IOException {
         final ByteArrayOutputStream response = new ByteArrayOutputStream();
         
-        ByteBuffer recvBuf = getRecvBuf();
-        recvBuf.clear();
-        
-        boolean firstPack = true;
-        int cnt;
-        int responseSize = 0;
+        long responseSize = 0;
         
         if (log.isDebugEnabled()) {
             log.debug("Start reading response");
         }
 
         try {
-            while ((cnt = channel.read(recvBuf)) != -1) {
-                responseSize += cnt;
-                if (firstPack) {
-                    res.latencyEnd();
-                    firstPack = false;
-                }
-                recvBuf.flip();
-                if (response.size() <= recvDataLimit) {
-                    byte[] bytes = new byte[cnt];
-                    recvBuf.get(bytes);
-                    response.write(bytes);
-                }
-                
-                recvBuf.clear();
-            }
-            
+            responseSize = ByteStreams.copy(channel, Channels.newChannel(response));
             if (response.size() < 1) {
                 log.warn("Read no bytes from socket, seems it was closed. Let it be so.");
                 channel.close();
@@ -125,7 +110,9 @@ public class HTTPRawSampler extends AbstractIPSampler {
             channel.close();
         }
         
-        res.setBytes(responseSize);
+        res.setBytes(
+            UnsignedLong.valueOf(responseSize).intValue()
+        );
         return response.toByteArray();
     }
     
