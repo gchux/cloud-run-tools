@@ -187,8 +187,8 @@ public class HTTPRawSampler extends AbstractIPSampler {
             log.warn("Wrong port number: " + getPort() + ", defaulting to 80", ex);
             port = 80;
         }
-        final String serverName = getHostName();
-        final InetSocketAddress address = new InetSocketAddress(serverName, port);
+
+        final InetSocketAddress address = new InetSocketAddress(getHostName(), port);
 
         if ( isHTTPS() ) {
             // bypass to support HTTPS
