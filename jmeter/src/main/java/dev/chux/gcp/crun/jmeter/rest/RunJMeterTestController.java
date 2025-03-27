@@ -432,7 +432,7 @@ public class RunJMeterTestController implements Route {
       .add("min_latency", minLatency)
       .add("max_latency", maxLatency)
       .add("duration", duration)
-      .add("threads", concurrency)
+      .add("threads", threads)
       .add("rampup_time", rampupTime)
       .add("rampup_steps", rampupSteps)
       .toString()
