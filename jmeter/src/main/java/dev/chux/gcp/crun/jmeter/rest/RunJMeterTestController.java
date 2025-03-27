@@ -92,15 +92,14 @@ public class RunJMeterTestController implements Route {
   }
 
   public void register(final String basePath) {
-    path(
-      basePath, () -> {
-        path("/jmeter", () -> {
-          path("/test", () -> {
-            get("/run", this);
-            post("/run", "*/*", this);
-          });
+    path(basePath, () -> {
+      path("/jmeter", () -> {
+        path("/test", () -> {
+          get("/run", this);
+          post("/run", "*/*", this);
         });
-      }
+      });
+    }
     );
   }
 
@@ -170,9 +169,9 @@ public class RunJMeterTestController implements Route {
   private int optionalIntParamOr(
     final Request request,
     final String param,
-    final Integer defaultValue
+    final Integer value
   ) {
-    return optionalIntParam(request, param).or(defaultValue).intValue();
+    return optionalIntParam(request, param).or(value).intValue();
   }
 
   private Optional<String> optionalParam(
@@ -197,16 +196,16 @@ public class RunJMeterTestController implements Route {
   private String optionalParamOr(
     final Request request,
     final String param,
-    final String defaultValue
+    final String value
   ) {
-    return optionalParam(request, param).or(defaultValue);
+    return this.optionalParam(request, param).or(value);
   }
 
   private Map<String, String> metadata(
     final Request request,
     final String param
   ) {
-    final Optional<String> metadata = optionalParam(request, param);
+    final Optional<String> metadata = this.optionalParam(request, param);
     if ( metadata.isPresent() ) {
       return METADATA_SPLITTER.split(metadata.get());
     }
@@ -214,39 +213,63 @@ public class RunJMeterTestController implements Route {
   }
   
   private String host(final Request request) {
-    return optionalParam(request, "host").orNull();
+    return this.optionalParam(request, "host").orNull();
   }
 
-  private Optional<String> id(final Request request) {
-    return optionalParam(request, "id");
+  private String id(final Request request) {
+    return this.optionalParam(request, "id").or(UUID.randomUUID().toString());
   }
 
   private String mode(final Request request) {
-    return optionalParamOr(request, "mode", MODE_CONCURRENCY).toLowerCase();
+    return this.optionalParamOr(request, "mode", MODE_CONCURRENCY).toLowerCase();
   }
 
   private String output(final Request request) {
-    return optionalParamOr(request, "output", RES_OUT).toLowerCase();
+    return this.optionalParamOr(request, "output", RES_OUT).toLowerCase();
   }
 
   private Optional<String> test(final Request request) {
-    return optionalParam(request, "test");
+    return this.optionalParam(request, "test");
   }
 
   private Optional<String> proto(final Request request) {
-    return optionalParam(request, "proto");
+    return this.optionalParam(request, "proto");
   }
 
   private Optional<Integer> port(final Request request) {
-    return optionalIntParam(request, "port");
+    return this.optionalIntParam(request, "port");
   }
 
   private Optional<String> endpoint(final Request request) {
-    return optionalParam(request, "path");
+    return this.optionalParam(request, "path");
   }
 
   private Optional<String> method(final Request request) {
-    return optionalParam(request, "method");
+    return this.optionalParam(request, "method");
+  }
+
+  private Optional<String> concurrency(final Request request) {
+    return this.optionalParam(request, MODE_CONCURRENCY);
+  }
+
+  private Optional<String> qps(final Request request) {
+    return this.optionalParam(request, MODE_QPS);
+  }
+
+  private int minLatency(final Request request) {
+    return this.optionalIntParamOr(request, "min_latency", DEFAULT_MIN_LATENCY);
+  }
+
+  private int maxLatency(final Request request) {
+    return this.optionalIntParamOr(request, "max_latency", DEFAULT_MAX_LATENCY);
+  }
+
+  private int duration(final Request request) {
+    return this.optionalIntParamOr(request, "duration", INTEGER_0);
+  }
+
+  private int threads(final Request request) {
+    return this.optionalIntParamOr(request, "threads", INTEGER_0);
   }
 
   private Optional<String> traceID(final Request request) {
@@ -288,19 +311,30 @@ public class RunJMeterTestController implements Route {
     return fromNullable(emptyToNull(request.body()));
   }
 
+  private void setHeader(
+    final Response response,
+    final String name,
+    final String value
+  ) {
+    if ( !isNullOrEmpty(value) ) {
+      response.header(toHeaderName(name), value);
+    }
+  }
+
   public Object handle(final Request request, final Response response) throws Exception {
     final Optional<String> body = this.body(request);
     final ServletOutputStream responseOutput = response.raw().getOutputStream();
 
     final String output = this.output(request);
-    final Optional<String> traceID = this.traceID(request);
-    final Optional<String> id = this.id(request);
-    final String testID = id.or(UUID.randomUUID().toString());
+    final String testID = this.id(request);
 
     response.type("text/plain");
-    response.header(toHeaderName("id"), testID);
+    this.setHeader(response, "id", testID);
+    this.setHeader(response, "instance-id", this.instanceID);
+
+    final Optional<String> traceID = this.traceID(request);
     if ( traceID.isPresent() ) {
-      response.header("x-cloud-trace-id", traceID.get());
+      this.setHeader(response, "trace-id", traceID.get());
     }
 
     // FQDN, hostname or IP of the remote service.
@@ -312,48 +346,51 @@ public class RunJMeterTestController implements Route {
 
     // Operation mode of the Load Test, may be: `qps` or `concurrency`.
     final String mode = this.mode(request);
-
     if ( isNullOrEmpty(mode) ) {
       halt(400, "mode is required");
       return null;
     }
-
     if ( !this.modes.contains(mode) ) {
       halt(400, "invalid mode: " + mode);
       return null;
     }
 
     // test to execute base on the name of JMX files ( case sensitive ).
-    final Optional<String> jmx        = this.test(request);
+    final Optional<String> jmx         = this.test(request);
 
     // may be `http` ot `https` ( case insensitive ).
-    final Optional<String> proto      = this.proto(request);
+    final Optional<String> proto       = this.proto(request);
 
     // HTTP method to use ( case insensitive ).
-    final Optional<String> method     = this.method(request);
+    final Optional<String> method      = this.method(request);
 
     // URL path ( aka endpoint ) of the remote service.
-    final Optional<String> path       = this.endpoint(request);
+    final Optional<String> path        = this.endpoint(request);
 
     // request metadata ( query params, and headers )
-    final Map<String, String> query   = this.params(request);
-    final Map<String, String> headers = this.headers(request);
+    final Map<String, String> query    = this.params(request);
+    final Map<String, String> headers  = this.headers(request);
 
     // TCP port where the remote service accepts HTTP requests.
-    final Optional<Integer> port      = this.port(request);
+    final Optional<Integer> port       = this.port(request);
 
     // dynamic test configuration
-    final Optional<String> threads    = optionalParam(request, MODE_CONCURRENCY);
-    final Optional<String> profile    = optionalParam(request, MODE_QPS);
+    final Optional<String> concurrency = this.concurrency(request);
+    final Optional<String> qps         = this.qps(request);
 
-    if ( (mode.equalsIgnoreCase(MODE_QPS)) && !profile.isPresent() ) {
+    if ( (mode.equalsIgnoreCase(MODE_QPS)) && !qps.isPresent() ) {
       halt(400, "parameter 'qps' is required when 'mode' is set to 'qps'");
       return null;
     }
 
+    if ( (mode.equalsIgnoreCase(MODE_CONCURRENCY)) && !concurrency.isPresent() ) {
+      halt(400, "parameter 'concurrency' is required when 'mode' is set to 'concurrency'");
+      return null;
+    }
+
     // expected min/max response time of the service to load test
-    final int minLatency  = optionalIntParamOr(request, "min_latency", DEFAULT_MIN_LATENCY);
-    final int maxLatency  = optionalIntParamOr(request, "max_latency", DEFAULT_MAX_LATENCY);
+    final int minLatency = this.minLatency(request);
+    final int maxLatency = this.maxLatency(request);
 
     if ( minLatency <= 0 ) {
       halt(400, "'min_latency' must be greater than 0 milli seconds");
@@ -365,14 +402,21 @@ public class RunJMeterTestController implements Route {
       return null;
     }
 
-    final int duration    = optionalIntParamOr(request, "duration", INTEGER_0);
-    final int concurrency = optionalIntParamOr(request, "concurrency", INTEGER_1);
+    final int duration = this.duration(request);
+    if ( duration <= 0 ) {
+      halt(400, "duration must be greater than 0");
+      return null;
+    }
+
+    // legacy test parameters
+    final int threads     = this.threads(request);
     final int rampupTime  = optionalIntParamOr(request, "rampup_time", INTEGER_1);
     final int rampupSteps = optionalIntParamOr(request, "rampup_steps", INTEGER_1);
 
     logger.info(
       toStringHelper(testID)
       .add("instance", this.instanceID)
+      .add("trace_id", traceID)
       .add("output", output)
       .add("test", jmx)
       .add("mode", mode)
@@ -384,38 +428,38 @@ public class RunJMeterTestController implements Route {
       .add("query", query)
       .add("headers", headers)
       .add("body", body)
-      .add(MODE_CONCURRENCY, threads)
-      .add(MODE_QPS, profile)
-      .add("duration", duration)
+      .add(MODE_QPS, qps)
+      .add(MODE_CONCURRENCY, concurrency)
       .add("min_latency", minLatency)
       .add("max_latency", maxLatency)
-      .add("concurrency", concurrency)
+      .add("duration", duration)
+      .add("threads", concurrency)
       .add("rampup_time", rampupTime)
       .add("rampup_steps", rampupSteps)
       .toString()
     );
 
     responseOutput.println("---- starting: " + testID + " ----");
-    logger.info("starting: {}", testID);
+    logger.info("starting: {}/{}", this.instanceID, testID);
 
     if( output != null && output.equalsIgnoreCase(SYS_OUT) ) {
       this.jMeterTestService.start(
         this.instanceID, testID, traceID,
         jmx, mode, proto, method, host, port, path,
-        query, headers, body, threads, profile,
-        concurrency, duration, rampupTime, rampupSteps,
+        query, headers, body, concurrency, qps,
+        threads, duration, rampupTime, rampupSteps,
         minLatency, maxLatency);
     } else {
       this.jMeterTestService.start(
         this.instanceID, testID, traceID,
         jmx, mode, proto, method, host, port, path,
-        query, headers, body, threads, profile,
-        concurrency, duration, rampupTime, rampupSteps,
+        query, headers, body, concurrency, qps,
+        threads, duration, rampupTime, rampupSteps,
         responseOutput, false /* closeable */,
         minLatency, maxLatency);
     }
     
-    logger.info("finished: {}", testID);
+    logger.info("finished: {}/{}", this.instanceID, testID);
     return "---- finished: " + testID + " ----";
   }
 
