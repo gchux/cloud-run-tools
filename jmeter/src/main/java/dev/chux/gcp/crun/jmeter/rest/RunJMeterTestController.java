@@ -99,18 +99,11 @@ public class RunJMeterTestController implements Route {
           post("/run", "*/*", this);
         });
       });
-    }
-    );
+    });
   }
 
   public String endpoint(final String basePath) {
     return "GET " + basePath + "/jmeter/test/run";
-  }
-
-  private Set<String> jmeterModes(
-    final ConfigService configService
-  ) {
-    return ImmutableSet.copyOf(jmeterModesProperty(configService));
   }
 
   private String instanceID(
@@ -128,6 +121,12 @@ public class RunJMeterTestController implements Route {
       .putLong(uuid.getLeastSignificantBits())
       .putLong(System.nanoTime())
       .hash().toString();
+  }
+
+  private Set<String> jmeterModes(
+    final ConfigService configService
+  ) {
+    return ImmutableSet.copyOf(jmeterModesProperty(configService));
   }
   
   private final List<String> jmeterModesProperty(
