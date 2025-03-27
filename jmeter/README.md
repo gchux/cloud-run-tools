@@ -1,5 +1,7 @@
 # JMeter as a Service
 
+![Static Badge](https://img.shields.io/badge/v1.5.2-green?style=flat&label=latest%20version&labelColor=gray&color=green&link=https%3A%2F%2Fgithub.com%2Fgchux%2Fcloud-run-tools%2Fpkgs%2Fcontainer%2Fcloud-run-tools%2F383324176%3Ftag%3Djmaas-v1.5.2)
+
 ## Motivation
 
 During development it is often useful to perform HTTP load tests on microservices to confirm different behaviors under stress.
