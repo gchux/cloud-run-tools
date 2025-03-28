@@ -8,17 +8,29 @@ import java.nio.file.Paths;
 
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Maps;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import dev.chux.gcp.crun.process.ProcessModule.ProcessConsumer;
 import dev.chux.gcp.crun.process.ProcessProvider;
+
+import org.apache.commons.io.output.DemuxOutputStream;
+import org.apache.commons.io.output.NullOutputStream;
+import org.apache.commons.io.output.TeeOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,35 +49,46 @@ public class JMeterTestService {
   private final JMeterTestFactory jMeterTestFactory;
   private final Consumer<ProcessProvider> processConsumer;
   private final Provider<String> jmeterTestProvider;
+  private final Map<String, JMeterTest> jmeterTestStorage;
+
+  private final Map<String, DemuxOutputStream> streams = Maps.newConcurrentMap();
+  private final Map<String, ListenableFuture<JMeterTest>> tests = Maps.newConcurrentMap();
+  private final ListeningExecutorService executor = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(2));
   
   @Inject
-  JMeterTestService(JMeterTestFactory jMeterTestFactory,
-    @ProcessConsumer Consumer<ProcessProvider> processConsumer,
-    @Named("jmeter://test.jmx") Provider<String> jmeterTestProvider) {
+  JMeterTestService(
+    final JMeterTestFactory jMeterTestFactory,
+    @ProcessConsumer final Consumer<ProcessProvider> processConsumer,
+    @Named("jmeter://test.jmx") final Provider<String> jmeterTestProvider,
+    final Map<String, JMeterTest> jmeterTestStorage
+  ) {
     this.jMeterTestFactory = jMeterTestFactory;
     this.processConsumer = processConsumer;
     this.jmeterTestProvider = jmeterTestProvider;
+    this.jmeterTestStorage = jmeterTestStorage;
   }
 
-  public void start(final String instanceID,
+  public final ListenableFuture<JMeterTest> start(final String instanceID,
     final String id, final Optional<String> traceID, final Optional<String> jmx, final String mode,
     final Optional<String> proto, final Optional<String> method, final String host, final Optional<Integer> port,
     final Optional<String> path, final Map<String, String> query, final Map<String, String> headers,
     final Optional<String> body, final Optional<String> threads, final Optional<String> profile,
     final int concurrency, final int duration, final int rampupTime, final int rampupSteps,
-    final int minLatency, final int maxLatency) {
-    this.start(instanceID, id, traceID, jmx, mode, proto, method, host, port, path, query, headers, body,
+    final int minLatency, final int maxLatency
+  ) {
+    return this.start(instanceID, id, traceID, jmx, mode, proto, method, host, port, path, query, headers, body,
       threads, profile, concurrency, duration, rampupTime, rampupSteps, System.out, false, minLatency, maxLatency);
   }
 
-  public void start(final String instanceID,
+  public final ListenableFuture<JMeterTest> start(final String instanceID,
     final String id, final Optional<String> traceID, final Optional<String> jmx, final String mode,
     final Optional<String> proto, final Optional<String> method, final String host, final Optional<Integer> port,
     final Optional<String> path, final Map<String, String> query, final Map<String, String> headers,
     final Optional<String> body, final Optional<String> threads, final Optional<String> profile,
     final int concurrency, final int duration, final int rampupTime, final int rampupSteps,
     final OutputStream outputStream, final boolean closeableOutputStream,
-    final int minLatency, final int maxLatency) {
+    final int minLatency, final int maxLatency
+  ) {
 
     checkArgument(!isNullOrEmpty(instanceID), "instanceID is required");
     checkArgument(!isNullOrEmpty(id), "ID is required");
@@ -85,16 +108,134 @@ public class JMeterTestService {
     .concurrency(concurrency).duration(duration)
     .rampupTime(rampupTime).rampupSteps(rampupSteps);
 
-    final JMeterTest test = this.newJMeterTest(config, outputStream, closeableOutputStream);
+    final OutputStream teeStream = this.wrapStream(config, outputStream);
+    final JMeterTest test = this.newJMeterTest(config, teeStream, closeableOutputStream);
 
     logger.info("starting test: {}", test);
 
-    this.processConsumer.accept(test);
-    this.clean(name);
+    final Optional<JMeterTest> t = fromNullable(
+      this.jmeterTestStorage.putIfAbsent(id, test)
+    );
+    if ( t.isPresent() ) {
+      logger.warn("test '{}' is already running", t.get());
+      return this.test(id).or(
+        Futures.immediateFuture(t.get())
+      );
+    }
+
+    final ListenableFuture<JMeterTest> futureTest =
+      this.executor.submit(
+        new Callable<JMeterTest>() {
+          public JMeterTest call() {
+            JMeterTestService.this.processConsumer.accept(test);
+            return test;
+          }
+        }
+      );
+
+    // clean up after test execution is complete
+    Futures.<JMeterTest>addCallback(
+      futureTest,
+      new FutureCallback<JMeterTest>() {
+        public void onSuccess(final JMeterTest test) {
+          logger.info("test complete: {}", test);
+          JMeterTestService.this.clean(test);
+        }
+        public void onFailure(final Throwable thrown) {
+          logger.error(
+            "test failed: {} => {}", test,
+            path, getStackTraceAsString(thrown)
+          );
+          JMeterTestService.this.clean(test);
+        }
+      },
+      this.executor
+    );
+
+
+    return fromNullable(
+      this.tests.putIfAbsent(
+        id, futureTest
+      )
+    ).or(futureTest);
   }
 
-  private final String jmx(final Optional<String> jmx) {
+  public final Optional<
+    JMeterTest
+  > get(final String id) {
+    checkArgument(!isNullOrEmpty(id));
+    return fromNullable(
+      this.jmeterTestStorage.get(id)
+    );
+  }
+
+  private final Optional<
+    ListenableFuture<
+      JMeterTest
+    >
+  > test(final String id) {
+    checkArgument(!isNullOrEmpty(id));
+    return fromNullable(this.tests.get(id));
+  }
+
+  private Optional<
+    DemuxOutputStream
+  > stream(final String id) {
+    checkArgument(!isNullOrEmpty(id));
+    return fromNullable(this.streams.get(id));
+  }
+
+  public final Optional<
+    ListenableFuture<
+      JMeterTest
+    >
+  > connect(
+    final String id,
+    final OutputStream stream
+  ) {
+    final Optional<
+      ListenableFuture<
+        JMeterTest
+      >
+    > t = this.test(id);
+    if ( t.isPresent() ) {
+      final Optional<
+        DemuxOutputStream
+      > s = this.stream(id);
+      if ( s.isPresent() ) {
+        s.get().bindStream(stream);
+        return t;
+      }
+    }
+    return Optional.absent();
+  }
+
+  public final Optional<
+    ListenableFuture<
+      JMeterTest
+    >
+  > connect(
+    final JMeterTest test,
+    final OutputStream stream
+  ) {
+    return this.connect(test.id(), stream);
+  }
+
+  private final String jmx(
+    final Optional<String> jmx
+  ) {
     return jmx.or(this.jmeterTestProvider.get());
+  }
+
+  private OutputStream wrapStream(
+    final JMeterTestConfig config,
+    final OutputStream stream
+  ) {
+    final DemuxOutputStream demuxStream = new DemuxOutputStream();
+    demuxStream.bindStream(NullOutputStream.INSTANCE);
+    final OutputStream teeStream = new TeeOutputStream(stream, demuxStream);
+    this.streams.putIfAbsent(config.id(), demuxStream);
+    return teeStream;
   }
 
   private final JMeterTest newJMeterTest(
@@ -120,20 +261,37 @@ public class JMeterTestService {
       .toString();
   }
 
-  private final void clean(final String name) {
+  private final void clean(
+    final JMeterTest test
+  ) {
+    final String id = test.id();
+    final String name = test.name();
+
     final Path[] paths = new Path[] {
       Paths.get("/tmp/" + name),
       Paths.get("/tmp/" + name + "_body")
     };
+
     for ( final Path path : paths ) {
       try {
         if ( Files.deleteIfExists(path) ) {
           logger.info("deleted: {}", path);
         }
       } catch(final Exception e) {
-        logger.error("failed to delete '{}': {}", path, getStackTraceAsString(e));
+        logger.error(
+          "failed to delete '{}': {}",
+          path, getStackTraceAsString(e)
+        );
       }
     }
+
+    final Optional<DemuxOutputStream> stream =
+      fromNullable(this.streams.remove(id));
+    if ( stream.isPresent() ) {
+      stream.get().bindStream(NullOutputStream.INSTANCE);
+    }
+    this.tests.remove(id);
+    this.jmeterTestStorage.remove(id, test);
   }
 
 }

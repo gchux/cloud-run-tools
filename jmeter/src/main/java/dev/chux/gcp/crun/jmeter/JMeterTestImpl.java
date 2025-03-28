@@ -38,7 +38,7 @@ import static com.google.common.base.Throwables.getStackTraceAsString;
 
 import static dev.chux.gcp.crun.jmeter.rest.RunJMeterTestController.DEFAULT_TRACE_ID;
 
-public class JMeterTestImpl implements JMeterTest, Supplier<JMeterTestConfig> {
+public class JMeterTestImpl implements JMeterTest {
 
   private static final Logger logger = LoggerFactory.getLogger(JMeterTestImpl.class);
 
@@ -133,7 +133,22 @@ public class JMeterTestImpl implements JMeterTest, Supplier<JMeterTestConfig> {
   @Override
   public JMeterTestConfig get() {
     return this.jMeterTestConfig;
-  } 
+  }
+
+  @Override
+  public final String name() {
+    return this.jMeterTestConfig.name();
+  }
+
+  @Override
+  public final String id() {
+    return this.jMeterTestConfig.id();
+  }
+
+  @Override
+  public final OutputStream stream() {
+    return this.stream.orNull();
+  }
 
   @Override
   public ProcessBuilder getBuilder() {
@@ -143,7 +158,7 @@ public class JMeterTestImpl implements JMeterTest, Supplier<JMeterTestConfig> {
   @Override
   public ProcessOutput getOutput() {
     if( this.stream.isPresent() ) {
-      return this.processOutputFactory.create(this.stream.get(), this.closeable);
+      return this.processOutputFactory.create(this.stream(), this.closeable);
     }
     return this.processOutputFactory.create(System.out, /* closeable */ false);
   }
@@ -210,13 +225,13 @@ public class JMeterTestImpl implements JMeterTest, Supplier<JMeterTestConfig> {
   private final JMeterTestImpl setID(
     final ImmutableList.Builder<String> cmd
   ) {
-    return this.setProperty(cmd, "tid", this.jMeterTestConfig.id());
+    return this.setProperty(cmd, "tid", this.id());
   }
 
   private final JMeterTestImpl setName(
     final ImmutableList.Builder<String> cmd
   ) {
-    return this.setProperty(cmd, "test_name", this.jMeterTestConfig.name());
+    return this.setProperty(cmd, "test_name", this.name());
   }
 
   private final JMeterTestImpl setHost(
