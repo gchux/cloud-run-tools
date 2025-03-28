@@ -54,7 +54,8 @@ public class JMeterTestService {
 
   private final Map<String, ProxyOutputStream> streams = Maps.newConcurrentMap();
   private final Map<String, ListenableFuture<JMeterTest>> tests = Maps.newConcurrentMap();
-  private final ListeningExecutorService executor = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(2));
+
+  private final ListeningExecutorService executor = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(3));
   
   @Inject
   JMeterTestService(
@@ -213,15 +214,21 @@ public class JMeterTestService {
       ListenableFuture<
         JMeterTest
       >
-    > t = this.test(id);
-    if ( t.isPresent() ) {
+    > test = this.test(id);
+    if ( test.isPresent() ) {
       final Optional<
         ProxyOutputStream
       > s = this.stream(id);
       if ( s.isPresent() ) {
         s.get().setReference(stream).flush();
-        logger.info("connected to test: {}", t.get());
-        return t;
+        
+        logger.info("connected to test: {}", test.get());
+
+        return Optional.of(
+          Futures.nonCancellationPropagating(
+            test.get()
+          )
+        );
       }
     }
     return Optional.absent();
