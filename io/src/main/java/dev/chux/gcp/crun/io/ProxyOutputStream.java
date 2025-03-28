@@ -39,6 +39,8 @@ import org.apache.commons.io.output.NullOutputStream;
  */
 public class ProxyOutputStream extends FilterOutputStream {
 
+    public static final ProxyOutputStream INSTANCE = new ProxyOutputStream();
+
     /**
      * Builds instances of {@link ProxyOutputStream}.
      * <p>

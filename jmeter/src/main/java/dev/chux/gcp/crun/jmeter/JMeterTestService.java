@@ -248,7 +248,7 @@ public class JMeterTestService {
     final JMeterTestConfig config,
     final OutputStream stream
   ) {
-    final ProxyOutputStream proxyStream = new ProxyOutputStream();
+    final ProxyOutputStream proxyStream = ProxyOutputStream.INSTANCE;
     final OutputStream teeStream = new TeeOutputStream(stream, proxyStream);
     this.streams.putIfAbsent(config.id(), proxyStream);
     return teeStream;
