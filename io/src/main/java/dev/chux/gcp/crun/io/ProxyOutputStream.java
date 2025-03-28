@@ -90,6 +90,10 @@ public class ProxyOutputStream extends FilterOutputStream {
         super(delegate);
     }
 
+    public ProxyOutputStream() {
+        this(NullOutputStream.INSTANCE);
+    }
+
     /**
      * Invoked by the write methods after the proxied call has returned
      * successfully. The number of bytes written (1 for the
