@@ -291,12 +291,12 @@ public class JMeterTestService {
     for ( final Path path : paths ) {
       try {
         if ( Files.deleteIfExists(path) ) {
-          logger.info("deleted: {}", path);
+          logger.info("{}/deleted: {}", id, path);
         }
       } catch(final Exception e) {
         logger.error(
-          "failed to delete '{}': {}",
-          path, getStackTraceAsString(e)
+          "{}/failed to delete '{}': {}",
+          id, path, getStackTraceAsString(e)
         );
       }
     }
@@ -309,8 +309,8 @@ public class JMeterTestService {
         s.flush();
       } catch(final Exception e) {
         logger.error(
-          "failed to flush '{}': {}",
-          s, getStackTraceAsString(e)
+          "{}/failed to flush '{}': {}",
+          id, s, getStackTraceAsString(e)
         );
       }
       s.setReference(NullOutputStream.INSTANCE);
