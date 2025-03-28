@@ -92,6 +92,7 @@ public class RunJMeterTestController extends JMeterTestController {
     final Request request,
     final Response response
   ) throws Exception {
+    // allows at most 1 execution per worker
     if ( !this.busy.compareAndSet(false, true) ) {
       response.status(409);
       return "busy";
@@ -240,7 +241,9 @@ public class RunJMeterTestController extends JMeterTestController {
 
     logger.info("finished: {}/{}", this.instanceID, test.id());
     this.busy.set(false);
-    return "---- finished: " + testID + " ----";
+    responseOutput.println("---- finished: " + testID + " ----");
+    responseOutput.flush();
+    return null;
   }
 
 }

@@ -2,6 +2,8 @@ package dev.chux.gcp.crun.jmeter.rest;
 
 import java.io.OutputStream;
 
+import javax.servlet.ServletOutputStream;
+
 import com.google.inject.Inject;
 
 import com.google.common.base.Optional;
@@ -66,26 +68,34 @@ public class StreamJMeterTestController extends JMeterTestController {
 
     response.type("text/plain");
 
-    final OutputStream stream = response.raw().getOutputStream();
+    final ServletOutputStream stream = response.raw().getOutputStream();
 
     final Optional<JMeterTest> test = this.jMeterTestService.get(testID);
-    if ( test.isPresent() ) {
-      JMeterTest t = test.get();
-      
-      logger.info("connecting to test: {}", t);
 
-      final ListenableFuture<
-        JMeterTest
-      > futureTest = this.jMeterTestService
-        .connect(t, stream)
-        .or(Futures.immediateFuture(t));
-
-      stream.flush();
-      t = futureTest.get();
-    } else {
+    if ( !test.isPresent() ) {
       halt(404, "test ID not found: " + testID);
+      return null;
     }
-    return testID;
+    
+    JMeterTest t = test.get();
+
+    logger.info("connecting to test: {}", t);
+
+    stream.println("---- stream::start" + t.id() + " ----");
+
+    final ListenableFuture<
+      JMeterTest
+    > futureTest = this.jMeterTestService
+      .connect(t, stream)
+      .or(Futures.immediateFuture(t));
+
+    // block until test is complete
+    t = futureTest.get();
+
+    stream.println("---- stream::stop " + t.id() + " ----");
+    stream.flush();
+
+    return null;
   }
 
 }

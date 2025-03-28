@@ -25,6 +25,7 @@ import java.io.OutputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.build.AbstractStreamBuilder;
+import org.apache.commons.io.output.NullOutputStream;
 
 /**
  * A Proxy stream which acts as expected, that is it passes the method
@@ -158,7 +159,8 @@ public class ProxyOutputStream extends FilterOutputStream {
      * @since 2.0
      */
     protected void handleIOException(final IOException e) throws IOException {
-        throw e;
+        // drop `reference` immediately if an exception is thrown.
+        this.out = NullOutputStream.INSTANCE;
     }
 
     /**
