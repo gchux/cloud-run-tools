@@ -81,7 +81,7 @@ public class StreamJMeterTestController extends JMeterTestController {
 
     logger.info("connecting to test: {}", t);
 
-    stream.println("---- stream::start" + t.id() + " ----");
+    stream.println("---- stream/start: <" + t.id() + "> ----");
 
     final ListenableFuture<
       JMeterTest
@@ -92,7 +92,7 @@ public class StreamJMeterTestController extends JMeterTestController {
     // block until test is complete
     t = futureTest.get();
 
-    stream.println("---- stream::stop " + t.id() + " ----");
+    stream.println("---- stream/stop: <" + t.id() + "> ----");
     stream.flush();
 
     return null;
