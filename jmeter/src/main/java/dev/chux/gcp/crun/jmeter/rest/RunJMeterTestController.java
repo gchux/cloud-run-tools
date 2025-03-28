@@ -235,6 +235,7 @@ public class RunJMeterTestController extends JMeterTestController {
         responseOutput, false /* closeable */,
         minLatency, maxLatency);
     }
+    responseOutput.flush();
     final JMeterTest test = jMeterTest.get();
 
     logger.info("finished: {}/{}", this.instanceID, test.id());

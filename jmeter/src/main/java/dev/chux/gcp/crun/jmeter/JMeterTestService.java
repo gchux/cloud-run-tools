@@ -25,10 +25,10 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import dev.chux.gcp.crun.io.ProxyOutputStream;
 import dev.chux.gcp.crun.process.ProcessModule.ProcessConsumer;
 import dev.chux.gcp.crun.process.ProcessProvider;
 
-import org.apache.commons.io.output.DemuxOutputStream;
 import org.apache.commons.io.output.NullOutputStream;
 import org.apache.commons.io.output.TeeOutputStream;
 
@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Strings.isNullOrEmpty;
@@ -51,7 +52,7 @@ public class JMeterTestService {
   private final Provider<String> jmeterTestProvider;
   private final Map<String, JMeterTest> jmeterTestStorage;
 
-  private final Map<String, DemuxOutputStream> streams = Maps.newConcurrentMap();
+  private final Map<String, ProxyOutputStream> streams = Maps.newConcurrentMap();
   private final Map<String, ListenableFuture<JMeterTest>> tests = Maps.newConcurrentMap();
   private final ListeningExecutorService executor = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(2));
   
@@ -111,8 +112,6 @@ public class JMeterTestService {
     final OutputStream teeStream = this.wrapStream(config, outputStream);
     final JMeterTest test = this.newJMeterTest(config, teeStream, closeableOutputStream);
 
-    logger.info("starting test: {}", test);
-
     final Optional<JMeterTest> t = fromNullable(
       this.jmeterTestStorage.putIfAbsent(id, test)
     );
@@ -122,6 +121,8 @@ public class JMeterTestService {
         Futures.immediateFuture(t.get())
       );
     }
+
+    logger.info("starting test: {}", test);
 
     final ListenableFuture<JMeterTest> futureTest =
       this.executor.submit(
@@ -152,12 +153,27 @@ public class JMeterTestService {
       this.executor
     );
 
+    final ListenableFuture<
+      JMeterTest
+    > producedValue =
+      fromNullable(
+        this.tests.putIfAbsent(
+          id, futureTest
+        )
+      ).or(futureTest);
 
-    return fromNullable(
-      this.tests.putIfAbsent(
-        id, futureTest
-      )
-    ).or(futureTest);
+    logger.info("> {}", this.toString());
+
+    return producedValue;
+  }
+
+  @Override
+  public String toString() {
+    return toStringHelper(this)
+      .addValue(this.jmeterTestStorage)
+      .add("tests", this.tests)
+      .add("streams", this.streams)
+      .toString();
   }
 
   public final Optional<
@@ -179,7 +195,7 @@ public class JMeterTestService {
   }
 
   private Optional<
-    DemuxOutputStream
+    ProxyOutputStream
   > stream(final String id) {
     checkArgument(!isNullOrEmpty(id));
     return fromNullable(this.streams.get(id));
@@ -192,7 +208,7 @@ public class JMeterTestService {
   > connect(
     final String id,
     final OutputStream stream
-  ) {
+  ) throws Exception {
     final Optional<
       ListenableFuture<
         JMeterTest
@@ -200,10 +216,11 @@ public class JMeterTestService {
     > t = this.test(id);
     if ( t.isPresent() ) {
       final Optional<
-        DemuxOutputStream
+        ProxyOutputStream
       > s = this.stream(id);
       if ( s.isPresent() ) {
-        s.get().bindStream(stream);
+        s.get().setReference(stream).flush();
+        logger.info("connected to test: {}", t.get());
         return t;
       }
     }
@@ -217,7 +234,7 @@ public class JMeterTestService {
   > connect(
     final JMeterTest test,
     final OutputStream stream
-  ) {
+  ) throws Exception {
     return this.connect(test.id(), stream);
   }
 
@@ -231,10 +248,9 @@ public class JMeterTestService {
     final JMeterTestConfig config,
     final OutputStream stream
   ) {
-    final DemuxOutputStream demuxStream = new DemuxOutputStream();
-    demuxStream.bindStream(NullOutputStream.INSTANCE);
-    final OutputStream teeStream = new TeeOutputStream(stream, demuxStream);
-    this.streams.putIfAbsent(config.id(), demuxStream);
+    final ProxyOutputStream proxyStream = new ProxyOutputStream(NullOutputStream.INSTANCE);
+    final OutputStream teeStream = new TeeOutputStream(stream, proxyStream);
+    this.streams.putIfAbsent(config.id(), proxyStream);
     return teeStream;
   }
 
@@ -285,13 +301,24 @@ public class JMeterTestService {
       }
     }
 
-    final Optional<DemuxOutputStream> stream =
+    final Optional<ProxyOutputStream> stream =
       fromNullable(this.streams.remove(id));
     if ( stream.isPresent() ) {
-      stream.get().bindStream(NullOutputStream.INSTANCE);
+      final ProxyOutputStream s = stream.get();
+      try {
+        s.flush();
+      } catch(final Exception e) {
+        logger.error(
+          "failed to flush '{}': {}",
+          s, getStackTraceAsString(e)
+        );
+      }
+      s.setReference(NullOutputStream.INSTANCE);
     }
     this.tests.remove(id);
     this.jmeterTestStorage.remove(id, test);
+
+    logger.info("< {}", this.toString());
   }
 
 }

@@ -19,6 +19,7 @@
 
   <modules>
     <module>api</module>
+    <module>io</module>
     <module>annotations</module>
     <module>model</module>
     <module>exec</module>
@@ -63,6 +64,12 @@
         <groupId>io.reactivex.rxjava3</groupId>
         <artifactId>rxjava</artifactId>
         <version>3.1.10</version>
+      </dependency>
+
+      <dependency>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>2.18.0</version>
       </dependency>
 
       <!-- dependency injection -->
@@ -145,6 +152,11 @@
       <dependency>
         <groupId>dev.chux.gcp.crun</groupId>
         <artifactId>process-runner-model</artifactId>
+        <version>${process-runner.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>dev.chux.gcp.crun</groupId>
+        <artifactId>process-runner-io</artifactId>
         <version>${process-runner.version}</version>
       </dependency>
       <dependency>

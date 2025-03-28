@@ -12,7 +12,9 @@ public class JMeterTestStorage extends ForwardingConcurrentMap<String, JMeterTes
 
   @Inject
   public JMeterTestStorage(
-    final ConcurrentMap<String, JMeterTest> delegate
+    final ConcurrentMap<
+      String, JMeterTest
+    > delegate
   ) {
     this.delegate = delegate;
   }

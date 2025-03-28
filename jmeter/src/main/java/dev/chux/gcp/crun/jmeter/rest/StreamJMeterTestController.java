@@ -1,5 +1,7 @@
 package dev.chux.gcp.crun.jmeter.rest;
 
+import java.io.OutputStream;
+
 import com.google.inject.Inject;
 
 import com.google.common.base.Optional;
@@ -11,9 +13,6 @@ import spark.Response;
 
 import dev.chux.gcp.crun.jmeter.JMeterTest;
 import dev.chux.gcp.crun.jmeter.JMeterTestService;
-
-import org.apache.commons.io.output.TeeOutputStream;
-import org.apache.commons.io.output.DemuxOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,15 +66,26 @@ public class StreamJMeterTestController extends JMeterTestController {
 
     response.type("text/plain");
 
+    final OutputStream stream = response.raw().getOutputStream();
+
     final Optional<JMeterTest> test = this.jMeterTestService.get(testID);
     if ( test.isPresent() ) {
-      this.jMeterTestService.connect(
-        test.get(), response.raw().getOutputStream()
-      ).or(Futures.immediateFuture(test.get())).get();
+      JMeterTest t = test.get();
+      
+      logger.info("connecting to test: {}", t);
+
+      final ListenableFuture<
+        JMeterTest
+      > futureTest = this.jMeterTestService
+        .connect(t, stream)
+        .or(Futures.immediateFuture(t));
+
+      stream.flush();
+      t = futureTest.get();
     } else {
       halt(404, "test ID not found: " + testID);
     }
-    return null;
+    return testID;
   }
 
 }

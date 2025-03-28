@@ -58,7 +58,6 @@
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
-      <version>2.18.0</version>
     </dependency>
 
     <!--log4j2 dependencies -->
@@ -97,6 +96,10 @@
     <dependency>
       <groupId>dev.chux.gcp.crun</groupId>
       <artifactId>process-runner-exec</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>dev.chux.gcp.crun</groupId>
+      <artifactId>process-runner-io</artifactId>
     </dependency>
     <dependency>
       <groupId>dev.chux.gcp.crun</groupId>
