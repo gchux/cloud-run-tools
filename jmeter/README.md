@@ -162,6 +162,11 @@ Test parameters are passed as URL query parameters by default; however, it is al
     x-jmaas-test-mode: concurrency
     x-jmaas-test-duration: 11
     x-jmaas-test-script: generic_dynamic
+    x-jmaas-test-proto: http
+    x-jmaas-test-method: POST
+    x-jmaas-test-host: localhost
+    x-jmaas-test-port: 8080
+    x-jmaas-test-path: /
     x-jmaas-test-headers: Content-type=text/plain
 
     test
