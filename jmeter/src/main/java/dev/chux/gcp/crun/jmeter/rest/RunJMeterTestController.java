@@ -261,6 +261,7 @@ public class RunJMeterTestController extends JMeterTestController {
         minLatency, maxLatency);
     }
 
+    // this may be blocking if `testID` is unknown to `JMeterTestService`
     this.addCallback(testID, test);
 
     if ( async || test.isDone() || test.isCancelled() ) {
