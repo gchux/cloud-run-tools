@@ -25,6 +25,7 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
   ```http
   GET /jmeter/test/status/:id
   Accept: application/json
+  Content-Length: 0
   ```
 
 - using query string parameters:
@@ -32,6 +33,7 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
   ```http
   GET /jmeter/test/status?id=<test-id>
   Accept: application/json
+  Content-Length: 0
   ```
 
 - using header parameters:
@@ -39,6 +41,7 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
   ```http
   GET /jmeter/test/status
   Accept: application/json
+  Content-Length: 0
   x-jmaas-test-id: <test-id>
   ```
 
@@ -63,6 +66,7 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
 ```http
 GET /jmeter/test/stream[/:id][?id=<test-id>]
 Accept: text/plain
+Content-Length: 0
 [x-jmaas-test-id: <test-id>]
 ```
 
