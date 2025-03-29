@@ -238,7 +238,7 @@ log.info(&quot;token[&quot; + tid + &quot;|&quot; + tokenNumber  + &quot;]=&quot
           <stringProp name="timeout">${gcp.run.test.request.timeout}</stringProp>
           <stringProp name="data">${gcp.run.test.request}&#xd;
 Host: ${gcp.run.test.host}:${gcp.run.test.port}&#xd;
-User-Agent: JMaaS/${jmaas.version} (jmeter/${jm.version})&#xd;
+User-Agent: JMaaS/${jmaas.version} (${gcp.run.test.id}; ${gcp.run.test.name}) JMeter/${jm.version} (${gcp.run.instance.id})&#xd;
 Authorization: Bearer ${__property(gcp_run_test_token)}&#xd;
 x-jmaas-test-id: ${gcp.run.test.id}&#xd;
 x-jmaas-test-name: ${gcp.run.test.name}&#xd;
