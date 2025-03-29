@@ -18,7 +18,29 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
 - load test Cloud Run services that require authentication.
 - Propagate [cloud trace context](https://cloud.google.com/trace/docs/trace-context) to show load test traffic in [Cloud Trace Explorer](https://cloud.google.com/trace/docs/finding-traces).
 
-## How to use
+## Get test details
+
+```
+GET /jmeter/test/status/:id
+Accept: application/json
+```
+
+## Stream test output
+
+```
+GET /jmeter/test/stream/:id
+Accept: text/plain
+```
+
+> [!NOTE]
+> Only 1 requests is allowed to stream test output.
+
+## Run tests
+
+### Endpoints
+
+- without payload: `GET /jmeter/test/run`
+- with payload: `POST /jmeter/test/run`
 
 ### Request Payload
 
