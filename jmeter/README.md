@@ -1,4 +1,4 @@
-# JMeter as a Service
+# JMaaS ( JMeter as a Service )
 
 ![Static Badge](https://img.shields.io/badge/v1.5.2-green?style=flat&label=latest%20version&labelColor=gray&color=green&link=https%3A%2F%2Fgithub.com%2Fgchux%2Fcloud-run-tools%2Fpkgs%2Fcontainer%2Fcloud-run-tools%2F383324176%3Ftag%3Djmaas-v1.5.2)
 
@@ -166,6 +166,9 @@ Test parameters are passed as URL query parameters by default; however, it is al
 
     test
     ```
+
+> [!IMPORTANT]
+> When running tests with payload, it is not required and stronly discouraged to pass `Content-Length` via `x-jmaas-test-headers` as this will be automatically done by **`JMaaS`** during test instrumentation.
 
   - `10,0,0,10,1` `;` `10,5,10,10,1`:
 
