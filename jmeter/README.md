@@ -188,6 +188,7 @@ Test parameters are passed as URL query parameters by default; however, it is al
     ```http
     GET /jmeter/test/run/load-test-0002 HTTP/1.1
     Accept: text/plain
+    Content-Length: 0
     x-jmaas-test-mode: concurrency
     x-jmaas-test-duration: 32
     x-jmaas-test-script: generic_dynamic
@@ -223,6 +224,7 @@ Test parameters are passed as URL query parameters by default; however, it is al
     ```http
     GET /jmeter/test/run HTTP/1.1
     Accept: text/plain
+    Content-Length: 0
     x-jmaas-test-id: load-test-0003
     x-jmaas-test-mode: qps
     x-jmaas-test-duration: 80
