@@ -110,6 +110,7 @@ Test parameters are passed as URL query parameters by default; however, it is al
 
 #### Basic Parameters
 
+- **`async`**: [`Boolean`, _optional_, default:`false`] wether to wait for test execution to be complete or to return immediately.
 - **`id`**: [`String`, _optional_] test ID passed to the remote service via HTTP request header `x-jmaas-test-id`; if not present, a random `UUID` will be used.
 - **`script`**: [`String`, _optional_, default:`test`] [test scenario](src/main/jmeter) to use; without `.jmx` extension.
 - **`mode`**: [`String`, _optional_, default:`concurrency`] test operation mode; alternatives: `qps` or `concurrency`.
