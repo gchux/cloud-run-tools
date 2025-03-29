@@ -102,7 +102,9 @@ Request payload is automatically propagated from the original request.
 Test parameters are passed as URL query parameters by default; however, it is also possible to pass them as request headers prefixed by `x-jmaas-test-*`.
 
 > [!TIP]
-> You may combine query and headers test params in the same request; query test params are checked first, and headers will be used as a fallback.
+> You may combine query and headers test params in the same request.
+>
+> Query test parameters are checked first, then headers will be used as a fallback.
 
 ### Query Parameters
 
@@ -116,12 +118,17 @@ Test parameters are passed as URL query parameters by default; however, it is al
 - **`host`**: [`String`, **required**]: hostname or IP of the remote HTTP server.
 - **`port`**: [`Integer`, _optional_, default:`443`] TCP port used to connect to the remote HTTP server.
 - **`path`**: [`String`, _optional_, default:`/`] endpoint to test on the remote HTTP server.
+- **`duration`**: [`Integer`, **required**] test duration in seconds.
 - **`params`**: [`Map<String, String>`, _optional_] query parameters to send; sample: `params=paramA:A;paramB:B`.
 - **`headers`**: [`Map<String, string>`, _optional_] headers to send; sample: `headers=headerA:A;headerB:B`.
-- **`duration`**: [`Integer`, **required**] test duration in seconds.
 
 > [!NOTE]
 > When passing test parameters as request headers, replace all underscores (`_`) by dashes (`-`).
+
+> [!TIP]
+> When using headers to pass **`params`** or **`headers`**, you may use an equals sign (`=`) to separate name from value.
+> >
+> For example: `x-jmaas-test-headers: Content-Type=text/plain;x-header-name=header_value`
 
 #### Latency Parameters
 
@@ -149,12 +156,15 @@ Test parameters are passed as URL query parameters by default; however, it is al
     - `step[1]`: immediately start 10 threads, hold the load for 10 seconsa, and stop in 1 second.
 
     ```http
-    GET /jmeter/test/run?concurrency=10,0,0,10,1 HTTP/1.1
+    POST /jmeter/test/run?concurrency=10,0,0,10,1 HTTP/1.1
     Accept: text/plain
     x-jmaas-test-id: load-test-0001
     x-jmaas-test-mode: concurrency
     x-jmaas-test-duration: 11
     x-jmaas-test-script: generic_dynamic
+    x-jmaas-test-headers: Content-type=text/plain
+
+    test
     ```
 
   - `10,0,0,10,1` `;` `10,5,10,10,1`:
