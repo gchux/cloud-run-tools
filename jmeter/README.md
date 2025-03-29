@@ -25,6 +25,7 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
   ```http
   GET /jmeter/test/status/:id
   Accept: application/json
+  Content-Length: 0
   ```
 
 - using query string parameters:
@@ -32,6 +33,7 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
   ```http
   GET /jmeter/test/status?id=<test-id>
   Accept: application/json
+  Content-Length: 0
   ```
 
 - using header parameters:
@@ -39,6 +41,7 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
   ```http
   GET /jmeter/test/status
   Accept: application/json
+  Content-Length: 0
   x-jmaas-test-id: <test-id>
   ```
 
@@ -63,6 +66,7 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
 ```http
 GET /jmeter/test/stream[/:id][?id=<test-id>]
 Accept: text/plain
+Content-Length: 0
 [x-jmaas-test-id: <test-id>]
 ```
 
@@ -184,6 +188,7 @@ Test parameters are passed as URL query parameters by default; however, it is al
     ```http
     GET /jmeter/test/run/load-test-0002 HTTP/1.1
     Accept: text/plain
+    Content-Length: 0
     x-jmaas-test-mode: concurrency
     x-jmaas-test-duration: 32
     x-jmaas-test-script: generic_dynamic
@@ -219,6 +224,7 @@ Test parameters are passed as URL query parameters by default; however, it is al
     ```http
     GET /jmeter/test/run HTTP/1.1
     Accept: text/plain
+    Content-Length: 0
     x-jmaas-test-id: load-test-0003
     x-jmaas-test-mode: qps
     x-jmaas-test-duration: 80
