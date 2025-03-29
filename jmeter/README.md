@@ -23,14 +23,32 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
 ```
 GET /jmeter/test/status/:id
 Accept: application/json
+
 ```
+
+### Path Parameters
+
+- **`id`**: [`String`, **required**] - test ID to be queried.
+
+### Headers
+
+- **`Accept`**: [`String`, **required**] - must be `application/json`.
 
 ## Stream test output
 
 ```
 GET /jmeter/test/stream/:id
 Accept: text/plain
+
 ```
+
+### Path Parameters
+
+- **`id`**: [`String`, **required**] - ID of the test's output to be streamed.
+
+### Headers
+
+- **`Accept`**: [`String`, **required**] - must be `text/plain`.
 
 > [!NOTE]
 > Only 1 requests is allowed to stream test output.
