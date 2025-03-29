@@ -7,14 +7,14 @@
 During development it is often useful to perform HTTP load tests on microservices to confirm different behaviors under stress.
 
 [Apache JMeter](https://jmeter.apache.org/) is a well known open source tool to perform flexible load testing; however,
-it requires to create test cases either using JMX or the JMeter UI which requires some knowledge and consumes valuable time.
+it entails creating test cases either using JMX or the JMeter UI which requires some knowledge and consumes valuable time.
 
 The goal of this project is to provide common load testing – parametrizable – scenarios, bundle them into a container running JMeter,
 and enable test execution using a simple REST API that can be invoked using simple tools as [cURL](https://curl.se/).
 
 Additionally, this project aims to provide compatibility with [Cloud Run](https://cloud.google.com/run) for both:
 
-- hosting JMeter as a Cloud Run service.
+- hosting JMeter as a Cloud Run service ( also known as JMaaS ).
 - load test Cloud Run services that require authentication.
 - Propagate [cloud trace context](https://cloud.google.com/trace/docs/trace-context) to show load test traffic in [Cloud Trace Explorer](https://cloud.google.com/trace/docs/finding-traces).
 
