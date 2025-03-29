@@ -54,13 +54,17 @@ abstract class JMeterTestController implements Route {
   protected static final String MODE_CONCURRENCY = "concurrency";
 
   private static final Splitter TRACE_SPLITTER = 
-    Splitter.on(CharMatcher.anyOf("/;-")).trimResults().omitEmptyStrings().limit(3);
+    Splitter.on(CharMatcher.anyOf("/;-"))
+      .trimResults().omitEmptyStrings().limit(3);
 
   private static final Splitter METADATA_SPLITTER =
-    Splitter.on(CharMatcher.anyOf(":=")).trimResults().omitEmptyStrings().limit(2);
+    Splitter.on(CharMatcher.anyOf(":="))
+      .trimResults().omitEmptyStrings().limit(2);
   
   private static final Splitter.MapSplitter METADATA_MAP_SPLITTER =
-    Splitter.on(CharMatcher.is(';')).trimResults().omitEmptyStrings().withKeyValueSeparator(METADATA_SPLITTER);
+    Splitter.on(CharMatcher.is(';'))
+      .trimResults().omitEmptyStrings()
+      .withKeyValueSeparator(METADATA_SPLITTER);
 
   private static final Joiner HEADER_JOINER = Joiner.on('-').skipNulls();
 
