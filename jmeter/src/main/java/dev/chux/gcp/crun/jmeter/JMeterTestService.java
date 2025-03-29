@@ -29,7 +29,6 @@ import dev.chux.gcp.crun.io.ProxyOutputStream;
 import dev.chux.gcp.crun.process.ProcessModule.ProcessConsumer;
 import dev.chux.gcp.crun.process.ProcessProvider;
 
-import org.apache.commons.io.output.NullOutputStream;
 import org.apache.commons.io.output.TeeOutputStream;
 
 import org.slf4j.Logger;
@@ -123,12 +122,12 @@ public class JMeterTestService {
       );
     }
 
-    logger.info("starting test: {}", test);
-
+    // start JMeter test asynchronously
     final ListenableFuture<JMeterTest> futureTest =
       this.executor.submit(
         new Callable<JMeterTest>() {
           public JMeterTest call() {
+            JMeterTestService.this.logger.info("starting test: {}", test);
             JMeterTestService.this.processConsumer.accept(test);
             return test;
           }
@@ -140,11 +139,11 @@ public class JMeterTestService {
       futureTest,
       new FutureCallback<JMeterTest>() {
         public void onSuccess(final JMeterTest test) {
-          logger.info("test complete: {}", test);
+          JMeterTestService.this.logger.info("test complete: {}", test);
           JMeterTestService.this.clean(test);
         }
         public void onFailure(final Throwable thrown) {
-          logger.error(
+          JMeterTestService.this.logger.error(
             "test failed: {} => {}", test,
             path, getStackTraceAsString(thrown)
           );
@@ -154,6 +153,7 @@ public class JMeterTestService {
       this.executor
     );
 
+    // save a reference to this test's `Future`
     final ListenableFuture<
       JMeterTest
     > producedValue =
@@ -186,15 +186,6 @@ public class JMeterTestService {
     );
   }
 
-  private Optional<
-    ListenableFuture<
-      JMeterTest
-    >
-  > test(final String id) {
-    checkArgument(!isNullOrEmpty(id));
-    return fromNullable(this.tests.get(id));
-  }
-
   public final Optional<
     ListenableFuture<
       JMeterTest
@@ -204,6 +195,7 @@ public class JMeterTestService {
       ListenableFuture<JMeterTest>
     > test = this.test(id);
     if ( test.isPresent() ) {
+      // return a non-cancelable `Future`
       return Optional.of(
         Futures.nonCancellationPropagating(
           test.get()
@@ -211,6 +203,15 @@ public class JMeterTestService {
       );
     }
     return Optional.absent();
+  }
+
+  private Optional<
+    ListenableFuture<
+      JMeterTest
+    >
+  > test(final String id) {
+    checkArgument(!isNullOrEmpty(id));
+    return fromNullable(this.tests.get(id));
   }
 
   private Optional<
@@ -242,6 +243,8 @@ public class JMeterTestService {
         
         logger.info("connected to test: {}", test.get());
 
+        // return a non-cancelable `Future`:
+        //   prevent unexpected/unwanted cancelations.
         return Optional.of(
           Futures.nonCancellationPropagating(
             test.get()
@@ -273,6 +276,9 @@ public class JMeterTestService {
     final JMeterTestConfig config,
     final OutputStream stream
   ) {
+    // tee output to a proxy stream to allow other threads to connect to it.
+    //   the default instance of `ProxyOutputStream` is backed by `NullOutputStream`,
+    //   so as long as no threads connect to a test's output stream, it tees into void.
     final ProxyOutputStream proxyStream = ProxyOutputStream.INSTANCE;
     final OutputStream teeStream = new TeeOutputStream(stream, proxyStream);
     this.streams.putIfAbsent(config.id(), proxyStream);
@@ -284,7 +290,8 @@ public class JMeterTestService {
     final OutputStream stream,
     final boolean closeable
   ) {
-    return this.jMeterTestFactory.createWithOutputStream(config, stream, closeable);
+    return this.jMeterTestFactory
+      .createWithOutputStream(config, stream, closeable);
   }
 
   private String name(
@@ -338,7 +345,7 @@ public class JMeterTestService {
           id, s, getStackTraceAsString(e)
         );
       }
-      s.setReference(NullOutputStream.INSTANCE);
+      s.setReference(ProxyOutputStream.INSTANCE);
     }
     this.tests.remove(id);
     this.jmeterTestStorage.remove(id, test);

@@ -36,9 +36,6 @@ public class RunJMeterTestController extends JMeterTestController {
 
   private static final Logger logger = LoggerFactory.getLogger(RunJMeterTestController.class);
 
-  private static final String SYS_OUT = "sys";
-  private static final String RES_OUT = "res";
-
   private final JMeterTestService jMeterTestService;
   private final Set<String> modes;
   private final String instanceID;
@@ -61,9 +58,9 @@ public class RunJMeterTestController extends JMeterTestController {
       path("/jmeter", () -> {
         path("/test", () -> {
           get("/run", "*/*", this);
-          get("/exec", "*/*", this);
+          get("/run/:id", "*/*", this);
           post("/run", "*/*", this);
-          post("/exec", "*/*", this);
+          post("/run/:id", "*/*", this);
         });
       });
     });
@@ -134,7 +131,7 @@ public class RunJMeterTestController extends JMeterTestController {
     }
 
     // test to execute base on the name of JMX files ( case sensitive ).
-    final Optional<String> jmx         = test(request);
+    final Optional<String> jmx         = script(request);
 
     // may be `http` ot `https` ( case insensitive ).
     final Optional<String> proto       = proto(request);

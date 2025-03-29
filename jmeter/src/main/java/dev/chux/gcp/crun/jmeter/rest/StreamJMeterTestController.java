@@ -38,6 +38,7 @@ public class StreamJMeterTestController extends JMeterTestController {
     path(basePath, () -> {
       path("/jmeter", () -> {
         path("/test", () -> {
+          get("/stream", "text/plain", this);
           get("/stream/:id", "text/plain", this);
         });
       });

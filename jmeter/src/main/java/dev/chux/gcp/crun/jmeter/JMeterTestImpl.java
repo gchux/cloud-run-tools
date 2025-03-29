@@ -136,13 +136,24 @@ public class JMeterTestImpl implements JMeterTest {
   }
 
   @Override
-  public final String name() {
-    return this.jMeterTestConfig.name();
+  public final String instanceID() {
+    return this.jMeterTestConfig.instanceID();
   }
 
   @Override
   public final String id() {
     return this.jMeterTestConfig.id();
+  }
+
+  @Override
+  public final String name() {
+    return this.jMeterTestConfig.name();
+  }
+
+  @Override
+  public final String script() {
+    return this.jMeterTestConfig.jmx()
+      .or(this.jmeterTestProvider.get());
   }
 
   @Override
@@ -275,8 +286,7 @@ public class JMeterTestImpl implements JMeterTest {
   private final JMeterTestImpl setInstanceID(
     final ImmutableList.Builder<String> cmd
   ) {
-    return this.setProperty(cmd, "instance_id",
-      this.jMeterTestConfig.instanceID());
+    return this.setProperty(cmd, "instance_id", this.instanceID());
   }
 
   private final JMeterTestImpl setConfig(
@@ -356,9 +366,7 @@ public class JMeterTestImpl implements JMeterTest {
   }
 
   private final String jmx() {
-    return this.jmeterTestDirProvider.get() + "/" +
-      this.jMeterTestConfig.jmx()
-        .or(this.jmeterTestProvider.get()) + ".jmx";
+    return this.jmeterTestDirProvider.get() + "/" + this.script() + ".jmx";
   }
 
   private final String traceID() {

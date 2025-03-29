@@ -45,6 +45,14 @@ abstract class JMeterTestController implements Route {
 
   public static final String PROPERTY_JMETER_MODES = "jmeter.modes";
 
+  public static final String DEFAULT_TRACE_ID = "00000000000000000000000000000000";
+
+  protected static final String SYS_OUT = "sys";
+  protected static final String RES_OUT = "res";
+
+  protected static final String MODE_QPS = "qps";
+  protected static final String MODE_CONCURRENCY = "concurrency";
+
   private static final Splitter TRACE_SPLITTER = 
     Splitter.on(CharMatcher.anyOf("/;-")).trimResults().omitEmptyStrings().limit(3);
   
@@ -57,19 +65,12 @@ abstract class JMeterTestController implements Route {
 
   private static final String HEADER_PREFIX = "x-jmaas-test";
 
-  private static final String SYS_OUT = "sys";
-  private static final String RES_OUT = "res";
-
-  protected static final String MODE_QPS = "qps";
-  protected static final String MODE_CONCURRENCY = "concurrency";
-
   private static final Integer INTEGER_0 = Integer.valueOf(0);
   private static final Integer INTEGER_1 = Integer.valueOf(1);
 
   private static final Integer DEFAULT_MIN_LATENCY = Integer.valueOf(1);
   private static final Integer DEFAULT_MAX_LATENCY = Integer.valueOf(1000);
 
-  public static final String DEFAULT_TRACE_ID = "00000000000000000000000000000000";
   private static final String DEFAULT_TRACE_CONTEXT = DEFAULT_TRACE_ID + "/0000000000000000;o=0";
 
   protected JMeterTestController() {}
@@ -188,8 +189,8 @@ abstract class JMeterTestController implements Route {
     return this.optionalParamOr(request, "output", RES_OUT).toLowerCase();
   }
 
-  protected Optional<String> test(final Request request) {
-    return this.optionalParam(request, "test");
+  protected Optional<String> script(final Request request) {
+    return this.optionalParam(request, "script");
   }
 
   protected Optional<String> proto(final Request request) {

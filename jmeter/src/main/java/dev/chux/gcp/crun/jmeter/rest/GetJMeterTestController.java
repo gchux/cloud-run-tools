@@ -46,6 +46,7 @@ public class GetJMeterTestController extends JMeterTestController {
     path(basePath, () -> {
       path("/jmeter", () -> {
         path("/test", () -> {
+          get("/status", "application/json", this);
           get("/status/:id", "application/json", this);
         });
       });
@@ -97,6 +98,7 @@ public class GetJMeterTestController extends JMeterTestController {
     }
 
     final OutputStreamWriter writer = new OutputStreamWriter(stream, UTF_8);
+
     this.gson.toJson(test.get().get(), JMeterTestConfig.class, writer);
 
     writer.flush();
