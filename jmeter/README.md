@@ -4,13 +4,13 @@
 
 ## Motivation
 
-During development it is often useful to perform HTTP load tests on microservices to confirm different behaviors under stress.
+During development it is often useful to perform **`HTTP/1.1`** load tests on microservices to confirm different behaviors under stress.
 
 [Apache JMeter](https://jmeter.apache.org/) is a well known open source tool to perform flexible load testing; however,
-it entails creating test cases either using JMX or the JMeter UI which requires some knowledge and consumes valuable time.
+it entails creating complex test cases either using JMX or the JMeter UI which requires some knowledge and consumes valuable time.
 
-The goal of this project is to provide common load testing – parametrizable – scenarios, bundle them into a container running JMeter,
-and enable test execution using a simple REST API that can be invoked using simple tools as [cURL](https://curl.se/).
+The goal of this project is to provide common load testing – parametrizable – scenarios, and enable test execution via REST API endpoints  
+that can be invoked using simple tools as [cURL](https://curl.se/); all of it bundled into a worker container ready to be deployed with minimal friction.
 
 Additionally, this project aims to provide compatibility with [Cloud Run](https://cloud.google.com/run) for both:
 
@@ -20,45 +20,78 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
 
 ## Get test details
 
-```
-GET /jmeter/test/status/:id
-Accept: application/json
+- using path parameters:
 
-```
+  ```http
+  GET /jmeter/test/status/:id
+  Accept: application/json
+  ```
+
+- using query string parameters:
+
+  ```http
+  GET /jmeter/test/status?id=<test-id>
+  Accept: application/json
+  ```
+
+- using header parameters:
+
+  ```http
+  GET /jmeter/test/status
+  Accept: application/json
+  x-jmaas-test-id: <test-id>
+  ```
 
 ### Path Parameters
+
+- **`id`**: [`String`, **required**] - test ID to be queried.
+
+### Query Parameters
 
 - **`id`**: [`String`, **required**] - test ID to be queried.
 
 ### Headers
 
 - **`Accept`**: [`String`, **required**] - must be `application/json`.
+- **`x-jmaas-test-id`**: [`String`, **required**] - test ID to be queried.
+
+> [!NOTE]
+> Pass the **required** test **`id`** however you prefer, either using path, query, or header parameters.
 
 ## Stream test output
 
-```
-GET /jmeter/test/stream/:id
+```http
+GET /jmeter/test/stream[/:id][?id=<test-id>]
 Accept: text/plain
-
+[x-jmaas-test-id: <test-id>]
 ```
 
 ### Path Parameters
 
 - **`id`**: [`String`, **required**] - ID of the test's output to be streamed.
 
+### Query Parameters
+
+- **`id`**: [`String`, **required**] - test ID to be streamed.
+
 ### Headers
 
 - **`Accept`**: [`String`, **required**] - must be `text/plain`.
+- **`x-jmaas-test-id`**: [`String`, **required**] - test ID to be streamed.
 
 > [!NOTE]
-> Only 1 requests is allowed to stream test output.
+> Only 1 request is allowed to stream the output of a test execution.
 
 ## Run tests
 
 ### Endpoints
 
-- without payload: `GET /jmeter/test/run`
-- with payload: `POST /jmeter/test/run`
+- without payload:
+  - `GET /jmeter/test/run`
+  - `GET /jmeter/test/run/:id`
+- with payload:
+  - `POST /jmeter/test/run`
+  - `POST /jmeter/test/run/:id`
 
 ### Request Payload
 
@@ -115,8 +148,13 @@ Test parameters are passed as URL query parameters by default; however, it is al
 
     - `step[1]`: immediately start 10 threads, hold the load for 10 seconsa, and stop in 1 second.
 
-    ```
-    GET /jmeter/test/run?mode=concurrency&duration=11&test=generic_dynamic&steps=10,0,0,10,1 HTTP/1.1
+    ```http
+    GET /jmeter/test/run?concurrency=10,0,0,10,1 HTTP/1.1
+    Accept: text/plain
+    x-jmaas-test-id: load-test-0001
+    x-jmaas-test-mode: concurrency
+    x-jmaas-test-duration: 11
+    x-jmaas-test-test: generic_dynamic
     ```
 
   - `10,0,0,10,1` `;` `10,5,10,10,1`:
@@ -124,8 +162,13 @@ Test parameters are passed as URL query parameters by default; however, it is al
     - `step[1]`: immediately start 10 threads, hold the load for 10 seconds, and stop in 1 second; step duration is 11 seconds.
     - `step[2]`: start 10 threads over 10 seconds after 5 seconds of startig the test, hold the load for 10 seconsa, and stop within 1 second; step duration is 21 seconds.
 
-    ```
-    GET /jmeter/test/run?mode=concurrency&duration=32&test=generic_dynamic&steps=10,0,0,10,1;10,5,10,10,1 HTTP/1.1
+    ```http
+    GET /jmeter/test/run/load-test-0002 HTTP/1.1
+    Accept: text/plain
+    x-jmaas-test-mode: concurrency
+    x-jmaas-test-duration: 32
+    x-jmaas-test-test: generic_dynamic
+    x-jmaas-test-concurrency: 10,0,0,10,1;10,5,10,10,1
     ```
 
 > [!IMPORTANT]
@@ -154,8 +197,14 @@ Test parameters are passed as URL query parameters by default; however, it is al
     - `step[2]`: hold 10 QPS for 60 seconds.
     - `step[3]`: drop QPS from 10 to 0 in 10 seconds.
 
-    ```
-    GET /jmeter/test/run?mode=qps&duration=80&test=generic_qps&qps=1,10,10;10,10,60;10,0,10 HTTP/1.1
+    ```http
+    GET /jmeter/test/run HTTP/1.1
+    Accept: text/plain
+    x-jmaas-test-id: load-test-0003
+    x-jmaas-test-mode: qps
+    x-jmaas-test-duration: 80
+    x-jmaas-test-test: generic_qps
+    x-jmaas-test-qps: 1,10,10;10,10,60;10,0,10
     ```
 
 > [!IMPORTANT]
@@ -193,7 +242,7 @@ Depending on the value of the **`mode`** parameter, **`test`** may be one of:
 
 1. Pull the pre-built image and upload it to Artifact Registry:
 
-```sh
+```bash
 export GCP_PROJECT_ID='...'
 export ARTIFACT_REGISTRY_REGION='...'
 export ARTIFACT_REGISTRY_REPOSITORY='...'
@@ -206,7 +255,7 @@ docker push ${ARTIFACT_REGISTRY_IMAGE_URI}
 
 2. Deploy the container into Cloud Run:
 
-```sh
+```bash
 export CLOUD_RUN_SERVICE_NAME='...'
 export CLOUD_RUN_SERVICE_REGION='...'
 export CLOUD_RUN_SERVICE_ACCOUNT='...@<project-id>.iam.gserviceaccount.com'
