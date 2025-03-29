@@ -186,13 +186,31 @@ public class JMeterTestService {
     );
   }
 
-  private final Optional<
+  private Optional<
     ListenableFuture<
       JMeterTest
     >
   > test(final String id) {
     checkArgument(!isNullOrEmpty(id));
     return fromNullable(this.tests.get(id));
+  }
+
+  public final Optional<
+    ListenableFuture<
+      JMeterTest
+    >
+  > getTest(final String id) {
+    final Optional<
+      ListenableFuture<JMeterTest>
+    > test = this.test(id);
+    if ( test.isPresent() ) {
+      return Optional.of(
+        Futures.nonCancellationPropagating(
+          test.get()
+        )
+      );
+    }
+    return Optional.absent();
   }
 
   private Optional<

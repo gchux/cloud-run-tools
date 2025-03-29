@@ -6,6 +6,10 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.Since;
+import com.google.gson.annotations.SerializedName;
+
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -17,32 +21,115 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 
 public class JMeterTestConfig {
 
+  @Since(1.0)
+  @Expose(deserialize=true, serialize=true)
+  @SerializedName(value="name")
   private final String name;
+
+  @Since(1.0)
+  @Expose(deserialize=true, serialize=true)
+  @SerializedName(value="instance_id")
   private final String instanceID;
+
+  @Since(1.0)
+  @Expose(deserialize=true, serialize=true)
+  @SerializedName(value="id")
   private final String id;
+
+  @Since(1.0)
+  @Expose(deserialize=true, serialize=true)
+  @SerializedName(value="trace_id")
   private Optional<String> traceID;
 
+  @Since(1.0)
+  @Expose(deserialize=true, serialize=true)
+  @SerializedName(value="test")
   private final Optional<String> jmx;
+
+  @Since(1.0)
+  @Expose(deserialize=true, serialize=true)
+  @SerializedName(value="mode")
   private final String mode;
+
+  @Since(1.0)
+  @Expose(deserialize=true, serialize=true)
+  @SerializedName(value="proto")
   private final Optional<String> proto;
+
+  @Since(1.0)
+  @Expose(deserialize=true, serialize=true)
+  @SerializedName(value="method")
   private final Optional<String> method;
+
+  @Since(1.0)
+  @Expose(deserialize=true, serialize=true)
+  @SerializedName(value="host")
   private final String host;
+
+  @Since(1.0)
+  @Expose(deserialize=true, serialize=true)
+  @SerializedName(value="post")
   private final Optional<Integer> port;
+
+  @Since(1.0)
+  @Expose(deserialize=true, serialize=true)
+  @SerializedName(value="path")
   private final Optional<String> path;
+
+  @Since(1.0)
+  @Expose(deserialize=true, serialize=true)
+  @SerializedName(value="params")
   private final Optional<Map<String, String>> query;
+
+  @Since(1.0)
+  @Expose(deserialize=true, serialize=true)
+  @SerializedName(value="headers")
   private final Optional<Map<String, String>> headers;
+
+  @Since(1.0)
+  @Expose(deserialize=true, serialize=true)
+  @SerializedName(value="body")
   private final Optional<String> body;
 
+  @Since(1.0)
+  @Expose(deserialize=true, serialize=true)
+  @SerializedName(value="min_latency")
   private final int minLatency;
+
+  @Since(1.0)
+  @Expose(deserialize=true, serialize=true)
+  @SerializedName(value="max_latency")
   private final int maxLatency;
 
+  @Since(1.0)
+  @Expose(deserialize=true, serialize=true)
+  @SerializedName(value="concurrency")
   private Optional<String> threads;
+
+  @Since(1.0)
+  @Expose(deserialize=true, serialize=true)
+  @SerializedName(value="qps")
   private Optional<String> profile;
 
-  private int concurrency = 1;
-  private int duration = 1;
-  private int rampupTime = 1;
-  private int rampupSteps = 1;
+  @Since(1.0)
+  @Expose(deserialize=true, serialize=true)
+  @SerializedName(value="duration")
+  private int duration = 0;
+
+  @Since(1.0)
+  @Expose(deserialize=true, serialize=true)
+  @SerializedName(value="threads")
+  private int concurrency = 0;
+
+  @Since(1.0)
+  @Expose(deserialize=true, serialize=true)
+  @SerializedName(value="rampup_time")
+  private int rampupTime = 0;
+
+  @Since(1.0)
+  @Expose(deserialize=true, serialize=true)
+  @SerializedName(value="rampup_steps")
+  private int rampupSteps = 0;
 
   public JMeterTestConfig(
     @CheckForNull @NonNull final String name,

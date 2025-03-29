@@ -60,8 +60,10 @@ public class RunJMeterTestController extends JMeterTestController {
     path(basePath, () -> {
       path("/jmeter", () -> {
         path("/test", () -> {
-          get("/run", this);
+          get("/run", "*/*", this);
+          get("/exec", "*/*", this);
           post("/run", "*/*", this);
+          post("/exec", "*/*", this);
         });
       });
     });
@@ -215,7 +217,7 @@ public class RunJMeterTestController extends JMeterTestController {
       .toString()
     );
 
-    responseOutput.println("---- starting: <" + testID + "> ----");
+    responseOutput.println("---- test/start: <" + testID + "> ----");
     logger.info("starting: {}/{}", this.instanceID, testID);
 
     
@@ -241,7 +243,7 @@ public class RunJMeterTestController extends JMeterTestController {
 
     logger.info("finished: {}/{}", this.instanceID, test.id());
     this.busy.set(false);
-    responseOutput.println("---- finished: <" + testID + "> ----");
+    responseOutput.println("---- test/stop: <" + testID + "> ----");
     responseOutput.flush();
     return null;
   }

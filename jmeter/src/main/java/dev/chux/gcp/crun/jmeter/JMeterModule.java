@@ -19,6 +19,7 @@ import dev.chux.gcp.crun.jmeter.config.JMeterTestProvider;
 import dev.chux.gcp.crun.jmeter.config.JMeterTestDirProvider;
 import dev.chux.gcp.crun.jmeter.rest.RunJMeterTestController;
 import dev.chux.gcp.crun.jmeter.rest.StreamJMeterTestController;
+import dev.chux.gcp.crun.jmeter.rest.GetJMeterTestController;
 
 public class JMeterModule extends AbstractModule {
 
@@ -60,6 +61,9 @@ public class JMeterModule extends AbstractModule {
 
     routesBinder.addBinding("jmeter://rest/stream-test")
       .to(StreamJMeterTestController.class).in(Scopes.SINGLETON);
+
+    routesBinder.addBinding("jmeter://rest/get-test")
+      .to(GetJMeterTestController.class).in(Scopes.SINGLETON);
   }
 
 }

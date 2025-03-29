@@ -9,6 +9,8 @@ import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import dev.chux.gcp.crun.rest.adapters.OptionalTypeAdapter;
+
 public class RestModule extends AbstractModule {
 
   protected void configure() {
@@ -16,6 +18,9 @@ public class RestModule extends AbstractModule {
     final Gson gson = new GsonBuilder()
       .excludeFieldsWithoutExposeAnnotation()
       .setVersion(1.0)
+      .registerTypeAdapterFactory(
+        OptionalTypeAdapter.FACTORY
+      )
       .create();
     bind(Gson.class).toInstance(gson);
 

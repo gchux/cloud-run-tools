@@ -140,6 +140,12 @@ abstract class JMeterTestController implements Route {
           )
         )
       )
+    ).or(
+      fromNullable(
+        emptyToNull(
+          request.params(":" + param)
+        )
+      )
     );
   }
 

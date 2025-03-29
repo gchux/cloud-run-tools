@@ -1,17 +1,20 @@
 package dev.chux.gcp.crun.jmeter.rest;
 
-import javax.servlet.ServletOutputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 
 import com.google.inject.Inject;
 
 import com.google.common.base.Optional;
-import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+
+import com.google.gson.Gson;
 
 import spark.Request;
 import spark.Response;
 
 import dev.chux.gcp.crun.jmeter.JMeterTest;
+import dev.chux.gcp.crun.jmeter.JMeterTestConfig;
 import dev.chux.gcp.crun.jmeter.JMeterTestService;
 
 import org.slf4j.Logger;
@@ -19,16 +22,21 @@ import org.slf4j.LoggerFactory;
 
 import static spark.Spark.*;
 
-public class StreamJMeterTestController extends JMeterTestController {
+import static java.nio.charset.StandardCharsets.UTF_8;
 
-  private static final Logger logger = LoggerFactory.getLogger(StreamJMeterTestController.class);
+public class GetJMeterTestController extends JMeterTestController {
 
+  private static final Logger logger = LoggerFactory.getLogger(GetJMeterTestController.class);
+
+  private final Gson gson;
   private final JMeterTestService jMeterTestService;
 
   @Inject
-  public StreamJMeterTestController(
+  public GetJMeterTestController(
+    final Gson gson,
     final JMeterTestService jMeterTestService
   ) {
+    this.gson = gson;
     this.jMeterTestService = jMeterTestService;
   }
 
@@ -38,7 +46,7 @@ public class StreamJMeterTestController extends JMeterTestController {
     path(basePath, () -> {
       path("/jmeter", () -> {
         path("/test", () -> {
-          get("/stream/:id", "text/plain", this);
+          get("/status/:id", "application/json", this);
         });
       });
     });
@@ -47,7 +55,7 @@ public class StreamJMeterTestController extends JMeterTestController {
   public String endpoint(
     final String basePath
   ) {
-    return "[GET] " + basePath + "/jmeter/test/stream/:id";
+    return "[GET] " + basePath + "/jmeter/test/status/:id";
   }
 
   public Object handle(
@@ -62,11 +70,13 @@ public class StreamJMeterTestController extends JMeterTestController {
 
     final String testID = id.get();
 
+    logger.debug("query: {}", testID);
+
     setHeader(response, "id", testID);
 
-    response.type("text/plain");
+    response.type("application/json");
 
-    final ServletOutputStream stream = response.raw().getOutputStream();
+    final OutputStream stream = response.raw().getOutputStream();
 
     final Optional<JMeterTest> test = this.jMeterTestService.get(testID);
 
@@ -74,24 +84,22 @@ public class StreamJMeterTestController extends JMeterTestController {
       halt(404, "test ID not found: " + testID);
       return null;
     }
-    
-    JMeterTest t = test.get();
 
-    logger.info("connecting to test: {}", t);
+    final Optional<
+      ListenableFuture<JMeterTest>
+    > t = this.jMeterTestService.getTest(testID);
 
-    stream.println("---- stream/start: <" + t.id() + "> ----");
+    logger.info("test: {} => {}", test, t);
 
-    final ListenableFuture<
-      JMeterTest
-    > futureTest = this.jMeterTestService
-      .connect(t, stream)
-      .or(Futures.immediateFuture(t));
+    if ( t.isPresent() ) {
+      final boolean isDone = t.get().isDone();
+      setHeader(response, "status", isDone ? "complete" : "running");
+    }
 
-    // block until test is complete
-    t = futureTest.get();
+    final OutputStreamWriter writer = new OutputStreamWriter(stream, UTF_8);
+    this.gson.toJson(test.get().get(), JMeterTestConfig.class, writer);
 
-    stream.println("---- stream/stop: <" + t.id() + "> ----");
-    stream.flush();
+    writer.flush();
 
     return null;
   }
