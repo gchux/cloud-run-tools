@@ -13,6 +13,8 @@ import com.google.inject.Inject;
 import com.google.common.base.Optional;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import spark.Request;
@@ -87,6 +89,29 @@ public class RunJMeterTestController extends JMeterTestController {
       .hash().toString();
   }
 
+  private void addCallback(
+    final String id,
+    final ListenableFuture<JMeterTest> test
+  ) {
+    Futures.addCallback(
+      test,
+      new FutureCallback<JMeterTest>() {
+        public void onSuccess(final JMeterTest t) {
+          RunJMeterTestController.this.
+            logger.info("finished/SUCCESS: {}/{}", t.instanceID(), t.id());
+          RunJMeterTestController.this.busy.set(false);
+        }
+        public void onFailure(final Throwable t) {
+          RunJMeterTestController.this.
+            logger.error("finished/FAILED: {}/{}",
+              RunJMeterTestController.this.instanceID, id);
+          RunJMeterTestController.this.busy.set(false);
+        }
+      },
+      this.jMeterTestService.executor(id)
+    );
+  }
+
   public Object handle(
     final Request request,
     final Response response
@@ -129,6 +154,8 @@ public class RunJMeterTestController extends JMeterTestController {
       halt(400, "invalid mode: " + mode);
       return null;
     }
+
+    final boolean async = async(request);
 
     // test to execute base on the name of JMX files ( case sensitive ).
     final Optional<String> jmx         = script(request);
@@ -193,7 +220,7 @@ public class RunJMeterTestController extends JMeterTestController {
       .add("instance", this.instanceID)
       .add("trace_id", traceID)
       .add("output", output)
-      .add("test", jmx)
+      .add("script", jmx)
       .add("mode", mode)
       .add("proto", proto)
       .add("method", method)
@@ -214,20 +241,18 @@ public class RunJMeterTestController extends JMeterTestController {
       .toString()
     );
 
-    responseOutput.println("---- test/start: <" + testID + "> ----");
     logger.info("starting: {}/{}", this.instanceID, testID);
 
-    
-    final ListenableFuture<JMeterTest> jMeterTest;
+    final ListenableFuture<JMeterTest> test;
     if( output != null && output.equalsIgnoreCase(SYS_OUT) ) {
-      jMeterTest = this.jMeterTestService.start(
+      test = this.jMeterTestService.start(
         this.instanceID, testID, traceID,
         jmx, mode, proto, method, host, port, path,
         query, headers, body, concurrency, qps,
         threads, duration, rampupTime, rampupSteps,
         minLatency, maxLatency);
     } else {
-      jMeterTest = this.jMeterTestService.start(
+      test = this.jMeterTestService.start(
         this.instanceID, testID, traceID,
         jmx, mode, proto, method, host, port, path,
         query, headers, body, concurrency, qps,
@@ -235,12 +260,18 @@ public class RunJMeterTestController extends JMeterTestController {
         responseOutput, false /* closeable */,
         minLatency, maxLatency);
     }
-    responseOutput.flush();
-    final JMeterTest test = jMeterTest.get();
 
-    logger.info("finished: {}/{}", this.instanceID, test.id());
-    this.busy.set(false);
-    responseOutput.println("---- test/stop: <" + testID + "> ----");
+    this.addCallback(testID, test);
+
+    if ( async || test.isDone() || test.isCancelled() ) {
+      response.status(204);
+      return null;
+    }
+
+    responseOutput.println("---- test/start: <" + testID + "> ----");
+    responseOutput.flush();
+    final JMeterTest t = test.get();
+    responseOutput.println("---- test/stopped: <" + t.id() + "> ----");
     responseOutput.flush();
     return null;
   }

@@ -105,23 +105,13 @@ abstract class JMeterTestController implements Route {
     final Request request,
     final String param
   ) {
-    return fromNullable(
-      Ints.tryParse(
-        request.queryParamOrDefault(param, "")
-      )
-    ).or(
-      fromNullable(
-        Ints.tryParse(
-          firstNonNull(
-            emptyToNull(
-              request.headers(
-                toHeaderName(param)
-              )
-            ), ""
-          )
-        )
-      )
-    );
+    final Optional<String> value = this.optionalParam(request, param);
+    if ( value.isPresent() ) {
+      return fromNullable(
+        Ints.tryParse(value.get())
+      );
+    }
+    return Optional.absent();
   }
 
   protected int optionalIntParamOr(
@@ -130,6 +120,28 @@ abstract class JMeterTestController implements Route {
     final Integer value
   ) {
     return optionalIntParam(request, param).or(value).intValue();
+  }
+
+  protected Optional<Boolean> optionalBoolParam(
+    final Request request,
+    final String param
+  ) {
+    final Optional<String> value = this.optionalParam(request, param);
+    if ( value.isPresent() ) {
+      return Optional.of(
+        fromNullable(value.get())
+      );
+    }
+    return Optional.absent();
+  }
+
+  protected boolean optionalBoolParamOr(
+    final Request request,
+    final String param,
+    final boolean value
+  ) {
+    return optionalBoolParam(request, param)
+      .or(Boolean.valueOf(value)).booleanValue();
   }
 
   protected Optional<String> optionalParam(
@@ -178,6 +190,10 @@ abstract class JMeterTestController implements Route {
   
   protected String host(final Request request) {
     return this.optionalParam(request, "host").orNull();
+  }
+
+  protected boolean async(final Request request) {
+    return this.optionalBoolParamOr(request, "async", false);
   }
 
   protected Optional<String> optionalID(final Request request) {

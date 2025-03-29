@@ -9,6 +9,7 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import com.google.inject.Inject;
@@ -54,7 +55,7 @@ public class JMeterTestService {
   private final Map<String, ProxyOutputStream> streams = Maps.newConcurrentMap();
   private final Map<String, ListenableFuture<JMeterTest>> tests = Maps.newConcurrentMap();
 
-  private final ListeningExecutorService executor = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(3));
+  private final ListeningExecutorService executor = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(5));
   
   @Inject
   JMeterTestService(
@@ -166,6 +167,20 @@ public class JMeterTestService {
     logger.info("> {}", this.toString());
 
     return producedValue;
+  }
+
+  public final Executor executor(
+    final String id
+  ) {
+    final Optional<
+      ListenableFuture<
+        JMeterTest
+      >
+    > test = this.test(id);
+    if ( test.isPresent() ) {
+      return this.executor;
+    }
+    return MoreExecutors.directExecutor();
   }
 
   @Override
