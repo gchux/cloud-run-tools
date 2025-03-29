@@ -109,7 +109,7 @@ Test parameters are passed as URL query parameters by default; however, it is al
 #### Basic Parameters
 
 - **`id`**: [`String`, _optional_] test ID passed to the remote service via HTTP request header `x-jmaas-test-id`; if not present, a random `UUID` will be used.
-- **`test`**: [`String`, _optional_, default:`test`] [test scenario](src/main/jmeter) to use; without `.jmx` extension.
+- **`script`**: [`String`, _optional_, default:`test`] [test scenario](src/main/jmeter) to use; without `.jmx` extension.
 - **`mode`**: [`String`, _optional_, default:`concurrency`] test operation mode; alternatives: `qps` or `concurrency`.
 - **`proto`**: [`String`, _optional_, default:`https`] protocol to use; alternatives: `http` or `https`.
 - **`method`**: [`String`, _optional_, default:`GET`] [HTTP method](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods) to use.
@@ -154,7 +154,7 @@ Test parameters are passed as URL query parameters by default; however, it is al
     x-jmaas-test-id: load-test-0001
     x-jmaas-test-mode: concurrency
     x-jmaas-test-duration: 11
-    x-jmaas-test-test: generic_dynamic
+    x-jmaas-test-script: generic_dynamic
     ```
 
   - `10,0,0,10,1` `;` `10,5,10,10,1`:
@@ -167,7 +167,7 @@ Test parameters are passed as URL query parameters by default; however, it is al
     Accept: text/plain
     x-jmaas-test-mode: concurrency
     x-jmaas-test-duration: 32
-    x-jmaas-test-test: generic_dynamic
+    x-jmaas-test-script: generic_dynamic
     x-jmaas-test-concurrency: 10,0,0,10,1;10,5,10,10,1
     ```
 
@@ -203,7 +203,7 @@ Test parameters are passed as URL query parameters by default; however, it is al
     x-jmaas-test-id: load-test-0003
     x-jmaas-test-mode: qps
     x-jmaas-test-duration: 80
-    x-jmaas-test-test: generic_qps
+    x-jmaas-test-script: generic_qps
     x-jmaas-test-qps: 1,10,10;10,10,60;10,0,10
     ```
 
@@ -215,7 +215,7 @@ Test parameters are passed as URL query parameters by default; however, it is al
 
 #### `test` Parameter
 
-Depending on the value of the **`mode`** parameter, **`test`** may be one of:
+Depending on the value of the **`mode`** parameter, the **`script`** parameter may be one of:
 
 - If **`mode`** is set to **`qps`**:
 
