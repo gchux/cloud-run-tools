@@ -147,6 +147,7 @@ public class JMeterTestService {
       this.clockIn(config);
       this.processConsumer.accept(this.test);
       this.clockOut(config);
+      logger.info("test complete: {}", this.test);
       return this.test;
     }
 
@@ -208,9 +209,12 @@ public class JMeterTestService {
       query, headers, body.orNull(), minLatency, maxLatency
     )
     .traceID(traceID.orNull())
-    .threads(threads.orNull()).profile(profile.orNull())
-    .concurrency(concurrency).duration(duration)
-    .rampupTime(rampupTime).rampupSteps(rampupSteps);
+    .threads(threads.orNull())
+    .profile(profile.orNull())
+    .concurrency(concurrency)
+    .duration(duration)
+    .rampupTime(rampupTime)
+    .rampupSteps(rampupSteps);
 
     final OutputStream teeStream = this.wrapStream(config, outputStream);
     final JMeterTest test = this.newJMeterTest(config, teeStream, closeableOutputStream);
