@@ -40,10 +40,12 @@ import org.slf4j.LoggerFactory;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.base.Optional.absent;
 import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Throwables.getStackTraceAsString;
+import static com.google.common.util.concurrent.Futures.immediateFuture;
 
 public class JMeterTestService {
 
@@ -61,6 +63,7 @@ public class JMeterTestService {
   private final ListeningScheduledExecutorService scheduledExecutor = MoreExecutors.listeningDecorator(Executors.newScheduledThreadPool(1));
 
   private static class Watchdog implements Runnable {
+
     private static final Logger logger = LoggerFactory.getLogger(Watchdog.class);
 
     private final Map<String, JMeterTest> jMeterTestStorage;
@@ -71,29 +74,80 @@ public class JMeterTestService {
       this.jMeterTestStorage = jmeterTestStorage;
     }
 
+    private boolean flush(
+      final JMeterTest test
+    ) {
+      final Optional<OutputStream> stream = test.stream();
+      if ( stream.isPresent() ) {
+        final OutputStream s = stream.get();
+        try {
+          s.flush();
+          logger.info(
+            "{} | flushed stream '{}': {}", test.id(), s
+          );
+          return true;
+        } catch(final Exception e) {
+          logger.error(
+            "{} | failed to flush '{}': {}",
+            test.id(), s, getStackTraceAsString(e)
+          );
+        }
+      }
+      return false;
+    }
+
     @Override
     public void run() {
       int flushedStreams = 0;
-      for ( final Map.Entry<String, JMeterTest> test : this.jMeterTestStorage.entrySet() ) {
-        final JMeterTest t = test.getValue();
-        final Optional<OutputStream> stream = t.stream();
-        if ( stream.isPresent() ) {
-          final OutputStream s = stream.get();
-          try {
-            s.flush();
-            logger.info(
-              "{} | flushed stream '{}': {}", t.id(), s
-            );
-            flushedStreams += 1;
-          } catch(final Exception e) {
-            logger.error(
-              "{} | failed to flush '{}': {}",
-              t.id(), s, getStackTraceAsString(e)
-            );
-          }
+      for ( final Map.Entry<String, JMeterTest> test :
+            this.jMeterTestStorage.entrySet() ) {
+        if ( this.flush(test.getValue()) ) {
+           flushedStreams += 1;
         }
       }
       logger.info("flushed {} streams", flushedStreams);
+    }
+
+  }
+
+  private static class TestExecutor implements Callable<JMeterTest> {
+
+    private static final Logger logger = LoggerFactory.getLogger(Executor.class);
+
+    private final Consumer<ProcessProvider> processConsumer;
+    private final JMeterTest test;
+
+    private TestExecutor(
+      @ProcessConsumer
+        final Consumer<
+          ProcessProvider
+        > processConsumer,
+      final JMeterTest test
+    ) {
+      this.processConsumer = processConsumer;
+      this.test = test;
+    }
+
+    private void clockIn(
+      final JMeterTestConfig config
+    ) {
+      config.started(System.currentTimeMillis());
+    }
+
+    private void clockOut(
+      final JMeterTestConfig config
+    ) {
+      config.finished(System.currentTimeMillis());
+    }
+
+    @Override
+    public JMeterTest call() {
+      final JMeterTestConfig config = this.test.get();
+      logger.info("starting test: {}", this.test);
+      this.clockIn(config);
+      this.processConsumer.accept(this.test);
+      this.clockOut(config);
+      return this.test;
     }
 
   }
@@ -112,12 +166,12 @@ public class JMeterTestService {
 
     this.scheduledExecutor.scheduleAtFixedRate(
       new Watchdog(jmeterTestStorage),
-      5l, 5l,
-      TimeUnit.SECONDS
+      5l, 5l, TimeUnit.SECONDS
     );
   }
 
-  public final ListenableFuture<JMeterTest> start(final String instanceID,
+  public final ListenableFuture<JMeterTest> start(
+    final FutureCallback<JMeterTest> callback, final String instanceID,
     final String id, final Optional<String> traceID, final Optional<String> jmx, final String mode,
     final Optional<String> proto, final Optional<String> method, final String host, final Optional<Integer> port,
     final Optional<String> path, final Map<String, String> query, final Map<String, String> headers,
@@ -125,11 +179,12 @@ public class JMeterTestService {
     final int concurrency, final int duration, final int rampupTime, final int rampupSteps,
     final int minLatency, final int maxLatency
   ) {
-    return this.start(instanceID, id, traceID, jmx, mode, proto, method, host, port, path, query, headers, body,
+    return this.start(callback, instanceID, id, traceID, jmx, mode, proto, method, host, port, path, query, headers, body,
       threads, profile, concurrency, duration, rampupTime, rampupSteps, System.out, false, minLatency, maxLatency);
   }
 
-  public final ListenableFuture<JMeterTest> start(final String instanceID,
+  public final ListenableFuture<JMeterTest> start(
+    final FutureCallback<JMeterTest> callback, final String instanceID,
     final String id, final Optional<String> traceID, final Optional<String> jmx, final String mode,
     final Optional<String> proto, final Optional<String> method, final String host, final Optional<Integer> port,
     final Optional<String> path, final Map<String, String> query, final Map<String, String> headers,
@@ -165,43 +220,47 @@ public class JMeterTestService {
     );
     if ( t.isPresent() ) {
       logger.warn("test '{}' is already running", t.get());
-      return this.test(id).or(
-        Futures.immediateFuture(t.get())
-      );
+      return this.test(id).or(immediateFuture(t.get()));
     }
 
     // start JMeter test asynchronously
     final ListenableFuture<JMeterTest> futureTest =
       this.executor.submit(
-        new Callable<JMeterTest>() {
-          public JMeterTest call() {
-            JMeterTestService.this.logger.info("starting test: {}", test);
-            config.started(System.currentTimeMillis());
-            JMeterTestService.this.processConsumer.accept(test);
-            config.finished(System.currentTimeMillis());
-            return test;
-          }
-        }
+        new TestExecutor(this.processConsumer, test)
       );
 
     // clean up after test execution is complete
     Futures.<JMeterTest>addCallback(
       futureTest,
       new FutureCallback<JMeterTest>() {
-        public void onSuccess(final JMeterTest test) {
-          JMeterTestService.this.logger.info("test complete: {}", test);
-          JMeterTestService.this.clean(test);
+        private void always(
+          final boolean success,
+          final Optional<JMeterTest> t,
+          final Optional<Throwable> e
+        ) {
+          if ( success ) {
+            JMeterTestService.this.logger.info(
+              "test complete: {}", t
+            );
+            JMeterTestService.this.clean(t.get());
+          } else {
+            JMeterTestService.this.logger.error(
+              "test failed: {} => {}", test,
+              path, getStackTraceAsString(e.get())
+            );
+            JMeterTestService.this.clean(test);
+          }
         }
-        public void onFailure(final Throwable thrown) {
-          JMeterTestService.this.logger.error(
-            "test failed: {} => {}", test,
-            path, getStackTraceAsString(thrown)
-          );
-          JMeterTestService.this.clean(test);
+        public void onSuccess(final JMeterTest t) {
+          this.always(/* success */ true, fromNullable(t), absent());
+        }
+        public void onFailure(final Throwable t) {
+          this.always(/* success */ false, absent(), fromNullable(t));
         }
       },
       this.executor
     );
+    Futures.<JMeterTest>addCallback(futureTest, callback, this.executor);
 
     // save a reference to this test's `Future`
     final ListenableFuture<
@@ -266,7 +325,7 @@ public class JMeterTestService {
         )
       );
     }
-    return Optional.absent();
+    return absent();
   }
 
   private Optional<
@@ -316,7 +375,7 @@ public class JMeterTestService {
         );
       }
     }
-    return Optional.absent();
+    return absent();
   }
 
   public final Optional<

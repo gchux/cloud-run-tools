@@ -11,6 +11,7 @@ import javax.servlet.ServletOutputStream;
 import com.google.inject.Inject;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.Futures;
@@ -30,6 +31,8 @@ import org.slf4j.LoggerFactory;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.base.Optional.absent;
+import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
 import static spark.Spark.*;
@@ -42,7 +45,68 @@ public class RunJMeterTestController extends JMeterTestController {
   private final Set<String> modes;
   private final String instanceID;
 
-  private final AtomicBoolean busy = new AtomicBoolean(false);
+  private final AtomicBoolean lock = new AtomicBoolean(false);
+
+  private static class Callback implements FutureCallback<JMeterTest>, Supplier<String> {
+
+    private static final Logger logger = LoggerFactory.getLogger(Callback.class);
+
+    private final AtomicBoolean lock;
+    private final String instanceID;
+    private final String testID;
+
+    private Callback(
+      final AtomicBoolean lock,
+      final String instanceID,
+      final String testID
+    ) {
+      this.lock = lock;
+      this.instanceID = instanceID;
+      this.testID = testID;
+    }
+
+    private void release() {
+      if ( this.lock.compareAndSet(true, false) ) {
+        logger.info("{} | is now available", this.instanceID);
+      }
+    }
+
+    private void always(
+      final boolean success,
+      final Optional<JMeterTest> test,
+      final Optional<Throwable> error
+    ) {
+      if ( success ) {
+        final JMeterTest t = test.get();
+        logger.info("finished/SUCCESS: {}/{}", t.instanceID(), t.id());
+      } else {
+        logger.error("finished/FAILED: {}/{}", this.instanceID, this.get());
+      }
+      this.release();
+    }
+
+    public void onSuccess(final JMeterTest t) {
+      this.always(/* success */ true, fromNullable(t), absent());
+    }
+
+    public void onFailure(final Throwable t) {
+      this.always(/* success */ false, absent(), fromNullable(t));
+    }
+
+    @Override
+    public String get() {
+      return this.testID;
+    }
+
+    @Override
+    public String toString() {
+      return toStringHelper(this)
+        .add("instance_id", this.instanceID)
+        .add("test_id", this.get())
+        .toString();
+    }
+
+  }
 
   @Inject
   public RunJMeterTestController(
@@ -89,35 +153,12 @@ public class RunJMeterTestController extends JMeterTestController {
       .hash().toString();
   }
 
-  private void addCallback(
-    final String id,
-    final ListenableFuture<JMeterTest> test
-  ) {
-    Futures.addCallback(
-      test,
-      new FutureCallback<JMeterTest>() {
-        public void onSuccess(final JMeterTest t) {
-          RunJMeterTestController.this.
-            logger.info("finished/SUCCESS: {}/{}", t.instanceID(), t.id());
-          RunJMeterTestController.this.busy.set(false);
-        }
-        public void onFailure(final Throwable t) {
-          RunJMeterTestController.this.
-            logger.error("finished/FAILED: {}/{}",
-              RunJMeterTestController.this.instanceID, id);
-          RunJMeterTestController.this.busy.set(false);
-        }
-      },
-      this.jMeterTestService.executor(id)
-    );
-  }
-
   public Object handle(
     final Request request,
     final Response response
   ) throws Exception {
     // allows at most 1 execution per worker
-    if ( !this.busy.compareAndSet(false, true) ) {
+    if ( !this.lock.compareAndSet(false, true) ) {
       response.status(409);
       return "busy";
     }
@@ -217,6 +258,7 @@ public class RunJMeterTestController extends JMeterTestController {
 
     logger.info(
       toStringHelper(testID)
+      .add("async", async)
       .add("instance", this.instanceID)
       .add("trace_id", traceID)
       .add("output", output)
@@ -241,18 +283,20 @@ public class RunJMeterTestController extends JMeterTestController {
       .toString()
     );
 
+    final Callback cb = new Callback(this.lock, this.instanceID, testID);
+
     logger.info("starting: {}/{}", this.instanceID, testID);
 
     final ListenableFuture<JMeterTest> test;
     if( output != null && output.equalsIgnoreCase(SYS_OUT) ) {
-      test = this.jMeterTestService.start(
+      test = this.jMeterTestService.start(cb,
         this.instanceID, testID, traceID,
         jmx, mode, proto, method, host, port, path,
         query, headers, body, concurrency, qps,
         threads, duration, rampupTime, rampupSteps,
         minLatency, maxLatency);
     } else {
-      test = this.jMeterTestService.start(
+      test = this.jMeterTestService.start(cb,
         this.instanceID, testID, traceID,
         jmx, mode, proto, method, host, port, path,
         query, headers, body, concurrency, qps,
@@ -260,9 +304,6 @@ public class RunJMeterTestController extends JMeterTestController {
         responseOutput, false /* closeable */,
         minLatency, maxLatency);
     }
-
-    // this may be blocking if `testID` is unknown to `JMeterTestService`
-    this.addCallback(testID, test);
 
     if ( async || test.isDone() || test.isCancelled() ) {
       response.status(204);
