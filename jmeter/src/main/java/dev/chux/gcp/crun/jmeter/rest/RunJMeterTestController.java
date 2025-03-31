@@ -169,14 +169,7 @@ public class RunJMeterTestController extends JMeterTestController {
     final String output = output(request);
     final String testID = id(request);
 
-    response.type("text/plain");
-    setHeader(response, "id", testID);
-    setHeader(response, "instance-id", this.instanceID);
-
     final Optional<String> traceID = traceID(request);
-    if ( traceID.isPresent() ) {
-      setHeader(response, "trace-id", traceID.get());
-    }
 
     // FQDN, hostname or IP of the remote service.
     final String host = host(request);
@@ -288,7 +281,7 @@ public class RunJMeterTestController extends JMeterTestController {
     logger.info("starting: {}/{}", this.instanceID, testID);
 
     final ListenableFuture<JMeterTest> test;
-    if( output != null && output.equalsIgnoreCase(SYS_OUT) ) {
+    if( async || output.equalsIgnoreCase(SYS_OUT) ) {
       test = this.jMeterTestService.start(cb,
         this.instanceID, testID, traceID,
         jmx, mode, proto, method, host, port, path,
@@ -305,10 +298,18 @@ public class RunJMeterTestController extends JMeterTestController {
         minLatency, maxLatency);
     }
 
+    setHeader(response, "id", testID);
+    setHeader(response, "instance-id", this.instanceID);
+    if ( traceID.isPresent() ) {
+      setHeader(response, "trace-id", traceID.get());
+    }
+
     if ( async || test.isDone() || test.isCancelled() ) {
       response.status(204);
-      return null;
+      return "";
     }
+
+    response.type("text/plain");
 
     responseOutput.println("---- test/start: <" + testID + "> ----");
     responseOutput.flush();

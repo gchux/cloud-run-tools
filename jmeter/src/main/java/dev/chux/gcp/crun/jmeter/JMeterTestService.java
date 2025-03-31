@@ -89,7 +89,7 @@ public class JMeterTestService {
           return true;
         } catch(final Exception e) {
           logger.error(
-            "{} | failed to flush '{}': {}",
+            "{} | failed to flush '{}' =>\n{}",
             test.id(), s, getStackTraceAsString(e)
           );
         }
@@ -254,7 +254,7 @@ public class JMeterTestService {
             JMeterTestService.this.clean(t.get());
           } else {
             JMeterTestService.this.logger.error(
-              "test failed: {} => {}", test,
+              "test failed: {} =>\n{}", test,
               path, getStackTraceAsString(e.get())
             );
             JMeterTestService.this.clean(test);
@@ -459,7 +459,7 @@ public class JMeterTestService {
         }
       } catch(final Exception e) {
         logger.error(
-          "{}/failed to delete '{}': {}",
+          "{}/failed to delete '{}' =>\n{}",
           id, path, getStackTraceAsString(e)
         );
       }
@@ -473,7 +473,7 @@ public class JMeterTestService {
         s.flush();
       } catch(final Exception e) {
         logger.error(
-          "{}/failed to flush '{}' => {}",
+          "{}/failed to flush '{}' =>\n{}",
           id, s, getStackTraceAsString(e)
         );
       }

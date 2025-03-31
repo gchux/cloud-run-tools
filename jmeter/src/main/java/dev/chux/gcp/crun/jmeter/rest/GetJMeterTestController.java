@@ -62,6 +62,14 @@ public class GetJMeterTestController extends JMeterTestController {
     return "[GET|HEAD] " + basePath + "/jmeter/test/status/:id";
   }
 
+  private String toJSON(
+    final JMeterTest test
+  ) {
+    return this.gson.toJson(
+      test.get(), JMeterTestConfig.class
+    );
+  }
+
   public Object handle(
     final Request request,
     final Response response
@@ -100,7 +108,8 @@ public class GetJMeterTestController extends JMeterTestController {
 
     if ( tt.isPresent() ) {
       final boolean isDone = tt.get().isDone();
-      setHeader(response, "status", isDone ? "complete" : "running");
+      setHeader(response, "status",
+        isDone ? "complete" : "running");
     }
 
     if ( isHEAD(request) ) {
@@ -109,7 +118,7 @@ public class GetJMeterTestController extends JMeterTestController {
 
     response.type("application/json");
 
-    return this.gson.toJson(t, JMeterTestConfig.class);
+    return this.toJSON(t);
   }
 
 }
