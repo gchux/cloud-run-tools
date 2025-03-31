@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -24,6 +25,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.ListeningScheduledExecutorService;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import dev.chux.gcp.crun.io.ProxyOutputStream;
@@ -56,6 +58,45 @@ public class JMeterTestService {
   private final Map<String, ListenableFuture<JMeterTest>> tests = Maps.newConcurrentMap();
 
   private final ListeningExecutorService executor = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(5));
+  private final ListeningScheduledExecutorService scheduledExecutor = MoreExecutors.listeningDecorator(Executors.newScheduledThreadPool(1));
+
+  private static class Watchdog implements Runnable {
+    private static final Logger logger = LoggerFactory.getLogger(Watchdog.class);
+
+    private final Map<String, JMeterTest> jMeterTestStorage;
+
+    private Watchdog(
+      final Map<String, JMeterTest> jmeterTestStorage
+    ) {
+      this.jMeterTestStorage = jmeterTestStorage;
+    }
+
+    @Override
+    public void run() {
+      int flushedStreams = 0;
+      for ( final Map.Entry<String, JMeterTest> test : this.jMeterTestStorage.entrySet() ) {
+        final JMeterTest t = test.getValue();
+        final Optional<OutputStream> stream = t.stream();
+        if ( stream.isPresent() ) {
+          final OutputStream s = stream.get();
+          try {
+            s.flush();
+            logger.info(
+              "{} | flushed stream '{}': {}", t.id(), s
+            );
+            flushedStreams += 1;
+          } catch(final Exception e) {
+            logger.error(
+              "{} | failed to flush '{}': {}",
+              t.id(), s, getStackTraceAsString(e)
+            );
+          }
+        }
+      }
+      logger.info("flushed {} streams", flushedStreams);
+    }
+
+  }
   
   @Inject
   JMeterTestService(
@@ -68,6 +109,12 @@ public class JMeterTestService {
     this.processConsumer = processConsumer;
     this.jmeterTestProvider = jmeterTestProvider;
     this.jmeterTestStorage = jmeterTestStorage;
+
+    this.scheduledExecutor.scheduleAtFixedRate(
+      new Watchdog(jmeterTestStorage),
+      5l, 5l,
+      TimeUnit.SECONDS
+    );
   }
 
   public final ListenableFuture<JMeterTest> start(final String instanceID,
@@ -129,7 +176,9 @@ public class JMeterTestService {
         new Callable<JMeterTest>() {
           public JMeterTest call() {
             JMeterTestService.this.logger.info("starting test: {}", test);
+            config.started(System.currentTimeMillis());
             JMeterTestService.this.processConsumer.accept(test);
+            config.finished(System.currentTimeMillis());
             return test;
           }
         }

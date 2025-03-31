@@ -48,6 +48,9 @@ public class GetJMeterTestController extends JMeterTestController {
         path("/test", () -> {
           get("/status", "application/json", this);
           get("/status/:id", "application/json", this);
+
+          head("/status", this);
+          head("/status/:id", this);
         });
       });
     });
@@ -73,10 +76,6 @@ public class GetJMeterTestController extends JMeterTestController {
 
     logger.debug("query: {}", testID);
 
-    setHeader(response, "id", testID);
-
-    response.type("application/json");
-
     final OutputStream stream = response.raw().getOutputStream();
 
     final Optional<JMeterTest> test = this.jMeterTestService.get(testID);
@@ -86,24 +85,31 @@ public class GetJMeterTestController extends JMeterTestController {
       return null;
     }
 
+    final JMeterTest t = test.get();
+
+    setHeader(response, "id", t.id());
+    setHeader(response, "name", t.name());
+    setHeader(response, "instance", t.instanceID());
+    setHeader(response, "script", t.script());
+
     final Optional<
       ListenableFuture<JMeterTest>
-    > t = this.jMeterTestService.getTest(testID);
+    > tt = this.jMeterTestService.getTest(testID);
 
     logger.info("test: {} => {}", test, t);
 
-    if ( t.isPresent() ) {
-      final boolean isDone = t.get().isDone();
+    if ( tt.isPresent() ) {
+      final boolean isDone = tt.get().isDone();
       setHeader(response, "status", isDone ? "complete" : "running");
     }
 
-    final OutputStreamWriter writer = new OutputStreamWriter(stream, UTF_8);
+    if ( isHEAD(request) ) {
+      return null;
+    }
 
-    this.gson.toJson(test.get().get(), JMeterTestConfig.class, writer);
+    response.type("application/json");
 
-    writer.flush();
-
-    return null;
+    return this.gson.toJson(t, JMeterTestConfig.class);
   }
 
 }

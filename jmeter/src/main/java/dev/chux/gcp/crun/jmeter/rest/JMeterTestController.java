@@ -82,6 +82,18 @@ abstract class JMeterTestController implements Route {
 
   protected JMeterTestController() {}
 
+  protected final String requestMethod(
+    final Request request
+  ) {
+    return request.requestMethod().toUpperCase();
+  }
+
+  protected final boolean isHEAD(
+    final Request request
+  ) {
+    return requestMethod(request).equals("HEAD");
+  }
+
   protected final Set<String> jmeterModes(
     final ConfigService configService
   ) {
@@ -111,7 +123,7 @@ abstract class JMeterTestController implements Route {
         Ints.tryParse(value.get())
       );
     }
-    return Optional.absent();
+    return Optional.<Integer>absent();
   }
 
   protected int optionalIntParamOr(
@@ -128,11 +140,11 @@ abstract class JMeterTestController implements Route {
   ) {
     final Optional<String> value = this.optionalParam(request, param);
     if ( value.isPresent() ) {
-      return Optional.of(
-        fromNullable(value.get())
+      return fromNullable(
+        Boolean.valueOf(value.get())
       );
     }
-    return Optional.absent();
+    return Optional.<Boolean>absent();
   }
 
   protected boolean optionalBoolParamOr(

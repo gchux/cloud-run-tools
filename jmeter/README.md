@@ -23,7 +23,7 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
 - using path parameters:
 
   ```http
-  GET /jmeter/test/status/:id
+  [GET|HEAD] /jmeter/test/status/:id
   Accept: application/json
   Content-Length: 0
   ```
@@ -31,7 +31,7 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
 - using query string parameters:
 
   ```http
-  GET /jmeter/test/status?id=<test-id>
+  [GET|HEAD] /jmeter/test/status?id=<test-id>
   Accept: application/json
   Content-Length: 0
   ```
@@ -39,7 +39,7 @@ Additionally, this project aims to provide compatibility with [Cloud Run](https:
 - using header parameters:
 
   ```http
-  GET /jmeter/test/status
+  [GET|HEAD] /jmeter/test/status
   Accept: application/json
   Content-Length: 0
   x-jmaas-test-id: <test-id>
@@ -132,8 +132,8 @@ Test parameters are passed as URL query parameters by default; however, it is al
 
 > [!TIP]
 > When using headers to pass **`params`** or **`headers`**, you may use an equals sign (`=`) to separate name from value.
-> >
-> For example: `x-jmaas-test-headers: Content-Type=text/plain;x-header-name=header_value`
+>
+> > For example: `x-jmaas-test-headers: Content-Type=text/plain;x-header-name=header_value`
 
 #### Latency Parameters
 
@@ -180,20 +180,20 @@ Test parameters are passed as URL query parameters by default; however, it is al
 > [!IMPORTANT]
 > When running tests with payload, it is not required and stronly discouraged to pass `Content-Length` via `x-jmaas-test-headers` as this will be automatically done by **`JMaaS`** during test instrumentation.
 
-  - `10,0,0,10,1` `;` `10,5,10,10,1`:
+- `10,0,0,10,1` `;` `10,5,10,10,1`:
 
-    - `step[1]`: immediately start 10 threads, hold the load for 10 seconds, and stop in 1 second; step duration is 11 seconds.
-    - `step[2]`: start 10 threads over 10 seconds after 5 seconds of startig the test, hold the load for 10 seconsa, and stop within 1 second; step duration is 21 seconds.
+  - `step[1]`: immediately start 10 threads, hold the load for 10 seconds, and stop in 1 second; step duration is 11 seconds.
+  - `step[2]`: start 10 threads over 10 seconds after 5 seconds of startig the test, hold the load for 10 seconsa, and stop within 1 second; step duration is 21 seconds.
 
-    ```http
-    GET /jmeter/test/run/load-test-0002 HTTP/1.1
-    Accept: text/plain
-    Content-Length: 0
-    x-jmaas-test-mode: concurrency
-    x-jmaas-test-duration: 32
-    x-jmaas-test-script: generic_dynamic
-    x-jmaas-test-concurrency: 10,0,0,10,1;10,5,10,10,1
-    ```
+  ```http
+  GET /jmeter/test/run/load-test-0002 HTTP/1.1
+  Accept: text/plain
+  Content-Length: 0
+  x-jmaas-test-mode: concurrency
+  x-jmaas-test-duration: 32
+  x-jmaas-test-script: generic_dynamic
+  x-jmaas-test-concurrency: 10,0,0,10,1;10,5,10,10,1
+  ```
 
 > [!IMPORTANT]
 > Query param **`duration`** must be equal to the sum of _`rampup_time + duration + shutdown_time`_ across all `5-tuples`.

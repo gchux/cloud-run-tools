@@ -157,8 +157,18 @@ public class JMeterTestImpl implements JMeterTest {
   }
 
   @Override
-  public final OutputStream stream() {
-    return this.stream.orNull();
+  public final Optional<OutputStream> stream() {
+    return this.stream;
+  }
+
+  @Override
+  public final long startedAt() {
+    return this.jMeterTestConfig.started();
+  }
+
+  @Override
+  public final long finishedAt() {
+    return this.jMeterTestConfig.finished();
   }
 
   @Override
@@ -168,8 +178,9 @@ public class JMeterTestImpl implements JMeterTest {
 
   @Override
   public ProcessOutput getOutput() {
-    if( this.stream.isPresent() ) {
-      return this.processOutputFactory.create(this.stream(), this.closeable);
+    final Optional<OutputStream> stream = this.stream();
+    if( stream.isPresent() ) {
+      return this.processOutputFactory.create(stream.get(), this.closeable);
     }
     return this.processOutputFactory.create(System.out, /* closeable */ false);
   }

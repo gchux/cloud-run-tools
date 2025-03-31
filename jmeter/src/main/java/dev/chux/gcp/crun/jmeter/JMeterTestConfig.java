@@ -23,21 +23,21 @@ public class JMeterTestConfig {
 
   @Since(1.0)
   @Expose(deserialize=true, serialize=true)
-  @SerializedName(value="name")
-  private final String name;
-
-  @Since(1.0)
-  @Expose(deserialize=true, serialize=true)
-  @SerializedName(value="instance_id")
-  private final String instanceID;
-
-  @Since(1.0)
-  @Expose(deserialize=true, serialize=true)
   @SerializedName(value="id")
   private final String id;
 
   @Since(1.0)
-  @Expose(deserialize=true, serialize=true)
+  @Expose(deserialize=false, serialize=true)
+  @SerializedName(value="name")
+  private final String name;
+
+  @Since(1.0)
+  @Expose(deserialize=false, serialize=true)
+  @SerializedName(value="instance_id")
+  private final String instanceID;
+
+  @Since(1.0)
+  @Expose(deserialize=false, serialize=true)
   @SerializedName(value="trace_id")
   private Optional<String> traceID;
 
@@ -131,6 +131,40 @@ public class JMeterTestConfig {
   @SerializedName(value="rampup_steps")
   private int rampupSteps = 0;
 
+  private class Timestamps {
+
+    @Since(1.0)
+    @Expose(deserialize=false, serialize=true)
+    @SerializedName(value="created")
+    private final long created;
+
+    @Since(1.0)
+    @Expose(deserialize=false, serialize=true)
+    @SerializedName(value="started")
+    private long started = 0;
+
+    @Since(1.0)
+    @Expose(deserialize=false, serialize=true)
+    @SerializedName(value="finished")
+    private long finished = 0;
+
+    private Timestamps(
+      final long created
+    ) {
+      this.created = created;
+    }
+
+    private Timestamps() {
+      this(System.currentTimeMillis());
+    }
+
+  }
+
+  @Since(1.0)
+  @Expose(deserialize=false, serialize=true)
+  @SerializedName(value="timestamps")
+  private final Timestamps timestamps;
+
   public JMeterTestConfig(
     @CheckForNull @NonNull final String name,
     @CheckForNull @NonNull final String instanceID,
@@ -194,6 +228,8 @@ public class JMeterTestConfig {
 
     this.minLatency = minLatency;
     this.maxLatency = maxLatency;
+
+    this.timestamps = new Timestamps();
   }
 
   @Override
@@ -342,6 +378,28 @@ public class JMeterTestConfig {
     final int rampupSteps
   ) {
     this.rampupSteps = rampupSteps;
+    return this;
+  }
+
+  public long started() {
+    return this.timestamps.started;
+  }
+
+  public JMeterTestConfig started(
+    final long timestamp
+  ) {
+    this.timestamps.started = timestamp;
+    return this;
+  }
+
+  public long finished() {
+    return this.timestamps.finished;
+  }
+
+  public JMeterTestConfig finished(
+    final long timestamp
+  ) {
+    this.timestamps.finished = timestamp;
     return this;
   }
 
