@@ -59,7 +59,7 @@ public class GetJMeterTestController extends JMeterTestController {
   public String endpoint(
     final String basePath
   ) {
-    return "[GET] " + basePath + "/jmeter/test/status/:id";
+    return "[GET|HEAD] " + basePath + "/jmeter/test/status/:id";
   }
 
   public Object handle(
