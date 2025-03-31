@@ -104,7 +104,7 @@ public class GetJMeterTestController extends JMeterTestController {
     }
 
     if ( isHEAD(request) ) {
-      return null;
+      return "";
     }
 
     response.type("application/json");

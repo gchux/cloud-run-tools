@@ -27,6 +27,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.build.AbstractStreamBuilder;
 import org.apache.commons.io.output.NullOutputStream;
 
+import static com.google.common.base.Throwables.getStackTraceAsString;
+
 /**
  * A Proxy stream which acts as expected, that is it passes the method
  * calls on to the proxied stream and doesn't change which methods are
@@ -38,8 +40,6 @@ import org.apache.commons.io.output.NullOutputStream;
  * </p>
  */
 public class ProxyOutputStream extends FilterOutputStream {
-
-    public static final ProxyOutputStream INSTANCE = new ProxyOutputStream();
 
     /**
      * Builds instances of {@link ProxyOutputStream}.
@@ -166,7 +166,8 @@ public class ProxyOutputStream extends FilterOutputStream {
      */
     protected void handleIOException(final IOException e) throws IOException {
         // drop `reference` immediately if an exception is thrown.
-        this.out = NullOutputStream.INSTANCE;
+        this.setReference(NullOutputStream.INSTANCE);
+        System.err.println(getStackTraceAsString(e));
     }
 
     /**

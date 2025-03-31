@@ -32,6 +32,7 @@ import dev.chux.gcp.crun.io.ProxyOutputStream;
 import dev.chux.gcp.crun.process.ProcessModule.ProcessConsumer;
 import dev.chux.gcp.crun.process.ProcessProvider;
 
+import org.apache.commons.io.output.NullOutputStream;
 import org.apache.commons.io.output.TeeOutputStream;
 
 import org.slf4j.Logger;
@@ -98,6 +99,10 @@ public class JMeterTestService {
 
     @Override
     public void run() {
+      if ( this.jMeterTestStorage.isEmpty() ) {
+        // no-op
+        return;
+      }
       int flushedStreams = 0;
       for ( final Map.Entry<String, JMeterTest> test :
             this.jMeterTestStorage.entrySet() ) {
@@ -167,7 +172,7 @@ public class JMeterTestService {
 
     this.scheduledExecutor.scheduleAtFixedRate(
       new Watchdog(jmeterTestStorage),
-      5l, 5l, TimeUnit.SECONDS
+      3l, 3l, TimeUnit.SECONDS
     );
   }
 
@@ -406,7 +411,7 @@ public class JMeterTestService {
     // tee output to a proxy stream to allow other threads to connect to it.
     //   the default instance of `ProxyOutputStream` is backed by `NullOutputStream`,
     //   so as long as no threads connect to a test's output stream, it tees into void.
-    final ProxyOutputStream proxyStream = ProxyOutputStream.INSTANCE;
+    final ProxyOutputStream proxyStream = new ProxyOutputStream();
     final OutputStream teeStream = new TeeOutputStream(stream, proxyStream);
     this.streams.putIfAbsent(config.id(), proxyStream);
     return teeStream;
@@ -468,11 +473,11 @@ public class JMeterTestService {
         s.flush();
       } catch(final Exception e) {
         logger.error(
-          "{}/failed to flush '{}': {}",
+          "{}/failed to flush '{}' => {}",
           id, s, getStackTraceAsString(e)
         );
       }
-      s.setReference(ProxyOutputStream.INSTANCE);
+      s.setReference(NullOutputStream.INSTANCE);
     }
     this.tests.remove(id);
     this.jmeterTestStorage.remove(id, test);
