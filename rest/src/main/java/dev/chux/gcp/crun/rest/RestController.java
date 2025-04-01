@@ -1,17 +1,6 @@
 package dev.chux.gcp.crun.rest;
 
-import java.util.Map;
-
-import javax.servlet.ServletOutputStream;
-
-import com.google.inject.Inject;
-
 import com.google.common.base.Joiner;
-
-import spark.Request;
-import spark.Response;
-
-import dev.chux.gcp.crun.ConfigService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +19,7 @@ public abstract class RestController implements Route {
   
   protected String path;
 
-  public void register(
+  protected final void register(
     final String root,
     final String base,
     final String path
@@ -40,19 +29,19 @@ public abstract class RestController implements Route {
     this.path = PATH_JOINER.join(this.base, path);
   }
 
-  protected String apiRoot() {
+  protected final String apiRoot() {
     return this.root;
   }
 
-  protected String apiBase() {
+  protected final String apiBase() {
     return this.base;
   }
 
-  protected String apiPath() {
+  protected final String apiPath() {
     return this.path;
   }
 
-  protected String appendToPath(
+  protected final String appendToPath(
     final String suffix
   ) {
     return PATH_JOINER.join(
@@ -61,4 +50,3 @@ public abstract class RestController implements Route {
   }
 
 }
-

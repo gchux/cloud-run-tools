@@ -14,8 +14,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.Since;
-import com.google.gson.annotations.SerializedName;
 
 import spark.Request;
 import spark.Response;
@@ -23,6 +21,7 @@ import spark.Response;
 import dev.chux.gcp.crun.jmeter.JMeterTest;
 import dev.chux.gcp.crun.jmeter.JMeterTestConfig;
 import dev.chux.gcp.crun.jmeter.JMeterTestService;
+import dev.chux.gcp.crun.rest.RestResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,19 +40,7 @@ public class GetJMeterTestController extends JMeterTestController {
   private String root;
   private String path;
 
-  private static class ApiResponse {
-
-    private static final String API_BASE = "/jmeter/test/";
-
-    @Since(1.0)
-    @Expose(deserialize=false, serialize=true)
-    @SerializedName(value="test")
-    private final JMeterTestConfig config;
-
-    @Since(1.0)
-    @Expose(deserialize=false, serialize=true)
-    @SerializedName(value="links")
-    private final Map<String, String> links;
+  private static class ApiResponse extends RestResponse<JMeterTestConfig> {
 
     @Expose(deserialize=false, serialize=false)
     private final String apiBase;
@@ -63,22 +50,22 @@ public class GetJMeterTestController extends JMeterTestController {
 
 
     private ApiResponse(
+      final JMeterTest test,
       final String apiBase,
-      final String apiPath,
-      final JMeterTest test
+      final String apiPath
     ) {
+      super(test.get());
       this.apiBase = apiBase;
       this.apiPath = apiPath;
-      this.config = test.get();
-      this.links = this.links(test);
     }
 
-    private Map<
+    @Override
+    protected Map<
       String, String
     > links(
-      final JMeterTest test
+      final JMeterTestConfig config
     ) {
-      final String id = test.id();
+      final String id = config.id();
       return ImmutableMap.<String, String>of(
         "self", this.apiPath + "/" + id,
         "stream", this.apiBase + "/stream/" + id
@@ -100,7 +87,7 @@ public class GetJMeterTestController extends JMeterTestController {
   public void register(
     final String basePath
   ) {
-    super.register(basePath, "status");
+    register(basePath, "status");
     path(apiBase(), () -> {
       get("/status", "application/json", this);
       get("/status/:id", "application/json", this);
@@ -122,9 +109,9 @@ public class GetJMeterTestController extends JMeterTestController {
   ) {
     return this.gson.toJson(
       new ApiResponse(
+        test,
         apiBase(),
-        apiPath(),
-        test
+        apiPath()
       ),
       ApiResponse.class
     );

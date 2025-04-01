@@ -82,11 +82,11 @@ abstract class JMeterTestController extends RestController {
 
   protected JMeterTestController() {}
 
-  public void register(
+  protected final void register(
     final String root,
     final String path
   ) {
-    super.register(root, RestModule.API_BASE, path);
+    register(root, RestModule.API_BASE, path);
   }
 
   protected final String requestMethod(

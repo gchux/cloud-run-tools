@@ -36,7 +36,7 @@ public class StreamJMeterTestController extends JMeterTestController {
   public void register(
     final String basePath
   ) {
-    super.register(basePath, "stream");
+    register(basePath, "stream");
     path(apiBase(), () -> {
       get("/stream", "text/plain", this);
       get("/stream/:id", "text/plain", this);

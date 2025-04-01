@@ -121,7 +121,7 @@ public class RunJMeterTestController extends JMeterTestController {
 
   @Override
   public void register(final String basePath) {
-    super.register(basePath, "run");
+    register(basePath, "run");
     path(apiBase(), () -> {
       get("/run", "*/*", this);
       get("/run/:id", "*/*", this);
