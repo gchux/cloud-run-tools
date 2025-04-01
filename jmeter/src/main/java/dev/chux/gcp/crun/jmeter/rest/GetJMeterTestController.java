@@ -3,12 +3,19 @@ package dev.chux.gcp.crun.jmeter.rest;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 
+import java.util.Map;
+
 import com.google.inject.Inject;
+
+import com.google.common.collect.ImmutableMap;
 
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import com.google.gson.Gson;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.Since;
+import com.google.gson.annotations.SerializedName;
 
 import spark.Request;
 import spark.Response;
@@ -30,6 +37,41 @@ public class GetJMeterTestController extends JMeterTestController {
 
   private final Gson gson;
   private final JMeterTestService jMeterTestService;
+
+  private static class ApiResponse {
+
+    private static final String API_BASE = "/jmeter/test/";
+
+    @Since(1.0)
+    @Expose(deserialize=false, serialize=true)
+    @SerializedName(value="test")
+    private final JMeterTestConfig config;
+
+    @Since(1.0)
+    @Expose(deserialize=false, serialize=true)
+    @SerializedName(value="links")
+    private final Map<String, String> links;
+
+    private ApiResponse(
+      final JMeterTest test
+    ) {
+      this.config = test.get();
+      this.links = this.links(test);
+    }
+
+    private Map<
+      String, String
+    > links(
+      final JMeterTest test
+    ) {
+      final String id = test.id();
+      return ImmutableMap.<String, String>of(
+        "self", API_BASE + "status/" + id,
+        "stream", API_BASE + "stream/" + id
+      );
+    }
+
+  }
 
   @Inject
   public GetJMeterTestController(
@@ -66,7 +108,8 @@ public class GetJMeterTestController extends JMeterTestController {
     final JMeterTest test
   ) {
     return this.gson.toJson(
-      test.get(), JMeterTestConfig.class
+      new ApiResponse(test),
+      ApiResponse.class
     );
   }
 
@@ -113,6 +156,8 @@ public class GetJMeterTestController extends JMeterTestController {
     }
 
     if ( isHEAD(request) ) {
+      setHeader(response, "stream",
+        "/jmeter/test/stream/" + testID);
       return "";
     }
 
