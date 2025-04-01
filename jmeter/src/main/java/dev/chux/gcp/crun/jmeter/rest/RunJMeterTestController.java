@@ -119,21 +119,21 @@ public class RunJMeterTestController extends JMeterTestController {
     logger.info("com.google.cloud.run.instance.id={}", this.instanceID);
   }
 
+  @Override
   public void register(final String basePath) {
-    path(basePath, () -> {
-      path("/jmeter", () -> {
-        path("/test", () -> {
-          get("/run", "*/*", this);
-          get("/run/:id", "*/*", this);
-          post("/run", "*/*", this);
-          post("/run/:id", "*/*", this);
-        });
-      });
+    super.register(basePath, "run");
+    path(apiBase(), () -> {
+      get("/run", "*/*", this);
+      get("/run/:id", "*/*", this);
+
+      post("/run", "*/*", this);
+      post("/run/:id", "*/*", this);
     });
   }
 
+  @Override
   public String endpoint(final String basePath) {
-    return "[GET|POST] " + basePath + "/jmeter/test/run";
+    return "[GET|POST] " + apiPath();
   }
 
   private String instanceID(

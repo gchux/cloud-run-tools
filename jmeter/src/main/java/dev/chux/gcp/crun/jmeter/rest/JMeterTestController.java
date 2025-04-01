@@ -25,7 +25,7 @@ import spark.Request;
 import spark.Response;
 
 import dev.chux.gcp.crun.ConfigService;
-import dev.chux.gcp.crun.rest.Route;
+import dev.chux.gcp.crun.rest.RestController;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +41,7 @@ import static com.google.common.base.Throwables.getStackTraceAsString;
 
 import static spark.Spark.*;
 
-abstract class JMeterTestController implements Route {
+abstract class JMeterTestController extends RestController {
 
   public static final String PROPERTY_JMETER_MODES = "jmeter.modes";
 
@@ -81,6 +81,13 @@ abstract class JMeterTestController implements Route {
   private static final String DEFAULT_TRACE_CONTEXT = DEFAULT_TRACE_ID + "/0000000000000000;o=0";
 
   protected JMeterTestController() {}
+
+  public void register(
+    final String root,
+    final String path
+  ) {
+    super.register(root, RestModule.API_BASE, path);
+  }
 
   protected final String requestMethod(
     final Request request

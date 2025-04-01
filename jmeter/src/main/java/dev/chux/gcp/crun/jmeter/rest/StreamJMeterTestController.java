@@ -32,23 +32,22 @@ public class StreamJMeterTestController extends JMeterTestController {
     this.jMeterTestService = jMeterTestService;
   }
 
+  @Override
   public void register(
     final String basePath
   ) {
-    path(basePath, () -> {
-      path("/jmeter", () -> {
-        path("/test", () -> {
-          get("/stream", "text/plain", this);
-          get("/stream/:id", "text/plain", this);
-        });
-      });
+    super.register(basePath, "stream");
+    path(apiBase(), () -> {
+      get("/stream", "text/plain", this);
+      get("/stream/:id", "text/plain", this);
     });
   }
 
+  @Override
   public String endpoint(
     final String basePath
   ) {
-    return "[GET] " + basePath + "/jmeter/test/stream/:id";
+    return "[GET] " + apiPath() + "/:id";
   }
 
   public Object handle(

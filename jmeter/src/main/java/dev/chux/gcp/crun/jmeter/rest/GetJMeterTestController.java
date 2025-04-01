@@ -38,6 +38,9 @@ public class GetJMeterTestController extends JMeterTestController {
   private final Gson gson;
   private final JMeterTestService jMeterTestService;
 
+  private String root;
+  private String path;
+
   private static class ApiResponse {
 
     private static final String API_BASE = "/jmeter/test/";
@@ -52,9 +55,20 @@ public class GetJMeterTestController extends JMeterTestController {
     @SerializedName(value="links")
     private final Map<String, String> links;
 
+    @Expose(deserialize=false, serialize=false)
+    private final String apiBase;
+
+    @Expose(deserialize=false, serialize=false)
+    private final String apiPath;
+
+
     private ApiResponse(
+      final String apiBase,
+      final String apiPath,
       final JMeterTest test
     ) {
+      this.apiBase = apiBase;
+      this.apiPath = apiPath;
       this.config = test.get();
       this.links = this.links(test);
     }
@@ -66,8 +80,8 @@ public class GetJMeterTestController extends JMeterTestController {
     ) {
       final String id = test.id();
       return ImmutableMap.<String, String>of(
-        "self", API_BASE + "status/" + id,
-        "stream", API_BASE + "stream/" + id
+        "self", this.apiPath + "/" + id,
+        "stream", this.apiBase + "/stream/" + id
       );
     }
 
@@ -82,33 +96,36 @@ public class GetJMeterTestController extends JMeterTestController {
     this.jMeterTestService = jMeterTestService;
   }
 
+  @Override
   public void register(
     final String basePath
   ) {
-    path(basePath, () -> {
-      path("/jmeter", () -> {
-        path("/test", () -> {
-          get("/status", "application/json", this);
-          get("/status/:id", "application/json", this);
+    super.register(basePath, "status");
+    path(apiBase(), () -> {
+      get("/status", "application/json", this);
+      get("/status/:id", "application/json", this);
 
-          head("/status", this);
-          head("/status/:id", this);
-        });
-      });
+      head("/status", this);
+      head("/status/:id", this);
     });
   }
 
+  @Override
   public String endpoint(
     final String basePath
   ) {
-    return "[GET|HEAD] " + basePath + "/jmeter/test/status/:id";
+    return "[GET|HEAD] " + apiPath() + "/:id";
   }
 
   private String toJSON(
     final JMeterTest test
   ) {
     return this.gson.toJson(
-      new ApiResponse(test),
+      new ApiResponse(
+        apiBase(),
+        apiPath(),
+        test
+      ),
       ApiResponse.class
     );
   }
@@ -156,8 +173,7 @@ public class GetJMeterTestController extends JMeterTestController {
     }
 
     if ( isHEAD(request) ) {
-      setHeader(response, "stream",
-        "/jmeter/test/stream/" + testID);
+      setHeader(response, "stream", appendToPath(testID));
       return "";
     }
 

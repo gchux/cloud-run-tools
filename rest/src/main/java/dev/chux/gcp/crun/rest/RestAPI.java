@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import static spark.Spark.*;
 
 public class RestAPI implements Supplier<Map<String, Route>> {
+
   private static final Logger logger = LoggerFactory.getLogger(RestAPI.class);
 
   private static final String PROPERTY_REST_ROOT = "rest.root";
