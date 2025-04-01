@@ -89,18 +89,6 @@ abstract class JMeterTestController extends RestController {
     register(root, RestModule.API_BASE, path);
   }
 
-  protected final String requestMethod(
-    final Request request
-  ) {
-    return request.requestMethod().toUpperCase();
-  }
-
-  protected final boolean isHEAD(
-    final Request request
-  ) {
-    return requestMethod(request).equals("HEAD");
-  }
-
   protected final Set<String> jmeterModes(
     final ConfigService configService
   ) {
@@ -328,7 +316,9 @@ abstract class JMeterTestController extends RestController {
     final String value
   ) {
     if ( !isNullOrEmpty(value) ) {
-      response.header(toHeaderName(name), value);
+      response.header(
+        toHeaderName(name), value
+      );
     }
   }
 

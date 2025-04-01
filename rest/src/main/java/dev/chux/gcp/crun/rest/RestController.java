@@ -49,4 +49,16 @@ public abstract class RestController implements Route {
     );
   }
 
+  protected final String requestMethod(
+    final Request request
+  ) {
+    return request.requestMethod().toUpperCase();
+  }
+
+  protected final boolean isHEAD(
+    final Request request
+  ) {
+    return requestMethod(request).equals("HEAD");
+  }
+
 }

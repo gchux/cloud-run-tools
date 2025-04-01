@@ -48,7 +48,6 @@ public class GetJMeterTestController extends JMeterTestController {
     @Expose(deserialize=false, serialize=false)
     private final String apiPath;
 
-
     private ApiResponse(
       final JMeterTest test,
       final String apiBase,
