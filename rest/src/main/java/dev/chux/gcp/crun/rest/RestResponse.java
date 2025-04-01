@@ -1,5 +1,7 @@
 package dev.chux.gcp.crun.rest;
 
+import java.util.Map;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.Since;
 import com.google.gson.annotations.SerializedName;

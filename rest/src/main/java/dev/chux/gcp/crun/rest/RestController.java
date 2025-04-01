@@ -5,7 +5,8 @@ import com.google.common.base.Joiner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static spark.Spark.*;
+import spark.Request;
+import spark.Response;
 
 public abstract class RestController implements Route {
 
