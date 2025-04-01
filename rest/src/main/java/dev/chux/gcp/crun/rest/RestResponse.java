@@ -23,13 +23,16 @@ public abstract class RestResponse<T> {
   @SerializedName(value="links")
   private final Map<String, String> links;
 
-  protected RestResponse(final T data) {
+  protected RestResponse(
+    final RestController controller,
+    final T data
+  ) {
     this.data = data;
-    this.links = links(data);
+    this.links = links(controller, data);
   }
 
-  protected abstract Map<
-    String, String
-  > links(final T data);
+  protected abstract Map<String, String > links(
+    final RestController controller, final T data
+  );
 
 }

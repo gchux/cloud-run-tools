@@ -303,6 +303,8 @@ public class RunJMeterTestController extends JMeterTestController {
     if ( traceID.isPresent() ) {
       setHeader(response, "trace-id", traceID.get());
     }
+    setHeader(response, "status", appendToBase("status/" + testID));
+    setHeader(response, "stream", appendToBase("stream/" + testID));
 
     if ( async || test.isDone() || test.isCancelled() ) {
       response.status(204);

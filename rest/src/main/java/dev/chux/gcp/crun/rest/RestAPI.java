@@ -55,8 +55,8 @@ public class RestAPI implements Supplier<Map<String, Route>> {
     for(final Map.Entry<String, Route> entry : this.routes.entrySet()) {
       final Route route = entry.getValue();
       final String root = this.root();
-      logger.info("registering route '{}' for: {}", entry.getKey(), route.endpoint(root));
       route.register(root);
+      logger.info("registered route '{}' for: {}", entry.getKey(), route.endpoint(root));
     }
   }
 

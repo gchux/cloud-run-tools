@@ -13,7 +13,6 @@ import com.google.common.base.Optional;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import com.google.gson.Gson;
-import com.google.gson.annotations.Expose;
 
 import spark.Request;
 import spark.Response;
@@ -21,6 +20,7 @@ import spark.Response;
 import dev.chux.gcp.crun.jmeter.JMeterTest;
 import dev.chux.gcp.crun.jmeter.JMeterTestConfig;
 import dev.chux.gcp.crun.jmeter.JMeterTestService;
+import dev.chux.gcp.crun.rest.RestController;
 import dev.chux.gcp.crun.rest.RestResponse;
 
 import org.slf4j.Logger;
@@ -42,32 +42,22 @@ public class GetJMeterTestController extends JMeterTestController {
 
   private static class ApiResponse extends RestResponse<JMeterTestConfig> {
 
-    @Expose(deserialize=false, serialize=false)
-    private final String apiBase;
-
-    @Expose(deserialize=false, serialize=false)
-    private final String apiPath;
-
     private ApiResponse(
-      final JMeterTest test,
-      final String apiBase,
-      final String apiPath
+      final RestController controller,
+      final JMeterTest test
     ) {
-      super(test.get());
-      this.apiBase = apiBase;
-      this.apiPath = apiPath;
+      super(controller, test.get());
     }
 
     @Override
-    protected Map<
-      String, String
-    > links(
+    protected Map<String, String> links(
+      final RestController controller,
       final JMeterTestConfig config
     ) {
       final String id = config.id();
       return ImmutableMap.<String, String>of(
-        "self", this.apiPath + "/" + id,
-        "stream", this.apiBase + "/stream/" + id
+        "self", controller.apiPath() + "/" + id,
+        "stream", controller.apiBase() + "/stream/" + id
       );
     }
 
@@ -107,11 +97,7 @@ public class GetJMeterTestController extends JMeterTestController {
     final JMeterTest test
   ) {
     return this.gson.toJson(
-      new ApiResponse(
-        test,
-        apiBase(),
-        apiPath()
-      ),
+      new ApiResponse(this, test),
       ApiResponse.class
     );
   }
@@ -159,7 +145,8 @@ public class GetJMeterTestController extends JMeterTestController {
     }
 
     if ( isHEAD(request) ) {
-      setHeader(response, "stream", appendToPath(testID));
+      setHeader(response, "stream",
+        appendToBase("stream/" + testID));
       return "";
     }
 

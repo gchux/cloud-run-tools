@@ -14,11 +14,9 @@ public abstract class RestController implements Route {
 
   private static final Joiner PATH_JOINER = Joiner.on('/').skipNulls();
 
-  protected String root;
-
-  protected String base;
-  
-  protected String path;
+  private String root;
+  private String base;
+  private String path;
 
   protected final void register(
     final String root,
@@ -30,16 +28,24 @@ public abstract class RestController implements Route {
     this.path = PATH_JOINER.join(this.base, path);
   }
 
-  protected final String apiRoot() {
+  public final String apiRoot() {
     return this.root;
   }
 
-  protected final String apiBase() {
+  public final String apiBase() {
     return this.base;
   }
 
-  protected final String apiPath() {
+  public final String apiPath() {
     return this.path;
+  }
+
+  protected final String appendToBase(
+    final String suffix
+  ) {
+    return PATH_JOINER.join(
+      this.apiBase(), suffix
+    );
   }
 
   protected final String appendToPath(

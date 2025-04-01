@@ -24,7 +24,6 @@ echo "Building Cloud Run JMETER test runner"
 set -x
 
 docker buildx build \
-  --no-cache \
   --platform=linux/amd64 \
   --file=./jmeter/"Dockerfile" \
   --build-arg="JMETER_VERSION=${JMETER_VERSION}" \
