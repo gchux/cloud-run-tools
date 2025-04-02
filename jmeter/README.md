@@ -136,6 +136,7 @@ Test parameters are passed as URL query parameters by default; however, it is al
 - **`duration`**: [`Integer`, **required**] test duration in seconds.
 - **`params`**: [`Map<String, String>`, _optional_] query parameters to send; sample: `params=paramA:A;paramB:B`.
 - **`headers`**: [`Map<String, string>`, _optional_] headers to send; sample: `headers=headerA:A;headerB:B`.
+- **`output`**: [`String`,_optional_, default:`res`] where to stream the output of the test; alternatives `res` for response, `sys` for standard output.
 
 > [!NOTE]
 > When passing test parameters as request headers, replace all underscores (`_`) by dashes (`-`).
