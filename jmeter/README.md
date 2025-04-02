@@ -304,7 +304,7 @@ gcloud run deploy ${CLOUD_RUN_SERVICE_NAME} \
   --no-cpu-throttling \
   --session-affinity \
   --no-allow-unauthenticated \
-  --concurrency=1 \
+  --concurrency=2 \
   --min-instances=0 \
   --max-instances=10 \
   --cpu=2 \
@@ -317,7 +317,7 @@ gcloud run deploy ${CLOUD_RUN_SERVICE_NAME} \
 > Make sure that the [Service Identity](https://cloud.google.com/run/docs/securing/service-identity) given by `CLOUD_RUN_SERVICE_ACCOUNT` has enough permissions to invoke the remote service.
 
 > [!TIP]
-> It is recommended to set [maximum concurrency](https://cloud.google.com/run/docs/about-concurrency) to 1, and allocate enough CPU and Memory according to the amount of traffic required to be prodiced by a single instance.
+> It is recommended to set [maximum concurrency](https://cloud.google.com/run/docs/about-concurrency) to 2, and allocate enough CPU and Memory according to the amount of traffic required to be prodiced by a single instance. The 2nd request slot is only used for [get test detail](#get-test-details) or [stream test output](#stream-test-output) requests.
 
 ## Samples
 
