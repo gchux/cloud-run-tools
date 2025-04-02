@@ -302,6 +302,7 @@ gcloud run deploy ${CLOUD_RUN_SERVICE_NAME} \
   --execution-environment=gen2 \
   --no-use-http2 \
   --no-cpu-throttling \
+  --session-affinity \
   --no-allow-unauthenticated \
   --concurrency=1 \
   --min-instances=0 \
