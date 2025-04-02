@@ -126,7 +126,7 @@ Test parameters are passed as URL query parameters by default; however, it is al
 
 - **`async`**: [`Boolean`, _optional_, default:`false`] wether to wait for test execution to be complete or to return immediately.
 - **`id`**: [`String`, _optional_] test ID passed to the remote service via HTTP request header `x-jmaas-test-id`; if not present, a random `UUID` will be used.
-- **`script`**: [`String`, _optional_, default:`test`] [script options](#script-parameter) to use; without `.jmx` extension.
+- **`script`**: [`String`, _optional_, default:`generic_dynamic_full`] [script options](#script-parameter) to use; without `.jmx` extension.
 - **`mode`**: [`String`, _optional_, default:`concurrency`] test operation mode; alternatives: [`qps`](#qps-mode-parameters) or [`concurrency`](#concurrency-mode-parameters).
 - **`proto`**: [`String`, _optional_, default:`https`] protocol to use; alternatives: `http` or `https`.
 - **`method`**: [`String`, _optional_, default:`GET`] [HTTP method](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods) to use.
