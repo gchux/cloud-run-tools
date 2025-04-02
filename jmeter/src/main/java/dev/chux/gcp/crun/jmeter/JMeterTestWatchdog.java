@@ -12,6 +12,9 @@ import com.google.inject.assistedinject.AssistedInject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Throwables.getStackTraceAsString;
 
 public class JMeterTestWatchdog implements Runnable {
@@ -27,7 +30,8 @@ public class JMeterTestWatchdog implements Runnable {
     @Assisted JMeterTest test
   ) {
     this.jMeterTestStorage = jMeterTestStorage;
-    this.test = test;
+    this.test = checkNotNull(test);
+    checkState(!isNullOrEmpty(test.id()));
   }
 
   private void flush(
@@ -63,6 +67,7 @@ public class JMeterTestWatchdog implements Runnable {
 
   @Override
   public void run() {
+    checkState(!isNullOrEmpty(test.id()));
     this.flush(this.test);
   }
 

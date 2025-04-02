@@ -25,6 +25,9 @@ import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Optional.absent;
 import static com.google.common.base.Optional.fromNullable;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Throwables.getStackTraceAsString;
 
 public class JMeterTestExecutorImpl implements JMeterTestExecutor {
@@ -52,7 +55,8 @@ public class JMeterTestExecutorImpl implements JMeterTestExecutor {
     this.jMeterTestService = jMeterTestService;
     this.jMeterTestFactory = jMeterTestFactory;
     this.processConsumer = processConsumer;
-    this.test = test;
+    this.test = checkNotNull(test);
+    checkState(!isNullOrEmpty(test.id()));
   }
 
   private void clockIn(
@@ -103,13 +107,13 @@ public class JMeterTestExecutorImpl implements JMeterTestExecutor {
   }
   
   @Override
-  public void onSuccess(final JMeterTest t) {
-    this.always(/* success */ true, fromNullable(t), absent());
+  public void onSuccess(final JMeterTest test) {
+    this.always(/* success */ true, fromNullable(test), absent());
   }
 
   @Override
-  public void onFailure(final Throwable t) {
-    this.always(/* success */ false, absent(), fromNullable(t));
+  public void onFailure(final Throwable error) {
+    this.always(/* success */ false, absent(), fromNullable(error));
   }
 
   @Override
@@ -120,7 +124,7 @@ public class JMeterTestExecutorImpl implements JMeterTestExecutor {
   @Override
   public JMeterTest call() {
     final JMeterTest test = this.get();
-    final JMeterTestConfig config = test.get();
+    final JMeterTestConfig config = checkNotNull(test.get());
     final ListenableScheduledFuture watchdog = this.startWatchdog(test);
     logger.info("starting test: {}", test);
     this.clockIn(config);
