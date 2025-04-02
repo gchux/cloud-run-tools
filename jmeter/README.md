@@ -1,6 +1,6 @@
 # JMaaS ( JMeter as a Service )
 
-![Static Badge](https://img.shields.io/badge/v1.6.1-green?style=flat&label=latest%20version&labelColor=gray&color=green&link=https%3A%2F%2Fgithub.com%2Fgchux%2Fcloud-run-tools%2Fpkgs%2Fcontainer%2Fcloud-run-tools%2F383324176%3Ftag%3Djmaas-v1.5.2)
+![Static Badge](https://img.shields.io/badge/v1.6.2-green?style=flat&label=latest%20version&labelColor=gray&color=green&link=https%3A%2F%2Fgithub.com%2Fgchux%2Fcloud-run-tools%2Fpkgs%2Fcontainer%2Fcloud-run-tools%2F383324176%3Ftag%3Djmaas-v1.5.2)
 
 ## Motivation
 
@@ -126,7 +126,7 @@ Test parameters are passed as URL query parameters by default; however, it is al
 
 - **`async`**: [`Boolean`, _optional_, default:`false`] wether to wait for test execution to be complete or to return immediately.
 - **`id`**: [`String`, _optional_] test ID passed to the remote service via HTTP request header `x-jmaas-test-id`; if not present, a random `UUID` will be used.
-- **`script`**: [`String`, _optional_, default:`test`] [script options](#script-parameter) to use; without `.jmx` extension.
+- **`script`**: [`String`, _optional_, default:`generic_dynamic_full`] [script options](#script-parameter) to use; without `.jmx` extension.
 - **`mode`**: [`String`, _optional_, default:`concurrency`] test operation mode; alternatives: [`qps`](#qps-mode-parameters) or [`concurrency`](#concurrency-mode-parameters).
 - **`proto`**: [`String`, _optional_, default:`https`] protocol to use; alternatives: `http` or `https`.
 - **`method`**: [`String`, _optional_, default:`GET`] [HTTP method](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods) to use.
@@ -136,6 +136,7 @@ Test parameters are passed as URL query parameters by default; however, it is al
 - **`duration`**: [`Integer`, **required**] test duration in seconds.
 - **`params`**: [`Map<String, String>`, _optional_] query parameters to send; sample: `params=paramA:A;paramB:B`.
 - **`headers`**: [`Map<String, string>`, _optional_] headers to send; sample: `headers=headerA:A;headerB:B`.
+- **`output`**: [`String`,_optional_, default:`res`] where to stream the output of the test; alternatives: `res` for response, and `sys` for standard output.
 
 > [!NOTE]
 > When passing test parameters as request headers, replace all underscores (`_`) by dashes (`-`).
