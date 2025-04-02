@@ -32,7 +32,7 @@ public class JMeterTestExecutorImpl implements JMeterTestExecutor {
   private static final Logger logger = LoggerFactory.getLogger(JMeterTestExecutorImpl.class);
 
   private static final ListeningScheduledExecutorService EXECUTOR =
-    MoreExecutors.listeningDecorator(Executors.newScheduledThreadPool(1));
+    MoreExecutors.listeningDecorator(Executors.newScheduledThreadPool(2));
 
   private final JMeterTestService jMeterTestService;
   private final JMeterTestFactory jMeterTestFactory;
@@ -94,14 +94,11 @@ public class JMeterTestExecutorImpl implements JMeterTestExecutor {
       logger.info(
         "test complete: {}", test
       );
-      this.jMeterTestService.clean(test.get());
     } else {
-      final JMeterTest t = this.get();
       logger.error(
-        "test failed: {} =>\n{}", t,
+        "test failed: {} =>\n{}", this.get(),
         getStackTraceAsString(error.get())
       );
-      this.jMeterTestService.clean(t);
     }
   }
   
@@ -131,6 +128,8 @@ public class JMeterTestExecutorImpl implements JMeterTestExecutor {
     this.clockOut(config);
     logger.info("test complete: {}", test);
     this.stopWatchdog(watchdog, test);
+    // clean up after test execution is complete
+    this.jMeterTestService.clean(test);
     return test;
   }
 

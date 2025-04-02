@@ -54,7 +54,8 @@ public class JMeterTestService {
   private final Map<String, ProxyOutputStream> streams = Maps.newConcurrentMap();
   private final Map<String, ListenableFuture<JMeterTest>> tests = Maps.newConcurrentMap();
 
-  private final ListeningExecutorService executor = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(5));
+  private static final ListeningExecutorService EXECUTOR =
+    MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(4));
   
   @Inject
   JMeterTestService(
@@ -112,7 +113,9 @@ public class JMeterTestService {
     .rampupTime(rampupTime)
     .rampupSteps(rampupSteps);
 
+    // create a `connectable` output stream
     final OutputStream teeStream = this.wrapStream(config, outputStream);
+
     final JMeterTest test = this.newJMeterTest(config, teeStream, closeableOutputStream);
 
     final Optional<JMeterTest> t = fromNullable(
@@ -123,14 +126,17 @@ public class JMeterTestService {
       return this.test(id).or(immediateFuture(t.get()));
     }
 
-    final JMeterTestExecutor testExecutor = this.jMeterTestFactory.createExecutor(test);
+    // create a test execution delegate
+    final JMeterTestExecutor executor = this.jMeterTestFactory.createExecutor(test);
 
     // start JMeter test asynchronously
-    final ListenableFuture<JMeterTest> futureTest = this.executor.submit(testExecutor);
+    final ListenableFuture<JMeterTest> futureTest = EXECUTOR.submit(executor);
 
-    // clean up after test execution is complete
-    Futures.<JMeterTest>addCallback(futureTest, testExecutor, this.executor);
-    Futures.<JMeterTest>addCallback(futureTest, callback, this.executor);
+    // add the jmaas test execution delegate as a callback
+    Futures.<JMeterTest>addCallback(futureTest, executor, EXECUTOR);
+
+    // add the jmaas client provided callback
+    Futures.<JMeterTest>addCallback(futureTest, callback, EXECUTOR);
 
     // save a reference to this test's `Future`
     final ListenableFuture<
@@ -156,7 +162,7 @@ public class JMeterTestService {
       >
     > test = this.test(id);
     if ( test.isPresent() ) {
-      return this.executor;
+      return EXECUTOR;
     }
     return MoreExecutors.directExecutor();
   }

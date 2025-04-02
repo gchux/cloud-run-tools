@@ -31,6 +31,21 @@ public class JMeterTestWatchdog implements Runnable {
   }
 
   private void flush(
+    final String testID,
+    final OutputStream stream
+  ) {
+    try {
+      stream.flush();
+      logger.info("{} | flushed stream '{}': {}", testID, stream);
+    } catch(final Exception e) {
+      logger.error(
+        "{} | failed to flush '{}' =>\n{}",
+        testID, stream, getStackTraceAsString(e)
+      );
+    }
+  }
+
+  private void flush(
     final JMeterTest test
   ) {
     final String id = test.id();
@@ -42,16 +57,7 @@ public class JMeterTestWatchdog implements Runnable {
 
     final Optional<OutputStream> stream = test.stream();
     if ( stream.isPresent() ) {
-      final OutputStream s = stream.get();
-      try {
-        s.flush();
-        logger.info("{} | flushed stream '{}': {}", id, s);
-      } catch(final Exception e) {
-        logger.error(
-          "{} | failed to flush '{}' =>\n{}",
-          id, s, getStackTraceAsString(e)
-        );
-      }
+      this.flush(id, stream.get());
     }
   }
 
@@ -61,4 +67,3 @@ public class JMeterTestWatchdog implements Runnable {
   }
 
 }
-
