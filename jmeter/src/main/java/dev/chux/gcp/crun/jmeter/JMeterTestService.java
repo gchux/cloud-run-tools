@@ -7,11 +7,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -24,13 +22,10 @@ import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.ListeningScheduledExecutorService;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import dev.chux.gcp.crun.io.ProxyOutputStream;
-import dev.chux.gcp.crun.process.ProcessModule.ProcessConsumer;
-import dev.chux.gcp.crun.process.ProcessProvider;
 
 import org.apache.commons.io.output.NullOutputStream;
 import org.apache.commons.io.output.TeeOutputStream;
@@ -53,7 +48,6 @@ public class JMeterTestService {
   private static final Logger logger = LoggerFactory.getLogger(JMeterTestService.class);
 
   private final JMeterTestFactory jMeterTestFactory;
-  private final Consumer<ProcessProvider> processConsumer;
   private final Provider<String> jmeterTestProvider;
   private final Map<String, JMeterTest> jmeterTestStorage;
 
@@ -61,119 +55,16 @@ public class JMeterTestService {
   private final Map<String, ListenableFuture<JMeterTest>> tests = Maps.newConcurrentMap();
 
   private final ListeningExecutorService executor = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(5));
-  private final ListeningScheduledExecutorService scheduledExecutor = MoreExecutors.listeningDecorator(Executors.newScheduledThreadPool(1));
-
-  private static class Watchdog implements Runnable {
-
-    private static final Logger logger = LoggerFactory.getLogger(Watchdog.class);
-
-    private final Map<String, JMeterTest> jMeterTestStorage;
-
-    private Watchdog(
-      final Map<String, JMeterTest> jmeterTestStorage
-    ) {
-      this.jMeterTestStorage = jmeterTestStorage;
-    }
-
-    private boolean flush(
-      final JMeterTest test
-    ) {
-      final Optional<OutputStream> stream = test.stream();
-      if ( stream.isPresent() ) {
-        final OutputStream s = stream.get();
-        try {
-          s.flush();
-          logger.info(
-            "{} | flushed stream '{}': {}", test.id(), s
-          );
-          return true;
-        } catch(final Exception e) {
-          logger.error(
-            "{} | failed to flush '{}' =>\n{}",
-            test.id(), s, getStackTraceAsString(e)
-          );
-        }
-      }
-      return false;
-    }
-
-    @Override
-    public void run() {
-      if ( this.jMeterTestStorage.isEmpty() ) {
-        // no-op
-        return;
-      }
-      int flushedStreams = 0;
-      for ( final Map.Entry<String, JMeterTest> test :
-            this.jMeterTestStorage.entrySet() ) {
-        if ( this.flush(test.getValue()) ) {
-           flushedStreams += 1;
-        }
-      }
-      logger.info("flushed {} streams", flushedStreams);
-    }
-
-  }
-
-  private static class TestExecutor implements Callable<JMeterTest> {
-
-    private static final Logger logger = LoggerFactory.getLogger(Executor.class);
-
-    private final Consumer<ProcessProvider> processConsumer;
-    private final JMeterTest test;
-
-    private TestExecutor(
-      @ProcessConsumer
-        final Consumer<
-          ProcessProvider
-        > processConsumer,
-      final JMeterTest test
-    ) {
-      this.processConsumer = processConsumer;
-      this.test = test;
-    }
-
-    private void clockIn(
-      final JMeterTestConfig config
-    ) {
-      config.started(System.currentTimeMillis());
-    }
-
-    private void clockOut(
-      final JMeterTestConfig config
-    ) {
-      config.finished(System.currentTimeMillis());
-    }
-
-    @Override
-    public JMeterTest call() {
-      final JMeterTestConfig config = this.test.get();
-      logger.info("starting test: {}", this.test);
-      this.clockIn(config);
-      this.processConsumer.accept(this.test);
-      this.clockOut(config);
-      logger.info("test complete: {}", this.test);
-      return this.test;
-    }
-
-  }
   
   @Inject
   JMeterTestService(
     final JMeterTestFactory jMeterTestFactory,
-    @ProcessConsumer final Consumer<ProcessProvider> processConsumer,
     @Named("jmeter://test.jmx") final Provider<String> jmeterTestProvider,
     final Map<String, JMeterTest> jmeterTestStorage
   ) {
     this.jMeterTestFactory = jMeterTestFactory;
-    this.processConsumer = processConsumer;
     this.jmeterTestProvider = jmeterTestProvider;
     this.jmeterTestStorage = jmeterTestStorage;
-
-    this.scheduledExecutor.scheduleAtFixedRate(
-      new Watchdog(jmeterTestStorage),
-      3l, 3l, TimeUnit.SECONDS
-    );
   }
 
   public final ListenableFuture<JMeterTest> start(
@@ -232,43 +123,13 @@ public class JMeterTestService {
       return this.test(id).or(immediateFuture(t.get()));
     }
 
+    final JMeterTestExecutor testExecutor = this.jMeterTestFactory.createExecutor(test);
+
     // start JMeter test asynchronously
-    final ListenableFuture<JMeterTest> futureTest =
-      this.executor.submit(
-        new TestExecutor(this.processConsumer, test)
-      );
+    final ListenableFuture<JMeterTest> futureTest = this.executor.submit(testExecutor);
 
     // clean up after test execution is complete
-    Futures.<JMeterTest>addCallback(
-      futureTest,
-      new FutureCallback<JMeterTest>() {
-        private void always(
-          final boolean success,
-          final Optional<JMeterTest> t,
-          final Optional<Throwable> e
-        ) {
-          if ( success ) {
-            JMeterTestService.this.logger.info(
-              "test complete: {}", t
-            );
-            JMeterTestService.this.clean(t.get());
-          } else {
-            JMeterTestService.this.logger.error(
-              "test failed: {} =>\n{}", test,
-              path, getStackTraceAsString(e.get())
-            );
-            JMeterTestService.this.clean(test);
-          }
-        }
-        public void onSuccess(final JMeterTest t) {
-          this.always(/* success */ true, fromNullable(t), absent());
-        }
-        public void onFailure(final Throwable t) {
-          this.always(/* success */ false, absent(), fromNullable(t));
-        }
-      },
-      this.executor
-    );
+    Futures.<JMeterTest>addCallback(futureTest, testExecutor, this.executor);
     Futures.<JMeterTest>addCallback(futureTest, callback, this.executor);
 
     // save a reference to this test's `Future`
@@ -441,7 +302,7 @@ public class JMeterTestService {
       .toString();
   }
 
-  private final void clean(
+  final void clean(
     final JMeterTest test
   ) {
     final String id = test.id();

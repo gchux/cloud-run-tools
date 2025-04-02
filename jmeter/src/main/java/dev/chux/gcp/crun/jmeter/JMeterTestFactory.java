@@ -10,4 +10,8 @@ public interface JMeterTestFactory {
 
   public JMeterTest createWithOutputStream(JMeterTestConfig jMeterTestConfig, OutputStream stream, boolean closeable);
 
+  public Runnable createWatchdog(final JMeterTest test);
+
+  public JMeterTestExecutor createExecutor(final JMeterTest test);
+
 }

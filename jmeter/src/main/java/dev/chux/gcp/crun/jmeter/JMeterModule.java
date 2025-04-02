@@ -1,6 +1,7 @@
 package dev.chux.gcp.crun.jmeter;
 
 import java.util.Map;
+
 import java.util.concurrent.ConcurrentMap;
 
 import com.google.inject.AbstractModule;
@@ -13,6 +14,7 @@ import com.google.common.collect.Maps;
 
 import dev.chux.gcp.crun.jmeter.config.JMeterTestProvider;
 import dev.chux.gcp.crun.jmeter.config.JMeterTestDirProvider;
+
 import dev.chux.gcp.crun.jmeter.rest.RestModule;
 
 public class JMeterModule extends AbstractModule {
@@ -26,9 +28,11 @@ public class JMeterModule extends AbstractModule {
       .annotatedWith(Names.named("jmeter://jmx.dir"))
       .toProvider(JMeterTestDirProvider.class);
 
-    install(new FactoryModuleBuilder()
-      .implement(JMeterTest.class, JMeterTestImpl.class)
-      .build(JMeterTestFactory.class));
+    final FactoryModuleBuilder builder = new FactoryModuleBuilder();
+    builder.implement(JMeterTest.class, JMeterTestImpl.class);
+    builder.implement(Runnable.class, JMeterTestWatchdog.class);
+    builder.implement(JMeterTestExecutor.class, JMeterTestExecutorImpl.class);
+    install(builder.build(JMeterTestFactory.class));
 
     final TypeLiteral<
       ConcurrentMap<String, JMeterTest>
