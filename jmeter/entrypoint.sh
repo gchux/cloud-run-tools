@@ -3,7 +3,7 @@
 source /.cloud_run.rc
 
 if [[ -z "${JMETER_CONFIG}" ]]; then
-  export JMETER_CONFIG='/jmeter-test-runner.properties'
+  export JMETER_CONFIG='/jmaas.properties'
 fi
 
 set -x

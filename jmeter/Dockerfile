@@ -81,7 +81,7 @@ WORKDIR /
 RUN mkdir -p /jmx/
 
 COPY ./cloud_run.rc /.cloud_run.rc
-COPY ./jmeter/jmeter-test-runner.properties /jmeter-test-runner.properties
+COPY ./jmeter/jmaas.properties /jmaas.properties
 COPY ./jmeter/src/main/jmeter/print_id_token /print_id_token
 COPY ./jmeter/entrypoint.sh /entrypoint.sh
 COPY ./jmeter/src/main/jmeter/*.jmx /jmx/
