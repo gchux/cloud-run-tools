@@ -48,6 +48,8 @@ public class RestAPI implements Supplier<Map<String, Route>> {
   
   public void serve(final int httpPort) {
     port(httpPort);
+    staticFiles.location("/static");
+    staticFiles.header("Content-Encoding", "gzip");
     registerRoutes();
   }
 

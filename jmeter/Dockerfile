@@ -1,3 +1,15 @@
+FROM node:23-alpine3.20  AS ui
+
+RUN apk add perl
+
+COPY ./jmeter/ui /app
+
+WORKDIR /app
+
+RUN npm install && npm run build
+
+RUN perl -i -p -e 's;(src|href)="/assets/;$1="/ui/assets/;g' ./dist/index.html
+
 FROM eclipse-temurin:17-jdk-alpine AS build
 
 WORKDIR /workspace/app
@@ -26,6 +38,9 @@ WORKDIR /workspace/app/target/dependency
 
 RUN jar -xf /workspace/app/jmeter/target/jmeter.jar
 
+# pre-compress the JMaaS test catalog
+RUN gzip -9 -cvf static/catalog.json > /workspace/catalog.json
+
 FROM eclipse-temurin:17
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -39,6 +54,8 @@ ENV JMETER_BIN=${JMETER_HOME}/bin
 VOLUME /tmp
 
 COPY --from=build ${DEPENDENCY} /app
+COPY --from=build /workspace/catalog.json /jmaas/catalog.json
+COPY --from=ui /app/dist /app/static/ui
 
 RUN apt-get -qq update  > /dev/null \
     && apt-get -qq -yy install ca-certificates > /dev/null \

@@ -22,6 +22,12 @@ public class RestModule extends AbstractModule {
 
     routesBinder.addBinding("jmeter://rest/get-test")
       .to(GetJMeterTestController.class).in(Scopes.SINGLETON);
+
+    routesBinder.addBinding("jmeter://rest/test-catalog")
+      .to(CatalogJMeterTestController.class).in(Scopes.SINGLETON);
+
+    routesBinder.addBinding("jmeter://rest/web-test")
+      .to(WebJMeterTestController.class).in(Scopes.SINGLETON);
   }
 
 }

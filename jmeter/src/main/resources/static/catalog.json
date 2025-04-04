@@ -1,0 +1,87 @@
+{
+  "params": {
+    "async": {
+      "name": "async",
+      "type": "boolean",
+      "default": false
+    },
+    "method": {
+      "name": "method",
+      "type": "enum",
+      "values": ["GET", "POST"],
+      "default": "GET"
+    },
+    "proto": {
+      "name": "proto",
+      "type": "enum",
+      "values": ["HTTP", "HTTPS"],
+      "default": "HTTPS"
+    },
+    "host": {
+      "name": "host",
+      "type": "string"
+    },
+    "port": {
+      "name": "port",
+      "type": "number",
+      "min": 1,
+      "max": 65535,
+      "default": 443
+    },
+    "path": {
+      "name": "path",
+      "type": "string",
+      "default": "/"
+    },
+    "query": {
+      "name": "query",
+      "type": ["map", "string", ["union", "string", "number"]]
+    },
+    "headers": {
+      "name": "headers",
+      "type": ["map", "string", ["union", "string", "number"]]
+    },
+    "qps": {
+      "name": "qps",
+      "type": ["array", "number"]
+    }
+  },
+  "tests": {
+    "cloud_run_qps_full": {
+      "name": "Cloud Run QPS (full)",
+      "test": [
+        {
+          "mode": "qps",
+          "params": [
+            "qps",
+            "method",
+            "host",
+            "path",
+            "query",
+            "headers",
+            "payload"
+          ]
+        }
+      ]
+    },
+    "generic_qps_full": {
+      "name": "Generic QPS (full)",
+      "test": [
+        {
+          "mode": "qps",
+          "params": [
+            "qps",
+            "proto",
+            "method",
+            "host",
+            "port",
+            "path",
+            "query",
+            "headers",
+            "payload"
+          ]
+        }
+      ]
+    }
+  }
+}
