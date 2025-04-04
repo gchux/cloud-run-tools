@@ -2,5 +2,11 @@
 </script>
 
 <template>
-  coming soon...
+  <v-select
+    clearable
+    multiple
+    label="Parameters"
+    :items="['ID', 'Host']"
+    >
+    </v-select>
 </template>
