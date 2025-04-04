@@ -25,6 +25,7 @@ public class WebJMeterTestController extends JMeterTestController {
     register(basePath, "web");
     path(apiBase(), () -> {
       get("/web", "text/html", this);
+      get("/ui", "text/html", this);
     });
   }
 
