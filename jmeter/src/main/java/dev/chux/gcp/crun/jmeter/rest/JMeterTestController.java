@@ -108,7 +108,7 @@ abstract class JMeterTestController extends RestController {
     );
   }
 
-  protected Optional<Integer> optionalIntParam(
+  protected final Optional<Integer> optionalIntParam(
     final Request request,
     final String param
   ) {
@@ -121,7 +121,7 @@ abstract class JMeterTestController extends RestController {
     return Optional.<Integer>absent();
   }
 
-  protected int optionalIntParamOr(
+  protected final int optionalIntParamOr(
     final Request request,
     final String param,
     final Integer value
@@ -129,7 +129,7 @@ abstract class JMeterTestController extends RestController {
     return optionalIntParam(request, param).or(value).intValue();
   }
 
-  protected Optional<Boolean> optionalBoolParam(
+  protected final Optional<Boolean> optionalBoolParam(
     final Request request,
     final String param
   ) {
@@ -142,7 +142,7 @@ abstract class JMeterTestController extends RestController {
     return Optional.<Boolean>absent();
   }
 
-  protected boolean optionalBoolParamOr(
+  protected final boolean optionalBoolParamOr(
     final Request request,
     final String param,
     final boolean value
@@ -151,7 +151,7 @@ abstract class JMeterTestController extends RestController {
       .or(Boolean.valueOf(value)).booleanValue();
   }
 
-  protected Optional<String> optionalParam(
+  protected final Optional<String> optionalParam(
     final Request request,
     final String param
   ) {
@@ -176,7 +176,7 @@ abstract class JMeterTestController extends RestController {
     );
   }
 
-  protected String optionalParamOr(
+  protected final String optionalParamOr(
     final Request request,
     final String param,
     final String value
@@ -184,7 +184,7 @@ abstract class JMeterTestController extends RestController {
     return this.optionalParam(request, param).or(value);
   }
 
-  protected Map<String, String> metadata(
+  protected final Map<String, String> metadata(
     final Request request,
     final String param
   ) {
@@ -195,83 +195,87 @@ abstract class JMeterTestController extends RestController {
     return ImmutableMap.of();
   }
   
-  protected String host(final Request request) {
+  protected final String host(final Request request) {
     return this.optionalParam(request, "host").orNull();
   }
 
-  protected boolean async(final Request request) {
+  protected final boolean async(final Request request) {
     return this.optionalBoolParamOr(request, "async", false);
   }
 
-  protected Optional<String> optionalID(final Request request) {
+  protected final Optional<String> optionalID(final Request request) {
     return this.optionalParam(request, "id");
   }
 
-  protected String id(final Request request) {
+  protected final String id(final Request request) {
     return this.optionalID(request).or(UUID.randomUUID().toString());
   }
 
-  protected String mode(final Request request) {
+  protected final String mode(final Request request) {
     return this.optionalParamOr(request, "mode", MODE_CONCURRENCY).toLowerCase();
   }
 
-  protected String output(final Request request) {
+  protected final String output(final Request request) {
     return this.optionalParamOr(request, "output", RES_OUT).toLowerCase();
   }
 
-  protected Optional<String> script(final Request request) {
+  protected final Optional<String> name(final Request request) {
+    return this.optionalParam(request, "name");
+  }
+
+  protected final Optional<String> script(final Request request) {
     return this.optionalParam(request, "script");
   }
 
-  protected Optional<String> proto(final Request request) {
+  protected final Optional<String> proto(final Request request) {
     return this.optionalParam(request, "proto");
   }
 
-  protected Optional<Integer> port(final Request request) {
+  protected final Optional<Integer> port(final Request request) {
     return this.optionalIntParam(request, "port");
   }
 
-  protected Optional<String> endpoint(final Request request) {
+  protected final Optional<String> endpoint(final Request request) {
     return this.optionalParam(request, "path");
   }
 
-  protected Optional<String> method(final Request request) {
+  protected final Optional<String> method(final Request request) {
     return this.optionalParam(request, "method");
   }
 
-  protected Optional<String> concurrency(final Request request) {
+  protected final Optional<String> concurrency(final Request request) {
     return this.optionalParam(request, MODE_CONCURRENCY);
   }
 
-  protected Optional<String> qps(final Request request) {
+  protected final Optional<String> qps(final Request request) {
     return this.optionalParam(request, MODE_QPS);
   }
 
-  protected int minLatency(final Request request) {
+  protected final int minLatency(final Request request) {
     return this.optionalIntParamOr(request, "min_latency", DEFAULT_MIN_LATENCY);
   }
 
-  protected int maxLatency(final Request request) {
+  protected final int maxLatency(final Request request) {
     return this.optionalIntParamOr(request, "max_latency", DEFAULT_MAX_LATENCY);
   }
 
-  protected int duration(final Request request) {
+  protected final int duration(final Request request) {
     return this.optionalIntParamOr(request, "duration", INTEGER_0);
   }
 
-  protected int threads(final Request request) {
+  protected final int threads(final Request request) {
     return this.optionalIntParamOr(request, "threads", INTEGER_0);
   }
 
-  protected int rampupTime(final Request request) {
+  protected final int rampupTime(final Request request) {
     return this.optionalIntParamOr(request, "rampup_time", INTEGER_0);
   }
 
-  protected int rampupSteps(final Request request) {
+  protected final int rampupSteps(final Request request) {
     return this.optionalIntParamOr(request, "rampup_steps", INTEGER_0);
   }
 
-  protected Optional<String> traceID(final Request request) {
+  protected final Optional<String> traceID(final Request request) {
     final Optional<String> xCloudTraceCtx = fromNullable(
       emptyToNull(request.headers("x-cloud-trace-context"))
     );
@@ -298,19 +302,19 @@ abstract class JMeterTestController extends RestController {
     return fromNullable(emptyToNull(parts.get(0)));
   }
 
-  protected Map<String, String> params(final Request request) {
+  protected final Map<String, String> params(final Request request) {
     return metadata(request, "params");
   }
 
-  protected Map<String, String> headers(final Request request) {
+  protected final Map<String, String> headers(final Request request) {
     return metadata(request, "headers");
   }
 
-  protected Optional<String> body(final Request request) {
+  protected final Optional<String> body(final Request request) {
     return fromNullable(emptyToNull(request.body()));
   }
 
-  protected void setHeader(
+  protected final void setHeader(
     final Response response,
     final String name,
     final String value

@@ -38,8 +38,12 @@ WORKDIR /workspace/app/target/dependency
 
 RUN jar -xf /workspace/app/jmeter/target/jmeter.jar
 
-# pre-compress the JMaaS test catalog
-RUN gzip -9 -cvf static/catalog.json > /workspace/catalog.json.gz
+# pre-compress the JMaaS catalogs
+RUN mkdir -pv /workspace/catalogs/ \
+    && find static/catalogs -name '*.json' \
+    | xargs -I% sh -c 'gzip -9 -cvf % > /workspace/catalogs/$(basename %).gz' \
+    && ls -l static/catalogs/ \
+    && ls -l /workspace/catalogs/
 
 FROM eclipse-temurin:17
 
@@ -54,7 +58,7 @@ ENV JMETER_BIN=${JMETER_HOME}/bin
 VOLUME /tmp
 
 COPY --from=build ${DEPENDENCY} /app
-COPY --from=build /workspace/catalog.json.gz /jmaas/catalog.json
+COPY --from=build /workspace/catalogs/*.json.gz /jmaas/catalogs/
 COPY --from=ui /app/dist /app/static/ui
 
 RUN apt-get -qq update  > /dev/null \
