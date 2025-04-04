@@ -12,7 +12,7 @@ it entails creating complex test cases either using JMX or the JMeter UI which r
 The goal of this project is to provide common load testing – parametrizable – scenarios, and enable test execution via REST API endpoints  
 that can be invoked using simple tools as [cURL](https://curl.se/); all of it bundled into a worker container ready to be deployed with minimal friction.
 
-Additionally, this project aims to provide compatibility with [Cloud Run](https://cloud.google.com/run) for both:
+Additionally, this project aims to provide compatibility with [Cloud Run](https://cloud.google.com/run) for:
 
 - hosting JMeter as a Cloud Run service ( also known as JMaaS ).
 - load test Cloud Run services that require authentication.
