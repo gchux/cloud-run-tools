@@ -33,7 +33,7 @@ public class WebJMeterTestController extends JMeterTestController {
   public String endpoint(
     final String basePath
   ) {
-    return "[GET] " + apiPath();
+    return "[GET] " + apiBase() + "/[web|ui]";
   }
 
   public Object handle(

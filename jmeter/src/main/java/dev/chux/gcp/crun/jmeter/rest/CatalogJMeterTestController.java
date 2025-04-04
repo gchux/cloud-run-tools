@@ -75,7 +75,7 @@ public class CatalogJMeterTestController extends JMeterTestController {
   public String endpoint(
     final String basePath
   ) {
-    return "[GET] " + apiPath();
+    return "[GET] " + apiPath() + "[/:name]";
   }
 
   private String catalogName(
