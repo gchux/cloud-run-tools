@@ -41,9 +41,7 @@ RUN jar -xf /workspace/app/jmeter/target/jmeter.jar
 # pre-compress the JMaaS catalogs
 RUN mkdir -pv /workspace/catalogs/ \
     && find static/catalogs -name '*.json' \
-    | xargs -I% sh -c 'gzip -9 -cvf % > /workspace/catalogs/$(basename %).gz' \
-    && ls -l static/catalogs/ \
-    && ls -l /workspace/catalogs/
+    | xargs -I% sh -c 'gzip -9 -cvf % > /workspace/catalogs/$(basename %).gz'
 
 FROM eclipse-temurin:17
 
