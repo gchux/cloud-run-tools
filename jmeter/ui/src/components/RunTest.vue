@@ -59,7 +59,7 @@ export default {
   methods: {
     async fetchCatalog() {
       const response = await jmaas.getCatalog();
-      const catalog = CatalogSchema.parse(response.data);
+      const catalog: Catalog = CatalogSchema.parse(response.data);
       this.tests = catalog.tests;
       this.test = first(this.tests);
     },
