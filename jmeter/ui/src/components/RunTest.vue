@@ -18,7 +18,7 @@ const PARAMS = [
   "payload",
 ] as const;
 
-const CatalogTestParams = z.array(z.enum(PARAMS)); 
+const CatalogTestParams = z.array(z.enum(PARAMS)).nonempty(); 
 
 const CatalogTestSchema = z.object({
   id: z.string(),
@@ -45,7 +45,7 @@ const defaultTest: CatalogTest = {
   name: "",
   desc: "",
   mode: MODES[0],
-  params: [],
+  params: [PARAMS[0]],
 };
 
 export default {
