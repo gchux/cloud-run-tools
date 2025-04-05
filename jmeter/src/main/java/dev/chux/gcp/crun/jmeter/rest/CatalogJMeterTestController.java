@@ -119,9 +119,11 @@ public class CatalogJMeterTestController extends JMeterTestController {
 
     response.header("Content-Type", "application/json");
     response.header("Content-Encoding", "gzip");
+
     final OutputStream responseOutputStream = response.raw().getOutputStream();
     source.get().copyTo(responseOutputStream);
     responseOutputStream.flush();
+    
     return null;
   }
 

@@ -3,7 +3,7 @@ import axios from 'axios';
 const BASE = '/jmeter/test';
 
 export default {
-    getCatalog: () => {
-        return axios.get(`${BASE}/catalog`);
+    getCatalog: (catalog: string = "default") => {
+        return axios.get(`${BASE}/catalog/${catalog}`);
     },
 };

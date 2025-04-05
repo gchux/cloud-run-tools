@@ -8,13 +8,19 @@
     "method": {
       "name": "method",
       "type": "enum",
-      "values": ["GET", "POST"],
+      "values": [
+        "GET",
+        "POST"
+      ],
       "default": "GET"
     },
     "proto": {
       "name": "proto",
       "type": "enum",
-      "values": ["HTTP", "HTTPS"],
+      "values": [
+        "HTTP",
+        "HTTPS"
+      ],
       "default": "HTTPS"
     },
     "host": {
@@ -35,53 +41,68 @@
     },
     "query": {
       "name": "query",
-      "type": ["map", "string", ["union", "string", "number"]]
+      "type": [
+        "map",
+        "string",
+        [
+          "union",
+          "string",
+          "number"
+        ]
+      ]
     },
     "headers": {
       "name": "headers",
-      "type": ["map", "string", ["union", "string", "number"]]
+      "type": [
+        "map",
+        "string",
+        [
+          "union",
+          "string",
+          "number"
+        ]
+      ]
     },
     "qps": {
       "name": "qps",
-      "type": ["array", "number"]
+      "type": [
+        "array",
+        "number"
+      ]
     }
   },
-  "tests": {
-    "cloud_run_qps_full": {
+  "tests": [
+    {
+      "id": "cloud_run_qps_full",
       "name": "Cloud Run QPS (full)",
-      "test": [
-        {
-          "mode": "qps",
-          "params": [
-            "qps",
-            "method",
-            "host",
-            "path",
-            "query",
-            "headers",
-            "payload"
-          ]
-        }
+      "desc": "run a fully parametrizable load test against a Cloud Run service",
+      "mode": "qps",
+      "params": [
+        "qps",
+        "method",
+        "host",
+        "path",
+        "query",
+        "headers",
+        "payload"
       ]
     },
-    "generic_qps_full": {
+    {
+      "id": "generic_qps_full",
       "name": "Generic QPS (full)",
-      "test": [
-        {
-          "mode": "qps",
-          "params": [
-            "qps",
-            "proto",
-            "method",
-            "host",
-            "port",
-            "path",
-            "query",
-            "headers",
-            "payload"
-          ]
-        }
+      "desc": "run a fully parametrizable load test against any remote host",
+      "mode": "qps",
+      "params": [
+        "qps",
+        "proto",
+        "method",
+        "host",
+        "port",
+        "path",
+        "query",
+        "headers",
+        "payload"
       ]
     }
-  }
+  ]
 }
