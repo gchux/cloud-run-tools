@@ -1,46 +1,70 @@
 {
-  "params": {
-    "async": {
-      "name": "async",
-      "type": "boolean",
+  "params": [
+    {
+      "id": "async",
+      "label": "run test async",
+      "type": [
+        "boolean"
+      ],
       "default": false
     },
-    "method": {
-      "name": "method",
-      "type": "enum",
+    {
+      "id": "method",
+      "label": "HTTP method",
+      "type": [
+        "enum"
+      ],
       "values": [
         "GET",
-        "POST"
+        "PUT",
+        "POST",
+        "DELETE",
+        "PATCH",
+        "HEAD",
+        "OPTIONS"
       ],
       "default": "GET"
     },
-    "proto": {
-      "name": "proto",
-      "type": "enum",
+    {
+      "id": "proto",
+      "label": "application layer protocol",
+      "type": [
+        "enum"
+      ],
       "values": [
         "HTTP",
         "HTTPS"
       ],
       "default": "HTTPS"
     },
-    "host": {
-      "name": "host",
-      "type": "string"
+    {
+      "id": "host",
+      "label": "IP or hostname of remote service",
+      "type": [
+        "string"
+      ]
     },
-    "port": {
-      "name": "port",
-      "type": "number",
+    {
+      "id": "port",
+      "label": "TCP port of remote service",
+      "type": [
+        "number"
+      ],
       "min": 1,
       "max": 65535,
       "default": 443
     },
-    "path": {
-      "name": "path",
-      "type": "string",
+    {
+      "id": "path",
+      "label": "endpoint of remote service",
+      "type": [
+        "string"
+      ],
       "default": "/"
     },
-    "query": {
-      "name": "query",
+    {
+      "id": "query",
+      "label": "query parameters to send",
       "type": [
         "map",
         "string",
@@ -51,8 +75,9 @@
         ]
       ]
     },
-    "headers": {
-      "name": "headers",
+    {
+      "id": "headers",
+      "label": "request headers to send",
       "type": [
         "map",
         "string",
@@ -63,14 +88,42 @@
         ]
       ]
     },
-    "qps": {
-      "name": "qps",
+    {
+      "id": "payload",
+      "label": "request payload to send",
+      "type": [
+        "text"
+      ]
+    },
+    {
+      "id": "qps",
+      "label": "traffic shape for QPS mode",
       "type": [
         "array",
-        "number"
+        [
+          "tuple",
+          "number",
+          "number",
+          "number"
+        ]
+      ]
+    },
+    {
+      "id": "concurrency",
+      "label": "traffic shape for CONCURRENCY mode",
+      "type": [
+        "array",
+        [
+          "tuple",
+          "number",
+          "number",
+          "number",
+          "number",
+          "number"
+        ]
       ]
     }
-  },
+  ],
   "tests": [
     {
       "id": "cloud_run_qps_full",
@@ -78,6 +131,7 @@
       "desc": "run a fully parametrizable load test against a Cloud Run service",
       "mode": "qps",
       "params": [
+        "async",
         "qps",
         "method",
         "host",
@@ -93,6 +147,7 @@
       "desc": "run a fully parametrizable load test against any remote host",
       "mode": "qps",
       "params": [
+        "async",
         "qps",
         "proto",
         "method",

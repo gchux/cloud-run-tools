@@ -1,51 +1,29 @@
 <script lang="ts">
-import { string, z } from 'zod';
-import { pick, first } from 'lodash';
+import { first, keyBy } from 'lodash';
 import jmaas from '../api/jmaas.ts';
 import { useTestStore } from '../stores/test.ts'
+import type {
+  Catalog,
+  CatalogTest,
+  CatalogTestParamsObject,
+  ParamEnumType
+} from '../types/catalogs.ts'
+import { ModeEnumSchema, CatalogSchema } from '../types/catalogs.ts'
+import TestParams from './TestParams.vue'
 
-const MODES = ["qps", "concurrency"] as const;
-
-const PARAMS = [
-  "qps",
-  "proto",
-  "method",
-  "host",
-  "port",
-  "path",
-  "query",
-  "headers",
-  "payload",
-] as const;
-
-const CatalogTestParams = z.array(z.enum(PARAMS)).nonempty(); 
-
-const CatalogTestSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  desc: z.string(),
-  mode: z.enum(MODES),
-  params: CatalogTestParams,
-});
-
-const CatalogSchema = z.object({
-  tests: z.array(CatalogTestSchema),
-});
-
-type Catalog = z.infer<typeof CatalogSchema>;
-type CatalogTest = z.infer<typeof CatalogTestSchema>;
-
-type TestData = {
-  test: CatalogTest,
+type Data = {
+  catalog: Catalog,
   tests: CatalogTest[],
+  params: CatalogTestParamsObject,
+  test: CatalogTest,
 };
 
 const defaultTest: CatalogTest = {
   id: "",
-  name: "",
-  desc: "",
-  mode: MODES[0],
-  params: [PARAMS[0]],
+  name: "loading...",
+  desc: "loading...",
+  mode: ModeEnumSchema.Values.qps,
+  params: [],
 };
 
 export default {
@@ -53,20 +31,24 @@ export default {
     return {
       test: defaultTest,
       tests: [],
-    } as Partial<TestData>;
+      params: [],
+    } as Partial<Data>;
   },
 
   methods: {
     async fetchCatalog() {
       const response = await jmaas.getCatalog();
-      const catalog: Catalog = CatalogSchema.parse(response.data);
-      this.tests = catalog.tests;
+      this.catalog = CatalogSchema.parse(response.data);
+      console.log(this.catalog);
+      this.params = keyBy(this.catalog.params, 'id');
+      this.tests = this.catalog.tests;
       this.test = first(this.tests);
     },
 
     updateTest(test: CatalogTest) {
       const TEST = useTestStore();
-      TEST.updateScript(test.id);
+      TEST.setScript(test.id);
+      TEST.setMode(test.mode);
       this.test = test;
     }
   },
@@ -74,6 +56,10 @@ export default {
   mounted() {
     this.fetchCatalog();
   },
+
+  components: {
+    TestParams,
+  }
 }
 </script>
 
@@ -91,4 +77,10 @@ export default {
       <v-list-item v-bind="itemProps" :subtitle="item.raw.desc"></v-list-item>
     </template>
   </v-select>
+  <TestParams
+    v-if="catalog"
+    :catalog="params"
+    :params="test?.params"
+  >
+  </TestParams>
 </template>
