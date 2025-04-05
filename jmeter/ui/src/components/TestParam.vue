@@ -73,16 +73,16 @@ export default {
 </script>
 
 <template>
-<v-responsive
-  class="mx-auto"
->
-  <component
-    v-if="param"
-    :is="component"
-    :model-value="value"
-    :label="param?.label"
-    :items="items"
-    @update:model-value="updateValue"
-  ></component>
-</v-responsive>
+  <v-responsive
+    class="mx-auto"
+  >
+    <component
+      v-if="param"
+      :is="component"
+      :model-value="value"
+      :label="param?.label"
+      :items="items"
+      @update:model-value="updateValue"
+    ></component>
+  </v-responsive>
 </template>

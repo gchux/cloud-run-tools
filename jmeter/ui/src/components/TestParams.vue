@@ -28,11 +28,10 @@ export default {
 </script>
 
 <template>
-<TestParam
-  v-if="catalog"
-  v-for="param in params"
-  :key="catalog[param]?.id"
-  :param="catalog[param]"
->
-</TestParam>
+  <TestParam
+    v-if="catalog"
+    v-for="param in params"
+    :key="catalog[param]?.id"
+    :param="catalog[param]"
+  ></TestParam>
 </template>

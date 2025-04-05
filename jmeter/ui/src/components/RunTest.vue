@@ -81,6 +81,5 @@ export default {
     v-if="catalog"
     :catalog="params"
     :params="test?.params"
-  >
-  </TestParams>
+  ></TestParams>
 </template>
