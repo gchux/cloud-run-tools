@@ -326,5 +326,13 @@ abstract class JMeterTestController extends RestController {
     }
   }
 
+  protected Object badRequest(
+    final Response response,
+    final String message
+  ) {
+    halt(400, message);
+    return null;
+  }
+
 }
 

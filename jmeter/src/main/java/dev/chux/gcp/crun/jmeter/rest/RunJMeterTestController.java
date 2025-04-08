@@ -189,6 +189,15 @@ public class RunJMeterTestController extends JMeterTestController {
       .hash().toString();
   }
 
+  protected final Object badRequest(
+    final Response response,
+    final String message
+  ) {
+    // ALWAYS unlock before halting a request!
+    this.lock.set(false);
+    return super.badRequest(response, message);
+  }
+
   public Object handle(
     final Request request,
     final Response response
@@ -211,19 +220,16 @@ public class RunJMeterTestController extends JMeterTestController {
     // FQDN, hostname or IP of the remote service.
     final String host = host(request);
     if ( isNullOrEmpty(host) ) {
-      response.status(400);
-      return "host is required";
+      return this.badRequest(response, "host is required");
     }
 
     // Operation mode of the Load Test, may be: `qps` or `concurrency`.
     final String mode = mode(request);
     if ( isNullOrEmpty(mode) ) {
-      halt(400, "mode is required");
-      return null;
+      return this.badRequest(response, "mode is required");
     }
     if ( !this.modes.contains(mode) ) {
-      halt(400, "invalid mode: " + mode);
-      return null;
+      return this.badRequest(response, "invalid mode: " + mode);
     }
 
     final boolean async = async(request);
@@ -252,13 +258,11 @@ public class RunJMeterTestController extends JMeterTestController {
     final Optional<String> qps         = qps(request);
 
     if ( (mode.equalsIgnoreCase(MODE_QPS)) && !qps.isPresent() ) {
-      halt(400, "parameter 'qps' is required when 'mode' is set to 'qps'");
-      return null;
+      return this.badRequest(response, "parameter 'qps' is required when 'mode' is set to 'qps'");
     }
 
     if ( (mode.equalsIgnoreCase(MODE_CONCURRENCY)) && !concurrency.isPresent() ) {
-      halt(400, "parameter 'concurrency' is required when 'mode' is set to 'concurrency'");
-      return null;
+      return this.badRequest(response, "parameter 'concurrency' is required when 'mode' is set to 'concurrency'");
     }
 
     // expected min/max response time of the service to load test
@@ -266,19 +270,16 @@ public class RunJMeterTestController extends JMeterTestController {
     final int maxLatency = maxLatency(request);
 
     if ( minLatency <= 0 ) {
-      halt(400, "'min_latency' must be greater than 0 milli seconds");
-      return null;
+      return this.badRequest(response, "'min_latency' must be greater than 0 milli seconds");
     }
 
     if ( maxLatency < minLatency ) {
-      halt(400, "'max_latency' must be greater than 'min_latency'");
-      return null;
+      return this.badRequest(response, "'max_latency' must be greater than 'min_latency'");
     }
 
     final int duration = duration(request);
     if ( duration <= 0 ) {
-      halt(400, "duration must be greater than 0");
-      return null;
+      return this.badRequest(response, "duration must be greater than 0");
     }
 
     // legacy test parameters
