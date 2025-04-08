@@ -55,7 +55,7 @@ public class JMeterTestService {
   private final Map<String, ListenableFuture<JMeterTest>> tests = Maps.newConcurrentMap();
 
   private static final ListeningExecutorService EXECUTOR =
-    MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(4));
+    MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(5));
   
   @Inject
   JMeterTestService(

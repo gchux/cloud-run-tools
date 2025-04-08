@@ -82,4 +82,12 @@ export default {
     :catalog="params"
     :params="test?.params"
   ></TestParams>
+  <v-btn block
+    class="text-none"
+    color="success"
+    size="x-large"
+    variant="flat"
+  >
+    Run the Load Test!
+  </v-btn>
 </template>

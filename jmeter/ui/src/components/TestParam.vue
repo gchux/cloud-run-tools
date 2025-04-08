@@ -4,6 +4,7 @@ import type { PropType } from 'vue';
 import type { CatalogTestParam } from '../types/catalogs.ts'
 import { useTestStore } from '../stores/test.ts'
 import { toString } from 'lodash'
+import KeyValueParam from './KeyValueParam.vue'
 
 const DataSchema = z.object({
   value: z.any(),
@@ -48,6 +49,8 @@ export default {
         case "bool":
         case "boolean":
           return "v-switch";
+        case "map":
+          return "KeyValueParam"
       }
     },
   },
@@ -65,10 +68,15 @@ export default {
 
   mounted() {
     console.log("param", this.param?.id, this.param);
+    const defualtValue = this.param?.default;
     if ( this.type == "boolean" ) {
-      this.updateValue(toString(this.param?.default || "false"));
+      this.updateValue(toString(defualtValue || "false"));
     }
   },
+
+  components: {
+    KeyValueParam,
+  }
 }
 </script>
 
@@ -82,6 +90,7 @@ export default {
       :model-value="value"
       :label="param?.label"
       :items="items"
+      :test-param="param"
       @update:model-value="updateValue"
     ></component>
   </v-responsive>

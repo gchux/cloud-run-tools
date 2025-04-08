@@ -9,7 +9,17 @@ import {
   ProtoEnumSchema,
   MethodEnumSchema
 } from '../types/catalogs.ts'
-import { toNumber } from 'lodash'
+import { isEqual, toNumber } from 'lodash'
+
+const KeyValueSchema = z.map(
+  z.number(),
+  z.object({
+    key: z.string(),
+    value: z.string(),
+  })
+);
+
+type KeyValue = z.infer<typeof KeyValueSchema>;
 
 const TestSchema = z.object({
   script: z.string(),
@@ -21,6 +31,8 @@ const TestSchema = z.object({
   proto: ProtoEnumSchema,
   path: z.string().nonempty(),
   payload: z.optional(z.string()),
+  query: KeyValueSchema,
+  headers: KeyValueSchema,
 });
 
 type Test = z.infer<typeof TestSchema>;
@@ -35,12 +47,20 @@ export const useTestStore = defineStore('test', {
       method: "GET",
       proto: "HTTPS",
       path: "/",
+      query: new Map(),
+      headers: new Map(),
     } as Test;
   },
 
   getters: {},
 
   actions: {
+    getKeyValue(id: string): KeyValue {
+      if ( isEqual(id, "query") ) {
+        return this.query;
+      }
+      return this.headers;
+    },
     setScript(script: string) {
       this.script = script;
     },
@@ -68,7 +88,10 @@ export const useTestStore = defineStore('test', {
     setPayload(payload: string) {
       this.payload = TestSchema.shape.payload.parse(payload);
     },
-    setValue(id: ParamEnumType | undefined, value: string) {
+    setValue(
+      id: ParamEnumType | undefined,
+      value: string,
+    ) {
       console.log("test value: ", id, value);
       switch ( id ) {
         case "host":
@@ -85,8 +108,27 @@ export const useTestStore = defineStore('test', {
           return this.setPath(value);
         case "payload":
           return this.setPayload(value);
+        case "query":
+          return this.setPayload(value);
+        case "headers":
+          return this.setPayload(value);
       }
-      
-    }
+    },
+    setKeyValue(
+      id: ParamEnumType,
+      index: number,
+      key: string,
+      value: string,
+    ) {
+      const kv = this.getKeyValue(id);
+      kv.set(index, { key, value });
+    },
+    unsetKeyValue(
+      id: ParamEnumType,
+      index: number,
+    ) {
+      const kv = this.getKeyValue(id);
+      kv.delete(index);
+    },
   },
 });

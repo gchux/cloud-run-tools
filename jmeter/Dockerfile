@@ -6,7 +6,9 @@ COPY ./jmeter/ui /app
 
 WORKDIR /app
 
-RUN npm install && npm run build
+RUN npm install
+RUN npm install --global gulp-cli
+RUN npm run build
 
 RUN perl -i -p -e 's;(src|href)="/assets/;$1="/ui/assets/;g' ./dist/index.html
 

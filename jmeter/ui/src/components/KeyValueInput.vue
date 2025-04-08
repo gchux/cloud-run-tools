@@ -1,0 +1,124 @@
+<script lang="ts">
+import { z } from 'zod'
+import type { PropType, ComponentPublicInstance } from 'vue';
+import { defineComponent } from 'vue';
+import { bind, debounce, isEmpty } from 'lodash'
+import { useTestStore } from '../stores/test.ts'
+
+export const SOURCE = [
+  "name",
+  "value",
+  "empty",
+  "delete"
+] as const;
+
+export const SourceSchema = z.enum(SOURCE);
+
+type Source = z.infer<typeof SourceSchema>;
+
+const DataSchema = z.object({
+  name: z.string(),
+  value: z.string(),
+  source: z.enum(SOURCE),
+  index: z.number().positive(),
+});
+
+export const ModelValueSchema = DataSchema;
+
+type Data = Omit<z.infer<typeof DataSchema>, "index" | "source">;
+
+export type ModelValue = z.infer<typeof DataSchema>;
+
+const component = defineComponent({
+  props: {
+    index: {
+      type: Number,
+      required: true,
+    },
+  },
+
+  data: () => {
+    return {
+      name: "",
+      value: "",
+    } as Data;
+  },
+
+  emits: {
+    'update:modelValue': function (
+      payload: ModelValue
+    ) {
+      return !isEmpty(payload.name) && !isEmpty(payload.value);
+    },
+    'delete:index': function (
+      index: number
+    ) {
+      return index > 0;
+    }
+  },
+
+  methods: {
+    emitUpdate: debounce(function (
+      this: ComponentPublicInstance<ModelValue>,
+      source: Source
+    ) {
+      if (isEmpty(this.name) || isEmpty(this.value)) {
+        return;
+      }
+
+      const value: ModelValue = {
+        name: this.name,
+        value: this.value,
+        index: this.index,
+        source
+      };
+
+      this.$emit('update:model-value', value);
+    }, 300, { maxWait: 300 }),
+
+    updateName(name: string) {
+      this.name = name;
+      this.emitUpdate(SourceSchema.Values.name);
+    },
+
+    updateValue(value: string) {
+      this.value = value;
+      this.emitUpdate(SourceSchema.Values.value);
+    },
+
+    deleteIndex() {
+      console.log(this);
+      console.log("delete: ", this.index);
+      this.$emit('delete:index', this.index);
+    },
+  },
+});
+
+export default component;
+</script>
+
+<template>
+  <v-row>
+    <v-btn
+        class="ms-2 mt-6"
+        density="compact"
+        icon="mdi-minus"
+        color="error"
+        @click="deleteIndex"
+    ></v-btn>
+    <v-col>
+      <v-text-field
+        label="Name"
+        :model-value="name"
+        @update:model-value="updateName"
+      ></v-text-field>
+    </v-col>
+    <v-col>
+      <v-text-field
+        label="Value"
+        :model-value="value"
+        @update:model-value="updateValue"
+      ></v-text-field>
+    </v-col>
+  </v-row>
+</template>

@@ -35,7 +35,7 @@ public class JMeterTestExecutorImpl implements JMeterTestExecutor {
   private static final Logger logger = LoggerFactory.getLogger(JMeterTestExecutorImpl.class);
 
   private static final ListeningScheduledExecutorService EXECUTOR =
-    MoreExecutors.listeningDecorator(Executors.newScheduledThreadPool(2));
+    MoreExecutors.listeningDecorator(Executors.newScheduledThreadPool(3));
 
   private final JMeterTestService jMeterTestService;
   private final JMeterTestFactory jMeterTestFactory;

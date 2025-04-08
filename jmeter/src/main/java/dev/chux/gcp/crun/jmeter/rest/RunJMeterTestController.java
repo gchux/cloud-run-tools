@@ -34,6 +34,7 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Optional.absent;
 import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static com.google.common.base.Throwables.getStackTraceAsString;
 
 import static spark.Spark.*;
 
@@ -68,6 +69,8 @@ public class RunJMeterTestController extends JMeterTestController {
     private void release() {
       if ( this.lock.compareAndSet(true, false) ) {
         logger.info("{} | is now available", this.instanceID);
+      } else {
+        logger.error("{} | is not available", this.instanceID);
       }
     }
 
@@ -85,10 +88,12 @@ public class RunJMeterTestController extends JMeterTestController {
       this.release();
     }
 
+    @Override
     public void onSuccess(final JMeterTest t) {
       this.always(/* success */ true, fromNullable(t), absent());
     }
 
+    @Override
     public void onFailure(final Throwable t) {
       this.always(/* success */ false, absent(), fromNullable(t));
     }
@@ -104,6 +109,37 @@ public class RunJMeterTestController extends JMeterTestController {
         .add("instance_id", this.instanceID)
         .add("test_id", this.get())
         .toString();
+    }
+
+  }
+
+  private static final class AsyncCallback implements Runnable {
+
+    private static final Logger logger = LoggerFactory.getLogger(AsyncCallback.class);
+
+    private final String instanceID;
+    private final String testID;
+    private final ListenableFuture<JMeterTest> test;
+
+    private AsyncCallback(
+      final String instanceID,
+      final String testID,
+      ListenableFuture<JMeterTest> test
+    ) {
+      this.instanceID = instanceID;
+      this.testID = testID;
+      this.test = test;
+    }
+
+    @Override
+    public void run() {
+      try {
+        final JMeterTest t = this.test.get();
+        logger.info("async/finished/OK: {}/{}", t.instanceID(), t.id());
+      } catch(final Exception e) {
+        logger.error("async/finished/KO: {}/{}\n{}",
+          this.instanceID, this.testID, getStackTraceAsString(e));
+      }
     }
 
   }
@@ -159,6 +195,7 @@ public class RunJMeterTestController extends JMeterTestController {
   ) throws Exception {
     // allows at most 1 execution per worker
     if ( !this.lock.compareAndSet(false, true) ) {
+      logger.error("Worker is busy: {} => {}", this.instanceID, this.lock);
       response.status(409);
       return "busy";
     }
@@ -307,6 +344,8 @@ public class RunJMeterTestController extends JMeterTestController {
     setHeader(response, "stream", appendToBase("stream/" + testID));
 
     if ( async || test.isDone() || test.isCancelled() ) {
+      this.jMeterTestService.executor(testID)
+        .execute(new AsyncCallback(this.instanceID, testID, test));
       response.status(204);
       return "";
     }
