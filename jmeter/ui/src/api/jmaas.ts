@@ -69,7 +69,7 @@ export default {
         headers[`${headersPrefix}-host`] = test.host;
         headers[`${headersPrefix}-port`] = toString(test.port);
         headers[`${headersPrefix}-path`] = test.path;
-        headers[`${headersPrefix}-async`] = toString(test.async);
+        headers[`${headersPrefix}-async`] = toString(test.async || false);
         headers[`${headersPrefix}-duration`] = toString(test.duration);
         headers[`${headersPrefix}-min-latency`] = toString(test.minLatency);
         headers[`${headersPrefix}-max-latency`] = toString(test.maxLatency);
