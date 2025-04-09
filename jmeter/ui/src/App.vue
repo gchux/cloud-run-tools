@@ -11,7 +11,7 @@ export default {
 <template>
   <v-responsive class="border rounded">
     <v-app theme="dark">
-      <v-app-bar title="JMaaS – JMeter as a Service"></v-app-bar>
+      <v-app-bar title="JMaaS [ JMeter as a Service ]"></v-app-bar>
 
       <v-navigation-drawer>
         <v-list>

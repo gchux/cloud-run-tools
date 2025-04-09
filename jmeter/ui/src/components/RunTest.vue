@@ -1,6 +1,7 @@
 <script lang="ts">
 import { first, keyBy } from 'lodash';
 import jmaas from '../api/jmaas.ts';
+import type { TestStreamEvent } from '../api/jmaas.ts';
 import { useTestStore } from '../stores/test.ts'
 import type { Test } from '../stores/test.ts'
 import type {
@@ -52,9 +53,13 @@ export default {
       this.test = test;
     },
 
+    streamTest(e: TestStreamEvent) {
+      console.log(e);
+    },
+
     runTest() {
       const TEST = useTestStore();
-      jmaas.runTest(TEST.get());
+      jmaas.runTest(TEST.get(), this.streamTest);
     },
   },
 

@@ -42,7 +42,7 @@ export type Duration = z.infer<typeof DurationSchema>;
 const TestSchema = z.object({
   script: z.string(),
   mode: ModeEnumSchema,
-  host: z.string().nonempty().url(),
+  host: z.string().nonempty(),
   port: PortSchema,
   async: z.boolean(),
   method: MethodEnumSchema,
@@ -74,6 +74,9 @@ export const useTestStore = defineStore('test', {
       headers: new Map(),
       qps: new Map(),
       concurrency: new Map(),
+      duration: DurationSchema.minValue,
+      minLatency: MinMaxLatencySchema.minValue,
+      maxLatency: 1000, // 1 second
     } as Test;
   },
 
@@ -157,6 +160,12 @@ export const useTestStore = defineStore('test', {
           return this.setPayload(value);
         case "headers":
           return this.setPayload(value);
+        case "duration":
+          return this.setDuration(toNumber(value));
+        case "min-latency":
+          return this.setMinLatency(toNumber(value));
+        case "max-latency":
+          return this.setMaxLatency(toNumber(value));
         default:
           throw new Error("invalid test parameter");
       }

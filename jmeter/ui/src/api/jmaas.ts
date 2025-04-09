@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import axios from 'axios';
-import { toString, join, isEqual } from 'lodash'
+import type { AxiosProgressEvent } from 'axios'
+import { toString, split, isEqual } from 'lodash'
 import type { Test } from '../stores/test.ts'
 
 const BASE = '/jmeter/test';
@@ -20,9 +21,9 @@ const getKeyValueParam = (
 ): string => {
     let value = "";
     test[param]
-    .forEach((p) => {
-        value += `${p.key}=${p.value};`;
-    });
+        .forEach((p) => {
+            value += `${p.key}=${p.value};`;
+        });
     return value;
 };
 
@@ -41,9 +42,9 @@ const getMultiValueParam = (
 ): string => {
     let value = "";
     test[param]
-    .forEach((v) => {
-        value += `${v};`;
-    });
+        .forEach((v) => {
+            value += `${v};`;
+        });
     return value;
 };
 
@@ -51,14 +52,64 @@ const headersPrefix = "x-jmaas-test";
 
 const HeadersSchema = z.record(z.string(), z.string());
 
-type Headers = z.infer<typeof HeadersSchema>;
+export type Headers = z.infer<typeof HeadersSchema>;
+
+const TestStreamEventSchema = z.object({
+    status: z.number(),
+    statusText: z.string(),
+    headers: HeadersSchema,
+    response: z.any(),
+});
+
+export type TestStreamEvent = z.infer<typeof TestStreamEventSchema>;
+
+const TestStreamHandlerSchema =
+    z.function()
+        .args(TestStreamEventSchema)
+        .returns(z.void());
+
+export type TestStreamHandler = z.infer<typeof TestStreamHandlerSchema>;
+
+const parseHeaders = (request: XMLHttpRequest): Headers => {
+    const rawHeaders = request.getAllResponseHeaders();
+    const headersList = split(rawHeaders, /[\r\n]+/);
+    const headers: Headers = {};
+
+    headersList.forEach((line) => {
+        const parts = split(line, /:\s?/, 2);
+        const header = parts[0];
+        const value = parts[1];
+        headers[header] = value;
+    });
+
+    return headers;
+};
+
+const onDownloadProgress = (
+    progressEvent: AxiosProgressEvent,
+    handler: TestStreamHandler,
+) => {
+    const event = progressEvent.event as ProgressEvent;
+    const request = event.currentTarget as XMLHttpRequest;
+    handler({
+        status: request.status,
+        statusText: request.statusText,
+        headers: parseHeaders(request),
+        response: request.response,
+    });
+}
 
 export default {
     getCatalog: (catalog: string = "default") => {
         return axios.get(`${BASE}/catalog/${catalog}`);
     },
 
-    runTest: (test: Test) => {
+    runTest: (
+        test: Test,
+        handler: TestStreamHandler,
+    ) => {
+        console.log("test: ", test);
+
         const mode = test.mode;
         const method = test.method;
         const headers: Headers = {};
@@ -76,7 +127,7 @@ export default {
         headers[`${headersPrefix}-query`] = getKeyValueParam(test, KeyValueParamsSchema.Values.query);
         headers[`${headersPrefix}-headers`] = getKeyValueParam(test, KeyValueParamsSchema.Values.headers);
 
-        if ( isEqual(mode, "qps") ) {
+        if (isEqual(mode, "qps")) {
             headers[`${headersPrefix}-qps`] = getMultiValueParam(test, MultiValueParamsSchema.Values.qps);
         } else {
             headers[`${headersPrefix}-concurrency`] = getMultiValueParam(test, MultiValueParamsSchema.Values.concurrency);
@@ -86,6 +137,9 @@ export default {
             url: `${BASE}/run`,
             method,
             headers,
+            onDownloadProgress(progressEvent: AxiosProgressEvent) {
+                onDownloadProgress(progressEvent, handler);
+            },
         });
     },
 };
