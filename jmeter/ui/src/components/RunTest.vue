@@ -74,6 +74,7 @@ export default {
       <v-card-title>Configure test execution</v-card-title>
     </v-card-item>
     <v-card-text>
+      <v-divider color="info"></v-divider>
       <v-select
         :model-value="test"
         :items="tests"
@@ -87,11 +88,13 @@ export default {
           <v-list-item v-bind="itemProps" :subtitle="item.raw.desc"></v-list-item>
         </template>
       </v-select>
+      <v-divider color="info"></v-divider>
       <TestParams
         v-if="catalog"
         :catalog="params"
         :params="test?.params"
       ></TestParams>
+      <v-divider color="info"></v-divider>
       <v-btn block
         class="text-none mt-2"
         color="success"
