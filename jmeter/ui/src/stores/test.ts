@@ -3,6 +3,7 @@ import { z } from 'zod'
 import type {
   ModeEnumType,
   ParamEnumType,
+  MethodEnumType,
 } from '../types/catalogs.ts'
 import {
   ModeEnumSchema,
@@ -16,10 +17,14 @@ const KeyValueSchema = z.map(
   z.object({
     key: z.string(),
     value: z.string(),
-  })
+  }),
 );
 
 type KeyValue = z.infer<typeof KeyValueSchema>;
+
+const MultiValueSchema = z.map(z.number(), z.string());
+
+type MultiValue = z.infer<typeof MultiValueSchema>;
 
 const TestSchema = z.object({
   script: z.string(),
@@ -33,9 +38,12 @@ const TestSchema = z.object({
   payload: z.optional(z.string()),
   query: KeyValueSchema,
   headers: KeyValueSchema,
+  qps: MultiValueSchema,
+  concurrency: MultiValueSchema,
+  duration: z.number().positive(),
 });
 
-type Test = z.infer<typeof TestSchema>;
+export type Test = z.infer<typeof TestSchema>;
 
 export const useTestStore = defineStore('test', {
   state: () => {
@@ -49,17 +57,31 @@ export const useTestStore = defineStore('test', {
       path: "/",
       query: new Map(),
       headers: new Map(),
+      qps: new Map(),
+      concurrency: new Map(),
     } as Test;
   },
 
   getters: {},
 
   actions: {
+    get(): Test {
+      return this.$state;
+    },
+    getMethod(): MethodEnumType {
+      return this.method;
+    },
     getKeyValue(id: string): KeyValue {
       if ( isEqual(id, "query") ) {
         return this.query;
       }
       return this.headers;
+    },
+    getMultiValue(id: string): MultiValue {
+      if ( isEqual(id, "qps") ) {
+        return this.qps;
+      }
+      return this.concurrency;
     },
     setScript(script: string) {
       this.script = script;
@@ -129,6 +151,21 @@ export const useTestStore = defineStore('test', {
     ) {
       const kv = this.getKeyValue(id);
       kv.delete(index);
+    },
+    setMultiValue(
+      id: ParamEnumType,
+      index: number,
+      value: string,
+    ) {
+      const values = this.getMultiValue(id);
+      values.set(index, value);
+    },
+    unsetMultiValue(
+      id: ParamEnumType,
+      index: number,
+    ) {
+      const values = this.getMultiValue(id);
+      values.delete(index);
     },
   },
 });

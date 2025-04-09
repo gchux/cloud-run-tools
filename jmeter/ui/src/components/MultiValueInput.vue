@@ -5,31 +5,18 @@ import { defineComponent } from 'vue';
 import { bind, debounce, isEmpty, gt, lte, toString } from 'lodash'
 import { useTestStore } from '../stores/test.ts'
 
-export const SOURCE = [
-  "name",
-  "value",
-  "empty",
-  "delete"
-] as const;
-
-export const SourceSchema = z.enum(SOURCE);
-
-type Source = z.infer<typeof SourceSchema>;
-
 const DataSchema = z.object({
-  name: z.string(),
   value: z.string(),
-  source: z.enum(SOURCE),
   index: z.number().positive(),
 });
 
 export const ModelValueSchema = DataSchema;
 
-type Data = Omit<z.infer<typeof DataSchema>, "index" | "source">;
+type Data = Omit<z.infer<typeof DataSchema>, "index">;
 
 export type ModelValue = z.infer<typeof DataSchema>;
 
-const component = defineComponent({
+export default defineComponent({
   props: {
     index: {
       type: Number,
@@ -39,7 +26,6 @@ const component = defineComponent({
 
   data: () => {
     return {
-      name: "",
       value: "",
     } as Data;
   },
@@ -48,53 +34,45 @@ const component = defineComponent({
     'update:modelValue': function (
       payload: ModelValue
     ) {
-      return !isEmpty(payload.name) && !isEmpty(payload.value) && gt(payload.index, 0);
+      return !isEmpty(payload.value) && gt(payload.index, 0);
     },
     'delete:index': function (
       index: number
     ) {
-      return index > 0;
+      return gt(index, 0);
     }
   },
 
   methods: {
     emitUpdate: debounce(function (
       this: ComponentPublicInstance<ModelValue>,
-      source: Source
+      newValue: string,
     ) {
-      if (isEmpty(this.name) || isEmpty(this.value) || lte(this.index, 0)) {
+      if (isEmpty(newValue) || lte(this.index, 0)) {
         return;
       }
 
       const value: ModelValue = {
-        name: this.name,
-        value: this.value,
+        value: newValue,
         index: this.index,
-        source,
       };
 
       this.$emit('update:model-value', value);
     }, 300, { maxWait: 300 }),
 
-    updateName(name: any) {
-      this.name = toString(name);
-      this.emitUpdate(SourceSchema.Values.name);
+    updateValue(value: any) {
+      this.emitUpdate(
+        toString(
+          this.value = value
+        )
+      );
     },
 
-    updateValue(value: string) {
-      this.value = toString(value);
-      this.emitUpdate(SourceSchema.Values.value);
-    },
-
-    deleteIndex() {
-      console.log(this);
-      console.log("delete: ", this.index);
+    deleteValue() {
       this.$emit('delete:index', this.index);
     },
   },
 });
-
-export default component;
 </script>
 
 <template>
@@ -104,15 +82,8 @@ export default component;
         density="compact"
         icon="mdi-minus"
         color="error"
-        @click="deleteIndex"
+        @click="deleteValue"
     ></v-btn>
-    <v-col class="py-0">
-      <v-text-field
-        label="Name"
-        :model-value="name"
-        @update:model-value="updateName"
-      ></v-text-field>
-    </v-col>
     <v-col class="py-0">
       <v-text-field
         label="Value"

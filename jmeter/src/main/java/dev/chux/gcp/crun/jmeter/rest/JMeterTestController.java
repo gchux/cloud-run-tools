@@ -240,7 +240,8 @@ abstract class JMeterTestController extends RestController {
   }
 
   protected final Optional<String> method(final Request request) {
-    return this.optionalParam(request, "method");
+    return this.optionalParam(request, "method")
+            .or(fromNullable(requestMethod(request)));
   }
 
   protected final Optional<String> concurrency(final Request request) {

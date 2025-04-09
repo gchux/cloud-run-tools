@@ -164,6 +164,21 @@ public class RunJMeterTestController extends JMeterTestController {
 
       post("/run", "*/*", this);
       post("/run/:id", "*/*", this);
+
+      put("/run", "*/*", this);
+      put("/run/:id", "*/*", this);
+
+      patch("/run", "*/*", this);
+      patch("/run/:id", "*/*", this);
+
+      head("/run", "*/*", this);
+      head("/run/:id", "*/*", this);
+
+      delete("/run", "*/*", this);
+      delete("/run/:id", "*/*", this);
+
+      options("/run", "*/*", this);
+      options("/run/:id", "*/*", this);
     });
   }
 

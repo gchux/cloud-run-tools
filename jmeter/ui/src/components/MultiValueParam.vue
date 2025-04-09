@@ -5,16 +5,15 @@ import { debounce, toString } from 'lodash'
 import type { CatalogTestParam } from '../types/catalogs.ts'
 import { useTestStore } from '../stores/test.ts'
 import {
-  default as KeyValueInput,
+  default as MultiValueInput,
   ModelValueSchema,
-  SourceSchema,
-} from './KeyValueInput.vue'
-import type { ModelValue } from './KeyValueInput.vue'
+} from './MultiValueInput.vue'
+import type { ModelValue } from './MultiValueInput.vue'
 
 const DataSchema = z.object({
   values: z.record(
     z.number().nonnegative(),
-    ModelValueSchema,
+    z.string(),
   ),
   counter: z.number().nonnegative(),
 });
@@ -39,40 +38,39 @@ export default {
     } as Data;
   },
 
+  computed: {
+    id() {
+      return this.testParam?.id || "concurrency";
+    },
+  },
+
   methods: {
-    addKeyValue() {
+    addValue() {
       const key = (this.counter += 1);
-      this.values[key] = {
-        index: key,
-        name: "",
-        value: "",
-        source: SourceSchema.Values.empty,
-      };
+      this.values[key] = "";
     },
 
     updateValue(data: ModelValue) {
       const TEST = useTestStore();
-      TEST.setKeyValue(
-        this.testParam?.id || "headers",
+      TEST.setMultiValue(
+        this.id,
         data.index,
-        data.name,
         toString(data.value),
       );
-      this.values[data.index] = data;
+      this.values[data.index] = data.value;
     },
 
     deleteIndex(index: number) {
       const TEST = useTestStore();
-      TEST.unsetKeyValue(
-        this.testParam?.id || "headers",
-        index
+      TEST.unsetMultiValue(
+        this.id, index
       );
       delete this.values[index];
     },
   },
 
   components: {
-    KeyValueInput,
+    MultiValueInput,
   }
 }
 </script>
@@ -87,7 +85,7 @@ export default {
           density="compact"
           icon="mdi-plus"
           color="success"
-          @click="addKeyValue"
+          @click="addValue"
         ></v-btn>
       </template>
     </v-list-item>
@@ -96,11 +94,11 @@ export default {
       v-for="(value, index) in values"
       :key="testParam?.id + '-' + index"
     >
-      <KeyValueInput
+      <MultiValueInput
         :index="index"
         @update:model-value="updateValue"
         @delete:index="deleteIndex"
-      ></KeyValueInput>
+      ></MultiValueInput>
     </v-container>
   </v-card>
 </template>

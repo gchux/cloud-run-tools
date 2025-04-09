@@ -4,6 +4,7 @@ import type { PropType } from 'vue';
 import type { CatalogTestParam } from '../types/catalogs.ts'
 import { useTestStore } from '../stores/test.ts'
 import { toString } from 'lodash'
+import MultiValueParam from './MultiValueParam.vue'
 import KeyValueParam from './KeyValueParam.vue'
 
 const DataSchema = z.object({
@@ -49,8 +50,12 @@ export default {
         case "bool":
         case "boolean":
           return "v-switch";
+        case "array":
+        case "list":
+          console.log("MultiValueParam");
+          return "MultiValueParam";
         case "map":
-          return "KeyValueParam"
+          return "KeyValueParam";
       }
     },
   },
@@ -76,6 +81,7 @@ export default {
 
   components: {
     KeyValueParam,
+    MultiValueParam,
   }
 }
 </script>

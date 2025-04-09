@@ -2,6 +2,7 @@
 import { first, keyBy } from 'lodash';
 import jmaas from '../api/jmaas.ts';
 import { useTestStore } from '../stores/test.ts'
+import type { Test } from '../stores/test.ts'
 import type {
   Catalog,
   CatalogTest,
@@ -50,7 +51,12 @@ export default {
       TEST.setScript(test.id);
       TEST.setMode(test.mode);
       this.test = test;
-    }
+    },
+
+    runTest() {
+      const TEST = useTestStore();
+      jmaas.runTest(TEST.get());
+    },
   },
 
   mounted() {
@@ -87,6 +93,7 @@ export default {
     color="success"
     size="x-large"
     variant="flat"
+    @click=""
   >
     Run the Load Test!
   </v-btn>
