@@ -39,16 +39,19 @@ const DurationSchema = z.number().positive().gte(10).lte(3600).finite();
 
 export type Duration = z.infer<typeof DurationSchema>;
 
+const NonEmptyString = z.string().nonempty();
+
 export const TestSchema = z.object({
-  script: z.string(),
+  id: z.optional(NonEmptyString),
+  script: NonEmptyString,
   mode: ModeEnumSchema,
-  host: z.string().nonempty(),
+  host: NonEmptyString,
   port: PortSchema,
   async: z.boolean(),
   method: MethodEnumSchema,
   proto: ProtoEnumSchema,
-  path: z.string().nonempty(),
-  payload: z.optional(z.string()),
+  path: NonEmptyString,
+  payload: z.optional(NonEmptyString),
   query: KeyValueSchema,
   headers: KeyValueSchema,
   qps: MultiValueSchema,
@@ -100,6 +103,9 @@ export const useTestStore = defineStore('test', {
         return this.qps;
       }
       return this.concurrency;
+    },
+    isComplete() {
+      return (this.qps.size > 0) || (this.concurrency.size > 0);
     },
     setScript(script: string): string {
       return this.script = script;

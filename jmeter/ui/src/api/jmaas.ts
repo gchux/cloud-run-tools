@@ -113,8 +113,6 @@ export default {
         test: Test,
         handler: TestStreamHandler,
     ) => {
-        console.log("test: ", test);
-
         const mode = test.mode;
         const method = test.method;
         const headers: Headers = {};

@@ -24,10 +24,20 @@ export default {
 </script>
 
 <template>
-  <TestParam
+  <v-row
     v-if="catalog && (params.length > 0)"
-    v-for="(param, index) in params"
-    :key="catalog[param]?.id || index"
-    :param="catalog[param]"
-  ></TestParam>
+    v-for="(row, i) in params"
+    :key="'params' + '-' + i"
+  >
+    <v-col
+      v-if="row.length > 0"
+      v-for="(param, j) in row"
+      :key="'params' + '-' + i + '-' + j"
+    >
+      <TestParam
+        :key="catalog[param]?.id"
+        :param="catalog[param]"
+      ></TestParam>
+    </v-col>
+  </v-row>
 </template>

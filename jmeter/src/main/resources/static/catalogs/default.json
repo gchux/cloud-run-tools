@@ -158,17 +158,31 @@
       "desc": "run a fully parametrizable load test against a Cloud Run service",
       "mode": "qps",
       "params": [
-        "async",
-        "method",
-        "host",
-        "path",
-        "query",
-        "headers",
-        "payload",
-        "min-latency",
-        "max-latency",
-        "duration",
-        "qps"
+        [
+          "async"
+        ],
+        [
+          "method",
+          "host",
+          "path"
+        ],
+        [
+          "query"
+        ],
+        [
+          "headers"
+        ],
+        [
+          "payload"
+        ],
+        [
+          "min-latency",
+          "max-latency",
+          "duration"
+        ],
+        [
+          "qps"
+        ]
       ]
     },
     {
@@ -177,19 +191,35 @@
       "desc": "run a fully parametrizable load test against any remote host",
       "mode": "qps",
       "params": [
-        "async",
-        "proto",
-        "method",
-        "host",
-        "port",
-        "path",
-        "query",
-        "headers",
-        "payload",
-        "min-latency",
-        "max-latency",
-        "duration",
-        "qps"
+        [
+          "async"
+        ],
+        [
+          "proto",
+          "method"
+        ],
+        [
+          "host",
+          "port",
+          "path"
+        ],
+        [
+          "query"
+        ],
+        [
+          "headers"
+        ],
+        [
+          "payload"
+        ],
+        [
+          "min-latency",
+          "max-latency",
+          "duration"
+        ],
+        [
+          "qps"
+        ]
       ]
     }
   ]

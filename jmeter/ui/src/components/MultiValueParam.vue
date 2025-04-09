@@ -95,7 +95,9 @@ export default {
       :key="testParam?.id + '-' + index"
     >
       <MultiValueInput
+        :key="testParam?.id"
         :index="index"
+        :test-param="testParam"
         @update:model-value="updateValue"
         @delete:index="deleteIndex"
       ></MultiValueInput>

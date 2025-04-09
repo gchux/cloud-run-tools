@@ -53,16 +53,8 @@ export default {
       this.test = test;
     },
 
-    streamTest(
-      test: Test,
-      e: TestStreamEvent,
-    ) {
-      console.log(test, e);
-    },
-
     runTest() {
-      const TEST = useTestStore();
-      jmaas.runTest(TEST.get(), this.streamTest);
+      this.$router.push('/stream');
     },
   },
 
@@ -77,31 +69,38 @@ export default {
 </script>
 
 <template>
-  <v-select
-    :model-value="test"
-    :items="tests"
-    item-title="name"
-    item-value="id"
-    return-object
-    single-line
-    @update:model-value="updateTest"
-  >
-    <template v-slot:item="{ props: itemProps, item }">
-      <v-list-item v-bind="itemProps" :subtitle="item.raw.desc"></v-list-item>
-    </template>
-  </v-select>
-  <TestParams
-    v-if="catalog"
-    :catalog="params"
-    :params="test?.params"
-  ></TestParams>
-  <v-btn block
-    class="text-none"
-    color="success"
-    size="x-large"
-    variant="flat"
-    @click="runTest"
-  >
-    Run the Load Test!
-  </v-btn>
+  <v-card>
+    <v-card-item>
+      <v-card-title>Configure test execution</v-card-title>
+    </v-card-item>
+    <v-card-text>
+      <v-select
+        :model-value="test"
+        :items="tests"
+        item-title="name"
+        item-value="id"
+        return-object
+        single-line
+        @update:model-value="updateTest"
+      >
+        <template v-slot:item="{ props: itemProps, item }">
+          <v-list-item v-bind="itemProps" :subtitle="item.raw.desc"></v-list-item>
+        </template>
+      </v-select>
+      <TestParams
+        v-if="catalog"
+        :catalog="params"
+        :params="test?.params"
+      ></TestParams>
+      <v-btn block
+        class="text-none mt-2"
+        color="success"
+        size="x-large"
+        variant="flat"
+        @click="runTest"
+      >
+        Run the Load Test!
+      </v-btn>
+    </v-card-text>  
+  </v-card> 
 </template>

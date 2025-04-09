@@ -12,8 +12,18 @@ const router = createRouter({
     },
     {
       path: '/run',
-      name: 'run_test',
+      name: 'run',
       component: RunTestView,
+    },
+    {
+      path: '/stream',
+      name: 'stream',
+      component: () => import('../views/StreamTestView.vue'),
+    },
+    {
+      path: '/stream/:id',
+      name: 'stream_by_id',
+      component: () => import('../views/StreamTestView.vue'),
     },
   ],
 })

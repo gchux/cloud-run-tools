@@ -28,7 +28,7 @@ export default {
       </v-navigation-drawer>
 
       <v-main>
-        <v-container>
+        <v-container class="px-0 py-0">
           <RouterView />
         </v-container>
       </v-main>

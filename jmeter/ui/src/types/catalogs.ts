@@ -28,7 +28,7 @@ const PARAM = [
 
 export const ParamEnumSchema = z.enum(PARAM)
 
-export const ParamsEnumSchema = z.array(ParamEnumSchema);
+export const ParamsEnumSchema = z.array(z.array(ParamEnumSchema));
 
 export type ParamEnumType = z.infer<typeof ParamEnumSchema>;
 

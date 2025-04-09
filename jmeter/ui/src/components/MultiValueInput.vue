@@ -1,9 +1,10 @@
 <script lang="ts">
 import { z } from 'zod'
-import type { PropType, ComponentPublicInstance } from 'vue';
 import { defineComponent } from 'vue';
 import { bind, debounce, isEmpty, gt, lte, toString } from 'lodash'
 import { useTestStore } from '../stores/test.ts'
+import type { PropType, ComponentPublicInstance } from 'vue';
+import type { CatalogTestParam } from '../types/catalogs.ts'
 
 const DataSchema = z.object({
   value: z.string(),
@@ -18,6 +19,9 @@ export type ModelValue = z.infer<typeof DataSchema>;
 
 export default defineComponent({
   props: {
+    testParam: {
+      type: Object as PropType<CatalogTestParam>,
+    },
     index: {
       type: Number,
       required: true,
