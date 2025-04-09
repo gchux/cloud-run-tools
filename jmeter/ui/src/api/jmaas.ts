@@ -2,6 +2,7 @@ import { z } from 'zod'
 import axios from 'axios';
 import type { AxiosProgressEvent } from 'axios'
 import { toString, split, isEqual } from 'lodash'
+import { TestSchema } from '../stores/test.ts'
 import type { Test } from '../stores/test.ts'
 
 const BASE = '/jmeter/test';
@@ -65,7 +66,10 @@ export type TestStreamEvent = z.infer<typeof TestStreamEventSchema>;
 
 const TestStreamHandlerSchema =
     z.function()
-        .args(TestStreamEventSchema)
+        .args(
+            TestSchema,
+            TestStreamEventSchema
+        )
         .returns(z.void());
 
 export type TestStreamHandler = z.infer<typeof TestStreamHandlerSchema>;
@@ -86,12 +90,13 @@ const parseHeaders = (request: XMLHttpRequest): Headers => {
 };
 
 const onDownloadProgress = (
+    test: Test,
     progressEvent: AxiosProgressEvent,
     handler: TestStreamHandler,
 ) => {
     const event = progressEvent.event as ProgressEvent;
     const request = event.currentTarget as XMLHttpRequest;
-    handler({
+    handler(test, {
         status: request.status,
         statusText: request.statusText,
         headers: parseHeaders(request),
@@ -138,7 +143,7 @@ export default {
             method,
             headers,
             onDownloadProgress(progressEvent: AxiosProgressEvent) {
-                onDownloadProgress(progressEvent, handler);
+                onDownloadProgress(test, progressEvent, handler);
             },
         });
     },

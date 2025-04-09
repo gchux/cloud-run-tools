@@ -53,8 +53,11 @@ export default {
       this.test = test;
     },
 
-    streamTest(e: TestStreamEvent) {
-      console.log(e);
+    streamTest(
+      test: Test,
+      e: TestStreamEvent,
+    ) {
+      console.log(test, e);
     },
 
     runTest() {

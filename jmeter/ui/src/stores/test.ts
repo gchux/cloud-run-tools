@@ -39,7 +39,7 @@ const DurationSchema = z.number().positive().gte(10).lte(3600).finite();
 
 export type Duration = z.infer<typeof DurationSchema>;
 
-const TestSchema = z.object({
+export const TestSchema = z.object({
   script: z.string(),
   mode: ModeEnumSchema,
   host: z.string().nonempty(),
