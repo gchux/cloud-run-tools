@@ -96,6 +96,33 @@
       ]
     },
     {
+      "id": "min-latency",
+      "label": "minimum response latency in milliseconds",
+      "type": [
+        "number"
+      ],
+      "min": 1,
+      "max": 3600000
+    },
+    {
+      "id": "max-latency",
+      "label": "maximum response latency in milliseconds",
+      "type": [
+        "number"
+      ],
+      "min": 1,
+      "max": 3600000
+    },
+    {
+      "id": "duration",
+      "label": "test duration in seconds",
+      "type": [
+        "number"
+      ],
+      "min": 10,
+      "max": 3600
+    },
+    {
       "id": "qps",
       "label": "traffic shape for QPS mode",
       "type": [
@@ -132,13 +159,16 @@
       "mode": "qps",
       "params": [
         "async",
-        "qps",
         "method",
         "host",
         "path",
         "query",
         "headers",
-        "payload"
+        "payload",
+        "min-latency",
+        "max-latency",
+        "duration",
+        "qps"
       ]
     },
     {
@@ -148,7 +178,6 @@
       "mode": "qps",
       "params": [
         "async",
-        "qps",
         "proto",
         "method",
         "host",
@@ -156,7 +185,11 @@
         "path",
         "query",
         "headers",
-        "payload"
+        "payload",
+        "min-latency",
+        "max-latency",
+        "duration",
+        "qps"
       ]
     }
   ]

@@ -71,6 +71,8 @@ export default {
         headers[`${headersPrefix}-path`] = test.path;
         headers[`${headersPrefix}-async`] = toString(test.async);
         headers[`${headersPrefix}-duration`] = toString(test.duration);
+        headers[`${headersPrefix}-min-latency`] = toString(test.minLatency);
+        headers[`${headersPrefix}-max-latency`] = toString(test.maxLatency);
         headers[`${headersPrefix}-query`] = getKeyValueParam(test, KeyValueParamsSchema.Values.query);
         headers[`${headersPrefix}-headers`] = getKeyValueParam(test, KeyValueParamsSchema.Values.headers);
 

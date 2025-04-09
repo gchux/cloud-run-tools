@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { z } from 'zod'
 import type {
   ModeEnumType,
+  ProtoEnumType,
   ParamEnumType,
   MethodEnumType,
 } from '../types/catalogs.ts'
@@ -26,11 +27,23 @@ const MultiValueSchema = z.map(z.number(), z.string());
 
 type MultiValue = z.infer<typeof MultiValueSchema>;
 
+const PortSchema = z.number().min(1).max(65535).finite();
+
+export type Port = z.infer<typeof PortSchema>;
+
+const MinMaxLatencySchema = z.number().positive().gte(1).lte(3600000).finite();
+
+export type MinMaxLatencySchema = z.infer<typeof MinMaxLatencySchema>;
+
+const DurationSchema = z.number().positive().gte(10).lte(3600).finite();
+
+export type Duration = z.infer<typeof DurationSchema>;
+
 const TestSchema = z.object({
   script: z.string(),
   mode: ModeEnumSchema,
   host: z.string().nonempty().url(),
-  port: z.number().min(1).max(65535),
+  port: PortSchema,
   async: z.boolean(),
   method: MethodEnumSchema,
   proto: ProtoEnumSchema,
@@ -40,7 +53,9 @@ const TestSchema = z.object({
   headers: KeyValueSchema,
   qps: MultiValueSchema,
   concurrency: MultiValueSchema,
-  duration: z.number().positive(),
+  duration: DurationSchema,
+  minLatency: MinMaxLatencySchema,
+  maxLatency: MinMaxLatencySchema,
 });
 
 export type Test = z.infer<typeof TestSchema>;
@@ -83,32 +98,41 @@ export const useTestStore = defineStore('test', {
       }
       return this.concurrency;
     },
-    setScript(script: string) {
-      this.script = script;
+    setScript(script: string): string {
+      return this.script = script;
     },
-    setMode(mode: ModeEnumType) {
-      this.mode = mode;
+    setMode(mode: ModeEnumType): ModeEnumType {
+      return this.mode = mode;
     },
-    setHost(host: string) {
-      this.host = TestSchema.shape.host.parse(host);
+    setHost(host: string): string {
+      return this.host = TestSchema.shape.host.parse(host);
     },
-    setPort(port: number) {
-      this.port = TestSchema.shape.port.parse(port);
+    setPort(port: number): Port {
+      return this.port = PortSchema.parse(port);
     },
-    setAsync(async: boolean) {
-      this.async = TestSchema.shape.async.parse(async);
+    setAsync(async: boolean): boolean {
+      return this.async = TestSchema.shape.async.parse(async);
     },
-    setProto(proto: string) {
-      this.proto = ProtoEnumSchema.parse(proto);
+    setProto(proto: string): ProtoEnumType {
+      return this.proto = ProtoEnumSchema.parse(proto);
     },
-    setMethod(method: string) {
-      this.method = MethodEnumSchema.parse(method);
+    setMethod(method: string): string {
+      return this.method = MethodEnumSchema.parse(method);
     },
-    setPath(path: string) {
-      this.path = TestSchema.shape.path.parse(path);
+    setPath(path: string): string {
+      return this.path = TestSchema.shape.path.parse(path);
     },
-    setPayload(payload: string) {
-      this.payload = TestSchema.shape.payload.parse(payload);
+    setPayload(payload: string): string | undefined {
+      return this.payload = TestSchema.shape.payload.parse(payload);
+    },
+    setDuration(duration: number): Duration {
+      return this.duration = DurationSchema.parse(duration);
+    },
+    setMinLatency(minLatency: number): MinMaxLatencySchema {
+      return this.minLatency = MinMaxLatencySchema.parse(minLatency);
+    },
+    setMaxLatency(maxLatency: number): MinMaxLatencySchema {
+      return this.maxLatency = MinMaxLatencySchema.parse(maxLatency);
     },
     setValue(
       id: ParamEnumType | undefined,
@@ -134,6 +158,8 @@ export const useTestStore = defineStore('test', {
           return this.setPayload(value);
         case "headers":
           return this.setPayload(value);
+        default:
+          throw new Error("invalid test parameter");
       }
     },
     setKeyValue(

@@ -93,7 +93,7 @@ export default {
     color="success"
     size="x-large"
     variant="flat"
-    @click=""
+    @click="runTest"
   >
     Run the Load Test!
   </v-btn>

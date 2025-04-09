@@ -13,6 +13,7 @@ export default {
     },
     params: {
       type: Array as PropType<ParamsEnumType>,
+      default: [],
     },
   },
 
@@ -29,9 +30,9 @@ export default {
 
 <template>
   <TestParam
-    v-if="catalog"
-    v-for="param in params"
-    :key="catalog[param]?.id"
+    v-if="catalog && (params.length > 0)"
+    v-for="(param, index) in params"
+    :key="catalog[param]?.id || index"
     :param="catalog[param]"
   ></TestParam>
 </template>
