@@ -63,6 +63,7 @@ export default {
 <template>
   <v-card
     v-if="id"
+    flat
   >
     <v-card-item>
       <v-card-title>Streaming test output</v-card-title>
