@@ -40,7 +40,6 @@ export default {
     async fetchCatalog() {
       const response = await jmaas.getCatalog();
       this.catalog = CatalogSchema.parse(response.data);
-      console.log(this.catalog);
       this.params = keyBy(this.catalog.params, 'id');
       this.tests = this.catalog.tests;
       this.test = first(this.tests);

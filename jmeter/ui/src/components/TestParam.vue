@@ -52,7 +52,6 @@ export default {
           return "v-switch";
         case "array":
         case "list":
-          console.log("MultiValueParam");
           return "MultiValueParam";
         case "map":
           return "KeyValueParam";
@@ -72,7 +71,6 @@ export default {
   },
 
   mounted() {
-    console.log("param", this.param?.id, this.param);
     const defualtValue = this.param?.default;
     if ( this.type == "boolean" ) {
       this.updateValue(toString(defualtValue || "false"));

@@ -138,7 +138,6 @@ export const useTestStore = defineStore('test', {
       id: ParamEnumType | undefined,
       value: string,
     ) {
-      console.log("test value: ", id, value);
       switch ( id ) {
         case "host":
           return this.setHost(value);

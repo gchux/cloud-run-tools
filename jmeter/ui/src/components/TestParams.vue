@@ -20,11 +20,6 @@ export default {
   components: {
     TestParam,
   },
-
-  mounted() {
-    console.log(this.params);
-    console.log(this.catalog);
-  }
 }
 </script>
 
