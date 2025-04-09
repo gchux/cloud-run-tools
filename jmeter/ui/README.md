@@ -1,6 +1,9 @@
 # JMaaS UI
 
-JMeter as a Service web user interface.
+JMeter as a Service web user interface is available at any of the following endpoints:
+
+- `/jmeter/test/ui`
+- `/jmeter/test/web`
 
 ---
 
