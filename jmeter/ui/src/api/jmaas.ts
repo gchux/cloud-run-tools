@@ -1,12 +1,12 @@
 import { z } from 'zod'
 import axios from 'axios';
-import type { AxiosProgressEvent } from 'axios'
 import { toString, split, isEqual, toNumber } from 'lodash'
 import { TestSchema } from '../stores/test.ts'
 import {
     KeyValueParamsSchema,
     MultiValueParamsSchema,
 } from '../types/catalogs.ts'
+import type { AxiosProgressEvent } from 'axios'
 import type {
     KeyValueParamsType,
     MultiValueParamType,

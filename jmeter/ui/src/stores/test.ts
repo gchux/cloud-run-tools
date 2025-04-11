@@ -1,15 +1,6 @@
-import { defineStore } from 'pinia'
 import { z } from 'zod'
-import type {
-  ModeEnumType,
-  ProtoEnumType,
-  ParamEnumType,
-  MethodEnumType,
-  MultiValueParamsType,
-  MultiValueParamType,
-  QPS,
-  Concurrency,
-} from '../types/catalogs.ts'
+import { defineStore } from 'pinia'
+import { isEqual, toNumber } from 'lodash'
 import {
   ModeEnumSchema,
   ProtoEnumSchema,
@@ -20,7 +11,16 @@ import {
   ConcurrencySchema,
   KeyValueParamsSchema,
 } from '../types/catalogs.ts'
-import { isEqual, toNumber, values } from 'lodash'
+import type {
+  ModeEnumType,
+  ProtoEnumType,
+  ParamEnumType,
+  MethodEnumType,
+  MultiValueParamsType,
+  MultiValueParamType,
+  QPS,
+  Concurrency,
+} from '../types/catalogs.ts'
 
 const KVSchema = z.object({
   key: z.string(),
