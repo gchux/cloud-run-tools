@@ -95,7 +95,7 @@ export default {
     
     <v-container
       v-for="(value, index) in values"
-      :key="testParam?.id + '-' + index"
+      :key="testParam.id + '-' + index"
     >
       <KeyValueInput
         :index="index"

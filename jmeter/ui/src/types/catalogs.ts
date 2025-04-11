@@ -37,9 +37,15 @@ export type ParamsEnumType = z.infer<typeof ParamsEnumSchema>;
 const SIMPLE_TYPE = [
   "enum",
   "string",
+  "str",
   "text",
+  "txt",
   "number",
+  "num",
+  "integer",
+  "int",
   "boolean",
+  "bool"
 ] as const;
 
 const COMPLEX_TYPE = [
@@ -47,7 +53,9 @@ const COMPLEX_TYPE = [
   "tuple",
   "array",
   "list",
+  "set",
   "map",
+  "kv",
 ] as const;
 
 const TYPE = [
@@ -174,16 +182,16 @@ export const ConcurrencySchema = z.object({
 
 export type Concurrency = z.infer<typeof ConcurrencySchema>;
 
-export const MultiValueParamSchema = z.union([QpsSchema, ConcurrencySchema]);
-
-export type MultiValueParamType = z.infer<typeof MultiValueParamSchema>;
-
 export const TestModeSchema = z.union([
   QpsSchema,
   ConcurrencySchema,
 ]);
 
 export type TestMode = z.infer<typeof TestModeSchema>;
+
+export const MultiValueParamSchema = TestModeSchema;
+
+export type MultiValueParamType = TestMode;
 
 export const CatalogTestParamSchema = z.object({
   id: ParamEnumSchema,

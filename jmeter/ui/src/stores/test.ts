@@ -14,21 +14,27 @@ import {
   ModeEnumSchema,
   ProtoEnumSchema,
   MethodEnumSchema,
+  ParamEnumSchema,
   MultiValueParamsSchema,
   QpsSchema,
   ConcurrencySchema,
+  KeyValueParamsSchema,
 } from '../types/catalogs.ts'
 import { isEqual, toNumber, values } from 'lodash'
 
+const KVSchema = z.object({
+  key: z.string(),
+  value: z.string(),
+});
+
+type KV = z.infer<typeof KVSchema>;
+
 const KeyValueSchema = z.map(
   z.number(),
-  z.object({
-    key: z.string(),
-    value: z.string(),
-  }),
+  KVSchema,
 );
 
-type KeyValue = z.infer<typeof KeyValueSchema>;
+type KeyValueType = z.infer<typeof KeyValueSchema>;
 
 export const QpsValueSchema = z.map(z.number(), QpsSchema);
 
@@ -74,9 +80,9 @@ export const TestSchema = z.object({
 
 export type Test = z.infer<typeof TestSchema>;
 
-export const MultiValueSchema = z.union([QpsValueSchema, ConcurrencyValueSchema]);
+export const MultiValueParamSchema = z.union([QpsValueSchema, ConcurrencyValueSchema]);
 
-export type MultiValue = z.infer<typeof MultiValueSchema>;
+export type MultiValueParam = z.infer<typeof MultiValueParamSchema>;
 
 export const useTestStore = defineStore('test', {
   state: () => {
@@ -88,8 +94,8 @@ export const useTestStore = defineStore('test', {
       method: "GET",
       proto: "HTTPS",
       path: "/",
-      query: new Map(),
-      headers: new Map(),
+      query: new Map<number, KV>(),
+      headers: new Map<number, KV>(),
       qps: new Map<number, QPS>(),
       concurrency: new Map<number, Concurrency>(),
       duration: DurationSchema.minValue,
@@ -105,8 +111,8 @@ export const useTestStore = defineStore('test', {
     getMethod(): MethodEnumType {
       return this.method;
     },
-    getKeyValue(id: string): KeyValue {
-      if ( isEqual(id, "query") ) {
+    getKeyValue(id: string): KeyValueType {
+      if ( isEqual(id, KeyValueParamsSchema.Enum.query) ) {
         return this.query;
       }
       return this.headers;
@@ -117,8 +123,8 @@ export const useTestStore = defineStore('test', {
     getConcurrency(): Concurrency[] {
       return Array.from(this.concurrency.values());
     },
-    getMultiValue(id: string): MultiValue {
-      if ( isEqual(id, "qps") ) {
+    getMultiValue(id: string): MultiValueParam {
+      if ( isEqual(id, MultiValueParamsSchema.Enum.qps) ) {
         return this.qps;
       }
       return this.concurrency;
@@ -163,37 +169,77 @@ export const useTestStore = defineStore('test', {
       return this.maxLatency = MinMaxLatencySchema.parse(maxLatency);
     },
     setValue(
-      id: ParamEnumType | undefined,
+      id: ParamEnumType,
       value: string,
     ) {
       switch ( id ) {
-        case "host":
+        case ParamEnumSchema.Enum.host:
           return this.setHost(value);
-        case "port":
+        case ParamEnumSchema.Enum.port:
           return this.setPort(toNumber(value));
-        case "async":
+        case ParamEnumSchema.Enum.async:
           return this.setAsync((/true/i).test(value));
-        case "proto":
+        case ParamEnumSchema.Enum.proto:
           return this.setProto(value);
-        case "method":
+        case ParamEnumSchema.Enum.method:
           return this.setMethod(value);
-        case "path":
+        case ParamEnumSchema.Enum.path:
           return this.setPath(value);
-        case "payload":
+        case ParamEnumSchema.Enum.payload:
           return this.setPayload(value);
-        case "query":
-          return this.setPayload(value);
-        case "headers":
-          return this.setPayload(value);
-        case "duration":
+        case ParamEnumSchema.Enum.duration:
           return this.setDuration(toNumber(value));
-        case "min-latency":
+        case ParamEnumSchema.Enum['min-latency']:
           return this.setMinLatency(toNumber(value));
-        case "max-latency":
+        case ParamEnumSchema.Enum['max-latency']:
           return this.setMaxLatency(toNumber(value));
         default:
-          throw new Error("invalid test parameter");
+          throw new Error(`invalid test parameter: ${id}`);
       }
+    },
+    getValue(
+      id: ParamEnumType,
+    ) {
+      switch ( id ) {
+        case ParamEnumSchema.Enum.host:
+          return this.host;
+        case ParamEnumSchema.Enum.port:
+          return this.port;
+        case ParamEnumSchema.Enum.async:
+          return this.async;
+        case ParamEnumSchema.Enum.proto:
+          return this.proto;
+        case ParamEnumSchema.Enum.method:
+          return this.method;
+        case ParamEnumSchema.Enum.path:
+          return this.path;
+        case ParamEnumSchema.Enum.payload:
+          return this.payload;
+        case ParamEnumSchema.Enum.duration:
+          return this.duration;
+        case ParamEnumSchema.Enum['min-latency']:
+          return this.minLatency;
+        case ParamEnumSchema.Enum['max-latency']:
+          return this.maxLatency;
+        default:
+          throw new Error(`invalid test parameter: ${id}`);
+      }
+    },
+    setKeyValue(
+      id: ParamEnumType,
+      index: number,
+      key: string,
+      value: string,
+    ) {
+      const kv = this.getKeyValue(id);
+      kv.set(index, { key, value });
+    },
+    unsetKeyValue(
+      id: ParamEnumType,
+      index: number,
+    ) {
+      const kv = this.getKeyValue(id);
+      kv.delete(index);
     },
     setQPS(
       index: number,
@@ -213,33 +259,27 @@ export const useTestStore = defineStore('test', {
         ConcurrencySchema.parse(value),
       );
     },
-    setKeyValue(
-      id: ParamEnumType,
-      index: number,
-      key: string,
-      value: string,
-    ) {
-      const kv = this.getKeyValue(id);
-      kv.set(index, { key, value });
-    },
-    unsetKeyValue(
-      id: ParamEnumType,
-      index: number,
-    ) {
-      const kv = this.getKeyValue(id);
-      kv.delete(index);
-    },
     setMultiValue(
       id: MultiValueParamsType,
       index: number,
       value: MultiValueParamType,
-    ) {
+    ): MultiValueParam {
       switch(id) {
-        case MultiValueParamsSchema.Values.qps:
+        case MultiValueParamsSchema.Enum.qps:
           return this.setQPS(index, value as QPS);
-        case MultiValueParamsSchema.Values.qps:
+        case MultiValueParamsSchema.Enum.concurrency:
           return this.setConcurrency(index, value as Concurrency);
       }
+    },
+    unsetQPS(
+      index: number,
+    ): boolean {
+      return this.qps.delete(index);
+    },
+    unsetConcurrency(
+      index: number,
+    ): boolean {
+      return this.concurrency.delete(index);
     },
     unsetMultiValue(
       id: MultiValueParamsType,

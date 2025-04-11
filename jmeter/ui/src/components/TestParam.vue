@@ -1,12 +1,13 @@
 <script lang="ts">
 import { z } from 'zod'
-import type { PropType } from 'vue';
-import type { CatalogTestParam } from '../types/catalogs.ts'
 import { useTestStore } from '../stores/test.ts'
 import { useMessagesStore } from '../stores/messages.ts'
 import { toString } from 'lodash'
+import { TypeEnumSchema } from '../types/catalogs.ts'
 import MultiValueParam from './MultiValueParam.vue'
 import KeyValueParam from './KeyValueParam.vue'
+import type { PropType } from 'vue';
+import type { ParamEnumType, CatalogTestParam } from '../types/catalogs.ts'
 
 const DataSchema = z.object({
   value: z.any(),
@@ -17,7 +18,7 @@ type Data = z.infer<typeof DataSchema>;
 
 export default {
   props: {
-    param: {
+    testParam: {
       type: Object as PropType<CatalogTestParam>,
       required: true,
     }
@@ -31,31 +32,53 @@ export default {
   },
 
   computed: {
+    id(): ParamEnumType {
+      return this.testParam.id;
+    },
+
+    defaultValue() {
+      return this.testParam.default;
+    },
+
+    values(): string[] {
+      return this.testParam.values || [];
+    },
+    
     items(): string[] {
-      if ( this.type == "enum" ) {
-        return this.param.values || [];
+      if ( this.type == TypeEnumSchema.Enum.enum ) {
+        return this.values;
       }
       return [];
     },
+    
     type(): String | undefined {
-      return this.param.type[0];
+      return this.testParam.type[0];
     },
+    
     component() {
       switch(this.type) {
-        case "string":
+        case TypeEnumSchema.Enum.string:
+        case TypeEnumSchema.Enum.str:
+        case TypeEnumSchema.Enum.number:
+        case TypeEnumSchema.Enum.num:
+        case TypeEnumSchema.Enum.integer:
+        case TypeEnumSchema.Enum.int:
         default:
           return "v-text-field";
-        case "text":
+        case TypeEnumSchema.Enum.text:
+        case TypeEnumSchema.Enum.txt:
           return "v-textarea";
-        case "enum":
+        case TypeEnumSchema.Enum.enum:
           return "v-select";
-        case "bool":
-        case "boolean":
+        case TypeEnumSchema.Enum.boolean:
+        case TypeEnumSchema.Enum.bool:
           return "v-switch";
-        case "array":
-        case "list":
+        case TypeEnumSchema.Enum.array:
+        case TypeEnumSchema.Enum.list:
+        case TypeEnumSchema.Enum.set:
           return "MultiValueParam";
-        case "map":
+        case TypeEnumSchema.Enum.map:
+        case TypeEnumSchema.Enum.kv:
           return "KeyValueParam";
       };
     },
@@ -67,13 +90,13 @@ export default {
       const TEST = useTestStore();
       try {
         TEST.setValue(
-          this.param.id,
+          this.id,
           toString(value)
         );
         this.value = value;
       } catch(error) {
         MESSAGES.parameterError(
-          this.param.id,
+          this.id,
           value,
           error as z.ZodError
         );
@@ -82,10 +105,13 @@ export default {
   },
 
   mounted() {
-    const defualtValue = this.param?.default;
-    if ( this.type == "boolean" ) {
-      this.updateValue(toString(defualtValue || "false"));
+    const TEST = useTestStore();
+    if ( this.type == TypeEnumSchema.Enum.boolean ) {
+      this.updateValue(
+        toString(this.defaultValue || "false")
+      );
     }
+    this.value = TEST.getValue(this.id);
   },
 
   components: {
@@ -100,12 +126,11 @@ export default {
     class="mx-auto"
   >
     <component
-      v-if="param"
       :is="component"
       :model-value="value"
-      :label="param.label"
+      :label="testParam.label"
       :items="items"
-      :test-param="param"
+      :test-param="testParam"
       @update:model-value="updateValue"
     ></component>
   </v-responsive>

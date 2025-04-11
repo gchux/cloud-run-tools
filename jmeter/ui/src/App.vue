@@ -45,7 +45,9 @@ export default {
         </v-container>
       </v-main>
 
-      <v-snackbar-queue v-model="queue.messages"></v-snackbar-queue>
+      <v-snackbar-queue
+        v-model="queue.messages"
+      ></v-snackbar-queue>
     </v-app>
   </v-responsive>
 </template>

@@ -86,7 +86,7 @@ export default defineComponent({
       } catch(error) {
         console.error(error);
       }
-      return "concurrency";
+      return MultiValueParamsSchema.Enum.concurrency;
     },
 
     type(): string {
@@ -166,15 +166,15 @@ export default defineComponent({
 
     label(index: number): string {
       const labels = LABELS[this.id];
-      if ( has(LABELS, this.paramId) && labels ) {
+      if ( has(LABELS, this.id) && labels ) {
         return labels[index];
       }
       return "";
     },
   },
 
-  moutned() {
-    this.values = Array.from(''.repeat(this.size-1));
+  mounted() {
+    this.values = new Array(this.size-1).fill('');
   },
 });
 </script>

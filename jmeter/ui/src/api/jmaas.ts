@@ -180,7 +180,7 @@ export default {
 
         let trafficShape: string;
         let duration: number;
-        if (isEqual(mode, "qps")) {
+        if (isEqual(mode, MultiValueParamsSchema.Enum.qps)) {
             [trafficShape, duration] = getQPS(test);
             headers[JMAAS_HEADERS.QPS] = trafficShape;
         } else {
@@ -196,8 +196,12 @@ export default {
             url: `${BASE}/run`,
             method,
             headers,
-            onDownloadProgress(progressEvent: AxiosProgressEvent) {
-                onDownloadProgress(test, progressEvent, handler);
+            onDownloadProgress(
+                progressEvent: AxiosProgressEvent,
+            ) {
+                onDownloadProgress(
+                    test, progressEvent, handler
+                );
             },
         });
     },

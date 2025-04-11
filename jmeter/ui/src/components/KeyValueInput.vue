@@ -91,8 +91,6 @@ const component = defineComponent({
     },
 
     deleteIndex() {
-      console.log(this);
-      console.log("delete: ", this.index);
       this.$emit('delete:index', this.index);
     },
   },
