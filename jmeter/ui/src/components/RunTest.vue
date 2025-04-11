@@ -69,7 +69,7 @@ export default {
 </script>
 
 <template>
-  <v-card>
+  <v-card variant="text" flat>
     <v-card-item>
       <v-card-title>Configure test execution</v-card-title>
     </v-card-item>

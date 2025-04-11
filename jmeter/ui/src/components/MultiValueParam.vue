@@ -1,12 +1,20 @@
 <script lang="ts">
 import { z } from 'zod'
 import type { PropType } from 'vue';
-import { debounce, toString } from 'lodash'
-import type { CatalogTestParam } from '../types/catalogs.ts'
+import { split, toNumber } from 'lodash'
+import type {
+  ArrayParamType,
+  CatalogTestParam,
+  MultiValueParamsType,
+  TestMode,
+  QPS,
+  Concurrency,
+} from '../types/catalogs.ts'
+import { MultiValueParamsSchema } from '../types/catalogs.ts'
 import { useTestStore } from '../stores/test.ts'
+import { useMessagesStore } from '../stores/messages.ts'
 import {
   default as MultiValueInput,
-  ModelValueSchema,
 } from './MultiValueInput.vue'
 import type { ModelValue } from './MultiValueInput.vue'
 
@@ -20,10 +28,45 @@ const DataSchema = z.object({
 
 type Data = z.infer<typeof DataSchema>;
 
+const toTestParam = (
+  param: CatalogTestParam,
+  data: ModelValue,
+): TestMode | string[] => {
+  const parts = split(data.value, ',');
+  switch(param.id) {
+    case MultiValueParamsSchema.Enum.qps:
+      if ( parts.length == 3 ) {
+        return {
+          startQPS: toNumber(parts[0]),
+          endQPS: toNumber(parts[1]),
+          duration: toNumber(parts[2]),
+        }; 
+      }
+      break;
+
+    case MultiValueParamsSchema.Enum.concurrency:
+      if ( parts.length == 5 ) {
+        return {
+          threadCount: toNumber(parts[0]),
+          initialDelay: toNumber(parts[1]),
+          rampupTime: toNumber(parts[2]),
+          duration: toNumber(parts[3]),
+          shutdownTime: toNumber(parts[4]),
+        }; 
+      }
+      break;
+
+    default:
+      throw new Error(`invalid multi value parameter: '${param.id}'`);
+  }
+  throw new Error(`invalid shape for '${param.id}': '[${data.value}]'`);
+};
+
 export default {
   props: {
     testParam: {
       type: Object as PropType<CatalogTestParam>,
+      required: true,
     },
     label: {
       type: String,
@@ -39,8 +82,17 @@ export default {
   },
 
   computed: {
-    id() {
-      return this.testParam?.id || "concurrency";
+    id(): MultiValueParamsType {
+      try {
+        return MultiValueParamsSchema.parse(this.testParam.id);
+      } catch(error) {
+        console.error(error);
+      }
+      return "concurrency";
+    },
+
+    type(): ArrayParamType {
+      return this.testParam.type as ArrayParamType;
     },
   },
 
@@ -51,12 +103,35 @@ export default {
     },
 
     updateValue(data: ModelValue) {
+      const MESSAGES = useMessagesStore();
+      
+      let param: TestMode | string[];
+      
+      try {
+        param = toTestParam(this.testParam, data);
+      } catch(error) {
+        MESSAGES.Error(error as Error);
+        return;
+      }
+
       const TEST = useTestStore();
-      TEST.setMultiValue(
-        this.id,
-        data.index,
-        toString(data.value),
-      );
+
+      switch(this.testParam.id) {
+        case MultiValueParamsSchema.Enum.qps:
+          TEST.setQPS(
+            toNumber(data.index),
+            param as QPS,
+          );
+          break;
+        case MultiValueParamsSchema.Enum.concurrency:
+          TEST.setConcurrency(
+            toNumber(data.index),
+            param as Concurrency,
+          );
+          break;
+        default: /* no-op */
+      }
+
       this.values[data.index] = data.value;
     },
 
@@ -71,7 +146,7 @@ export default {
 
   components: {
     MultiValueInput,
-  }
+  },
 }
 </script>
 
@@ -92,10 +167,11 @@ export default {
     
     <v-container
       v-for="(value, index) in values"
-      :key="testParam?.id + '-' + index"
+      :key="testParam.id + '-' + index"
     >
       <MultiValueInput
-        :key="testParam?.id"
+        :key="testParam.id"
+        :param-id="id"
         :index="index"
         :test-param="testParam"
         @update:model-value="updateValue"

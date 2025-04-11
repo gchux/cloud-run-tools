@@ -67,11 +67,15 @@
       "label": "query parameters to send",
       "type": [
         "map",
-        "string",
         [
-          "union",
           "string",
-          "number"
+          [
+            "union",
+            [
+              "string",
+              "number"
+            ]
+          ]
         ]
       ]
     },
@@ -80,11 +84,15 @@
       "label": "request headers to send",
       "type": [
         "map",
-        "string",
         [
-          "union",
           "string",
-          "number"
+          [
+            "union",
+            [
+              "string",
+              "number"
+            ]
+          ]
         ]
       ]
     },
@@ -129,9 +137,11 @@
         "array",
         [
           "tuple",
-          "number",
-          "number",
-          "number"
+          [
+            "number",
+            "number",
+            "number"
+          ]
         ]
       ]
     },
@@ -142,11 +152,13 @@
         "array",
         [
           "tuple",
-          "number",
-          "number",
-          "number",
-          "number",
-          "number"
+          [
+            "number",
+            "number",
+            "number",
+            "number",
+            "number"
+          ]
         ]
       ]
     }

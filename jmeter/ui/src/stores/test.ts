@@ -5,13 +5,20 @@ import type {
   ProtoEnumType,
   ParamEnumType,
   MethodEnumType,
+  MultiValueParamsType,
+  MultiValueParamType,
+  QPS,
+  Concurrency,
 } from '../types/catalogs.ts'
 import {
   ModeEnumSchema,
   ProtoEnumSchema,
-  MethodEnumSchema
+  MethodEnumSchema,
+  MultiValueParamsSchema,
+  QpsSchema,
+  ConcurrencySchema,
 } from '../types/catalogs.ts'
-import { isEqual, toNumber } from 'lodash'
+import { isEqual, toNumber, values } from 'lodash'
 
 const KeyValueSchema = z.map(
   z.number(),
@@ -23,9 +30,13 @@ const KeyValueSchema = z.map(
 
 type KeyValue = z.infer<typeof KeyValueSchema>;
 
-const MultiValueSchema = z.map(z.number(), z.string());
+export const QpsValueSchema = z.map(z.number(), QpsSchema);
 
-type MultiValue = z.infer<typeof MultiValueSchema>;
+export type QpsValue = z.infer<typeof QpsValueSchema>;
+
+export const ConcurrencyValueSchema = z.map(z.number(), ConcurrencySchema);
+
+export type ConcurrencyValue = z.infer<typeof ConcurrencyValueSchema>;
 
 const PortSchema = z.number().min(1).max(65535).finite();
 
@@ -54,14 +65,18 @@ export const TestSchema = z.object({
   payload: z.optional(NonEmptyString),
   query: KeyValueSchema,
   headers: KeyValueSchema,
-  qps: MultiValueSchema,
-  concurrency: MultiValueSchema,
+  qps: QpsValueSchema,
+  concurrency: ConcurrencyValueSchema,
   duration: DurationSchema,
   minLatency: MinMaxLatencySchema,
   maxLatency: MinMaxLatencySchema,
 });
 
 export type Test = z.infer<typeof TestSchema>;
+
+export const MultiValueSchema = z.union([QpsValueSchema, ConcurrencyValueSchema]);
+
+export type MultiValue = z.infer<typeof MultiValueSchema>;
 
 export const useTestStore = defineStore('test', {
   state: () => {
@@ -75,15 +90,13 @@ export const useTestStore = defineStore('test', {
       path: "/",
       query: new Map(),
       headers: new Map(),
-      qps: new Map(),
-      concurrency: new Map(),
+      qps: new Map<number, QPS>(),
+      concurrency: new Map<number, Concurrency>(),
       duration: DurationSchema.minValue,
       minLatency: MinMaxLatencySchema.minValue,
       maxLatency: 1000, // 1 second
     } as Test;
   },
-
-  getters: {},
 
   actions: {
     get(): Test {
@@ -97,6 +110,12 @@ export const useTestStore = defineStore('test', {
         return this.query;
       }
       return this.headers;
+    },
+    getQPS(): QPS[] {
+      return Array.from(this.qps.values());
+    },
+    getConcurrency(): Concurrency[] {
+      return Array.from(this.concurrency.values());
     },
     getMultiValue(id: string): MultiValue {
       if ( isEqual(id, "qps") ) {
@@ -176,6 +195,24 @@ export const useTestStore = defineStore('test', {
           throw new Error("invalid test parameter");
       }
     },
+    setQPS(
+      index: number,
+      value: QPS,
+    ): QpsValue {
+      return this.qps.set(
+        QpsValueSchema.keySchema.parse(index),
+        QpsSchema.parse(value),
+      );
+    },
+    setConcurrency(
+      index: number,
+      value: Concurrency,
+    ): ConcurrencyValue {
+      return this.concurrency.set(
+        ConcurrencyValueSchema.keySchema.parse(index),
+        ConcurrencySchema.parse(value),
+      );
+    },
     setKeyValue(
       id: ParamEnumType,
       index: number,
@@ -193,19 +230,22 @@ export const useTestStore = defineStore('test', {
       kv.delete(index);
     },
     setMultiValue(
-      id: ParamEnumType,
+      id: MultiValueParamsType,
       index: number,
-      value: string,
+      value: MultiValueParamType,
     ) {
-      const values = this.getMultiValue(id);
-      values.set(index, value);
+      switch(id) {
+        case MultiValueParamsSchema.Values.qps:
+          return this.setQPS(index, value as QPS);
+        case MultiValueParamsSchema.Values.qps:
+          return this.setConcurrency(index, value as Concurrency);
+      }
     },
     unsetMultiValue(
-      id: ParamEnumType,
+      id: MultiValueParamsType,
       index: number,
     ) {
-      const values = this.getMultiValue(id);
-      values.delete(index);
+      this.getMultiValue(id).delete(index);
     },
   },
 });

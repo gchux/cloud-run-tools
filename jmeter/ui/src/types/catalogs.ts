@@ -34,80 +34,177 @@ export type ParamEnumType = z.infer<typeof ParamEnumSchema>;
 
 export type ParamsEnumType = z.infer<typeof ParamsEnumSchema>;
 
-const TYPE = [
+const SIMPLE_TYPE = [
+  "enum",
   "string",
   "text",
   "number",
   "boolean",
-  "array",
-  "map",
-  "union",
-  "tuple",
 ] as const;
 
-const TypeEnumSchema = z.enum(TYPE);
+const COMPLEX_TYPE = [
+  "union",
+  "tuple",
+  "array",
+  "list",
+  "map",
+] as const;
 
-export const ArrayTypeSchema = z.tuple([
-  z.string().startsWith("array").endsWith("array").length(5),
+const TYPE = [
+  ...SIMPLE_TYPE,
+  ...COMPLEX_TYPE,
+] as const;
+
+export const SimpleTypeEnumSchema = z.enum(SIMPLE_TYPE);
+
+export const ComplexTypeEnumSchema = z.enum(COMPLEX_TYPE);
+
+export const TypeEnumSchema = z.enum(TYPE);
+
+export type ParamType = z.infer<typeof TypeEnumSchema>;
+
+const NonEmptyString = z.string().nonempty();
+
+const ArrayOfStrings = z.array(NonEmptyString);
+
+export const UnionTypeSchema = z.tuple([
+  z.string()
+    .startsWith(TypeEnumSchema.Enum.union)
+    .endsWith(TypeEnumSchema.Enum.union)
+    .length(5),
+  z.array(SimpleTypeEnumSchema),
+]);
+
+export const TupleTypeSchema = z.tuple([
+  z.string()
+    .startsWith(TypeEnumSchema.Enum.tuple)
+    .endsWith(TypeEnumSchema.Enum.tuple)
+    .length(5),
+  z.array(SimpleTypeEnumSchema)
+]);
+
+export const ArrayParamSchema = z.tuple([
+  z.string()
+    .startsWith(TypeEnumSchema.Enum.array)
+    .endsWith(TypeEnumSchema.Enum.array)
+    .length(5),
   z.union([      // type of values
-    z.string(),
-    z.array(z.string()),
-  ]), 
+    SimpleTypeEnumSchema,
+    UnionTypeSchema,
+    TupleTypeSchema,
+  ]),
 ]);
 
-export const MapTypeSchema = z.tuple([
-  z.string().startsWith("map").endsWith("map").length(3),
-  z.union([      // type of key
-    z.string(),
-    z.array(z.string()),
+export type ArrayParamType = z.infer<typeof ArrayParamSchema>;
+
+export const MapParamSchema = z.tuple([
+  z.string()
+    .startsWith(TypeEnumSchema.Enum.map)
+    .endsWith(TypeEnumSchema.Enum.map)
+    .length(3),
+  z.tuple([
+    SimpleTypeEnumSchema,      // type of key
+    z.union([                  // type of value
+      SimpleTypeEnumSchema,
+      UnionTypeSchema,
+      TupleTypeSchema,
+      ArrayParamSchema,
+    ]),
   ]),
-  z.union([      // type of value
-    z.string(),
-    z.array(z.string()),
-  ]),  
 ]);
+
+export type MapParamType = z.infer<typeof MapParamSchema>;
 
 const PROTO = [
-    "HTTP",
-    "HTTPS"
-  ] as const;
-  
+  "HTTP",
+  "HTTPS"
+] as const;
+
 export const ProtoEnumSchema = z.enum(PROTO);
 
 export type ProtoEnumType = z.infer<typeof ProtoEnumSchema>;
 
 const METHOD = [
-    "GET",
-    "PUT",
-    "POST",
-    "DELETE",
-    "PATCH",
-    "HEAD",
-    "OPTIONS",
-  ] as const;
-  
+  "GET",
+  "PUT",
+  "POST",
+  "DELETE",
+  "PATCH",
+  "HEAD",
+  "OPTIONS",
+] as const;
+
 export const MethodEnumSchema = z.enum(METHOD);
 
 export type MethodEnumType = z.infer<typeof MethodEnumSchema>;
+
+const KeyValueParamsEnum = [
+  "query",
+  "headers",
+] as const;
+
+export const KeyValueParamsSchema = z.enum(KeyValueParamsEnum);
+
+export type KeyValueParamsType = z.infer<typeof KeyValueParamsSchema>;
+
+const MultiValueParamsEnum = [
+  "qps",
+  "concurrency",
+] as const;
+
+export const MultiValueParamsSchema = z.enum(MultiValueParamsEnum);
+
+export type MultiValueParamsType = z.infer<typeof MultiValueParamsSchema>;
+
+export const QpsSchema = z.object({
+  startQPS: z.number(),
+  endQPS: z.number(),
+  duration: z.number(),
+});
+
+export type QPS = z.infer<typeof QpsSchema>;
+
+export const ConcurrencySchema = z.object({
+  threadCount: z.number(),
+  initialDelay: z.number(),
+  rampupTime: z.number(),
+  duration: z.number(),
+  shutdownTime: z.number(),
+});
+
+export type Concurrency = z.infer<typeof ConcurrencySchema>;
+
+export const MultiValueParamSchema = z.union([QpsSchema, ConcurrencySchema]);
+
+export type MultiValueParamType = z.infer<typeof MultiValueParamSchema>;
+
+export const TestModeSchema = z.union([
+  QpsSchema,
+  ConcurrencySchema,
+]);
+
+export type TestMode = z.infer<typeof TestModeSchema>;
 
 export const CatalogTestParamSchema = z.object({
   id: ParamEnumSchema,
   label: z.string(),
   type: z.union([
-    z.array(
-      z.string()
-    ).length(1),
-    ArrayTypeSchema,
-    MapTypeSchema,
+    z.tuple([
+      SimpleTypeEnumSchema,
+    ]),
+    UnionTypeSchema,
+    TupleTypeSchema,
+    ArrayParamSchema,
+    MapParamSchema,
   ]),
   values: z.optional(
     z.array(z.string().nonempty())
   ),
   default: z.optional(
     z.union([
-        z.boolean(),
-        z.string().nonempty(),
-        z.number(),
+      z.boolean(),
+      z.string().nonempty(),
+      z.number(),
     ])
   ),
   min: z.optional(z.number()),

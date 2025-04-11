@@ -3,6 +3,7 @@ import { z } from 'zod'
 import type { PropType } from 'vue';
 import type { CatalogTestParam } from '../types/catalogs.ts'
 import { useTestStore } from '../stores/test.ts'
+import { useMessagesStore } from '../stores/messages.ts'
 import { toString } from 'lodash'
 import MultiValueParam from './MultiValueParam.vue'
 import KeyValueParam from './KeyValueParam.vue'
@@ -18,6 +19,7 @@ export default {
   props: {
     param: {
       type: Object as PropType<CatalogTestParam>,
+      required: true,
     }
   },
 
@@ -31,12 +33,12 @@ export default {
   computed: {
     items(): string[] {
       if ( this.type == "enum" ) {
-        return this.param?.values || [];
+        return this.param.values || [];
       }
       return [];
     },
     type(): String | undefined {
-      return this.param?.type[0];
+      return this.param.type[0];
     },
     component() {
       switch(this.type) {
@@ -55,18 +57,27 @@ export default {
           return "MultiValueParam";
         case "map":
           return "KeyValueParam";
-      }
+      };
     },
   },
 
   methods: {
     updateValue(value: any) {
+      const MESSAGES = useMessagesStore();
       const TEST = useTestStore();
-      TEST.setValue(
-        this.param?.id,
-        toString(value)
-      );
-      this.value = value;
+      try {
+        TEST.setValue(
+          this.param.id,
+          toString(value)
+        );
+        this.value = value;
+      } catch(error) {
+        MESSAGES.parameterError(
+          this.param.id,
+          value,
+          error as z.ZodError
+        );
+      }
     },
   },
 
@@ -92,7 +103,7 @@ export default {
       v-if="param"
       :is="component"
       :model-value="value"
-      :label="param?.label"
+      :label="param.label"
       :items="items"
       :test-param="param"
       @update:model-value="updateValue"

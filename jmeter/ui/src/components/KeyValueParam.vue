@@ -1,7 +1,7 @@
 <script lang="ts">
 import { z } from 'zod'
 import type { PropType } from 'vue';
-import { debounce, toString } from 'lodash'
+import { toString } from 'lodash'
 import type { CatalogTestParam } from '../types/catalogs.ts'
 import { useTestStore } from '../stores/test.ts'
 import {
@@ -25,6 +25,7 @@ export default {
   props: {
     testParam: {
       type: Object as PropType<CatalogTestParam>,
+      required: true,
     },
     label: {
       type: String,
@@ -53,7 +54,7 @@ export default {
     updateValue(data: ModelValue) {
       const TEST = useTestStore();
       TEST.setKeyValue(
-        this.testParam?.id || "headers",
+        this.testParam.id,
         data.index,
         data.name,
         toString(data.value),
@@ -64,7 +65,7 @@ export default {
     deleteIndex(index: number) {
       const TEST = useTestStore();
       TEST.unsetKeyValue(
-        this.testParam?.id || "headers",
+        this.testParam.id,
         index
       );
       delete this.values[index];

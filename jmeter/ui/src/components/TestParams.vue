@@ -35,7 +35,8 @@ export default {
       :key="'params' + '-' + i + '-' + j"
     >
       <TestParam
-        :key="catalog[param]?.id"
+        v-if="catalog[param]"
+        :key="catalog[param].id"
         :param="catalog[param]"
       ></TestParam>
     </v-col>

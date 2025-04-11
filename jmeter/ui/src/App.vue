@@ -1,7 +1,19 @@
 <script lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
+import { useMessagesStore } from './stores/messages.ts'
+import type { Qeue, ID as QueueID } from './stores/messages.ts'
+import type { Store } from 'pinia'
+
+type Data = {
+  queue: Store<QueueID, Qeue>,
+}
 
 export default {
+  data: () => {
+    return {
+      queue: useMessagesStore(),
+    } as Data;
+  },
   mounted() {
     this.$router.push('/');
   },
@@ -32,6 +44,8 @@ export default {
           <RouterView />
         </v-container>
       </v-main>
+
+      <v-snackbar-queue v-model="queue.messages"></v-snackbar-queue>
     </v-app>
   </v-responsive>
 </template>
