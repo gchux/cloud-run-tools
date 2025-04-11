@@ -82,7 +82,7 @@ export default defineComponent({
   computed: {
     id(): MultiValueParamsType {
       try {
-        return MultiValueParamsSchema.parse(this.testParam.id);
+        return MultiValueParamsSchema.parse(this.paramId);
       } catch(error) {
         console.error(error);
       }
