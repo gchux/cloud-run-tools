@@ -1,6 +1,6 @@
 # JMaaS ( JMeter as a Service )
 
-![Static Badge](https://img.shields.io/badge/v1.6.7-green?style=flat&label=latest%20version&labelColor=gray&color=green&link=https%3A%2F%2Fgithub.com%2Fgchux%2Fcloud-run-tools%2Fpkgs%2Fcontainer%2Fcloud-run-tools%2F383324176%3Ftag%3Djmaas-v1.5.2)
+![Static Badge](https://img.shields.io/badge/v1.6.8-green?style=flat&label=latest%20version&labelColor=gray&color=green&link=https%3A%2F%2Fgithub.com%2Fgchux%2Fcloud-run-tools%2Fpkgs%2Fcontainer%2Fcloud-run-tools%2F383324176%3Ftag%3Djmaas-v1.5.2)
 
 ## Motivation
 
@@ -10,7 +10,7 @@ During development it is often useful to perform **`HTTP/1.1`** load tests on mi
 it entails creating complex test cases either using JMX or the JMeter UI which requires some knowledge and consumes valuable time.
 
 The goal of this project is to provide common load testing – parametrizable – scenarios, and enable test execution via REST API endpoints  
-that can be invoked using simple tools as [cURL](https://curl.se/); all of it bundled into a worker container ready to be deployed with minimal friction.
+that can be invoked using simple tools as [cURL](https://curl.se/) or a Web UI; all of it bundled into a worker container ready to be deployed with minimal friction.
 
 Additionally, this project aims to provide compatibility with [Cloud Run](https://cloud.google.com/run) for:
 
