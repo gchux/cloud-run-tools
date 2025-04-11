@@ -1,14 +1,12 @@
 <script lang="ts">
 import { first, keyBy } from 'lodash';
 import jmaas from '../api/jmaas.ts';
-import type { TestStreamEvent } from '../api/jmaas.ts';
 import { useTestStore } from '../stores/test.ts'
-import type { Test } from '../stores/test.ts'
+import { ParamEnumSchema } from '../types/catalogs.ts'
 import type {
   Catalog,
   CatalogTest,
   CatalogTestParamsObject,
-  ParamEnumType
 } from '../types/catalogs.ts'
 import { ModeEnumSchema, CatalogSchema } from '../types/catalogs.ts'
 import TestParams from './TestParams.vue'
@@ -41,7 +39,10 @@ export default {
     async fetchCatalog() {
       const response = await jmaas.getCatalog();
       this.catalog = CatalogSchema.parse(response.data);
-      this.params = keyBy(this.catalog.params, 'id');
+      this.params = keyBy(
+        this.catalog.params,
+        ParamEnumSchema.Enum.id
+      );
       this.tests = this.catalog.tests;
       this.test = first(this.tests);
     },

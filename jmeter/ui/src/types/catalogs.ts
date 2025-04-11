@@ -10,6 +10,7 @@ export const ModeEnumSchema = z.enum(MODE);
 export type ModeEnumType = z.infer<typeof ModeEnumSchema>;
 
 const PARAM = [
+  "id",
   "async",
   "concurrency",
   "qps",
