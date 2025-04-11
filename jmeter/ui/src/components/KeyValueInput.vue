@@ -1,8 +1,7 @@
 <script lang="ts">
 import { z } from 'zod'
 import { defineComponent } from 'vue';
-import { bind, debounce, isEmpty, gt, lte, toString } from 'lodash'
-import { useTestStore } from '../stores/test.ts'
+import { debounce, isEmpty, gt, lte, toString } from 'lodash'
 import type { PropType, ComponentPublicInstance } from 'vue';
 import type { CatalogTestParam } from '../types/catalogs.ts'
 

@@ -1,14 +1,14 @@
 <script lang="ts">
 import { z } from 'zod'
-import type { PropType } from 'vue';
 import { toString } from 'lodash'
-import type { CatalogTestParam } from '../types/catalogs.ts'
 import { useTestStore } from '../stores/test.ts'
 import {
   default as KeyValueInput,
   ModelValueSchema,
   SourceSchema,
 } from './KeyValueInput.vue'
+import type { PropType } from 'vue';
+import type { CatalogTestParam } from '../types/catalogs.ts'
 import type { ModelValue } from './KeyValueInput.vue'
 
 const DataSchema = z.object({

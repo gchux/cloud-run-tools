@@ -1,9 +1,9 @@
 <script lang="ts">
 import { toString, isEmpty, isArray, first, replace, split } from 'lodash';
 import { default as jmaas, JMAAS_HEADERS } from '../api/jmaas.ts';
-import type { TestStreamEvent } from '../api/jmaas.ts';
 import { useTestStore } from '../stores/test.ts';
 import { useMessagesStore } from '../stores/messages.ts'
+import type { TestStreamEvent } from '../api/jmaas.ts';
 import type { Test } from '../stores/test.ts';
 
 type Data = {
