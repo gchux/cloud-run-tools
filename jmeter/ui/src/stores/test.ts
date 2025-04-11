@@ -244,8 +244,8 @@ export const useTestStore = defineStore('test', {
     unsetMultiValue(
       id: MultiValueParamsType,
       index: number,
-    ) {
-      this.getMultiValue(id).delete(index);
+    ): boolean {
+      return this.getMultiValue(id).delete(index);
     },
   },
 });
