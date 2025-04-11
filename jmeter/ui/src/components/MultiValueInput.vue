@@ -92,7 +92,6 @@ export default defineComponent({
     type(): string {
       if ( this.testParam.type.length == 2 ) {
         return this.testParam.type[1][0];
-        
       }
       return this.testParam.type[0];
     },

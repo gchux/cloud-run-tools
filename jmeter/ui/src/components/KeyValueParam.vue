@@ -2,13 +2,14 @@
 import { z } from 'zod'
 import { toString } from 'lodash'
 import { useTestStore } from '../stores/test.ts'
+import { useMessagesStore } from '../stores/messages.ts'
 import {
   default as KeyValueInput,
   ModelValueSchema,
   SourceSchema,
 } from './KeyValueInput.vue'
 import type { PropType } from 'vue';
-import type { CatalogTestParam } from '../types/catalogs.ts'
+import type { ParamEnumType, CatalogTestParam } from '../types/catalogs.ts'
 import type { ModelValue } from './KeyValueInput.vue'
 
 const DataSchema = z.object({
@@ -40,6 +41,12 @@ export default {
     } as Data;
   },
 
+  computed: {
+    id(): ParamEnumType {
+      return this.testParam.id;
+    },
+  },
+
   methods: {
     addKeyValue() {
       const key = (this.counter += 1);
@@ -52,22 +59,29 @@ export default {
     },
 
     updateValue(data: ModelValue) {
+      const MESSAGES = useMessagesStore();
       const TEST = useTestStore();
-      TEST.setKeyValue(
-        this.testParam.id,
-        data.index,
-        data.name,
-        toString(data.value),
-      );
-      this.values[data.index] = data;
+
+      try {
+        TEST.setKeyValue(
+          this.id,
+          data.index,
+          data.name,
+          toString(data.value),
+        );
+        this.values[data.index] = data;
+      } catch(error) {
+        MESSAGES.parameterError(
+          this.id,
+          data.value,
+          error as z.ZodError
+        );
+      }
     },
 
     deleteIndex(index: number) {
       const TEST = useTestStore();
-      TEST.unsetKeyValue(
-        this.testParam.id,
-        index
-      );
+      TEST.unsetKeyValue(this.id, index);
       delete this.values[index];
     },
   },
@@ -95,7 +109,7 @@ export default {
     
     <v-container
       v-for="(value, index) in values"
-      :key="testParam.id + '-' + index"
+      :key="id + '-' + index"
     >
       <KeyValueInput
         :index="index"

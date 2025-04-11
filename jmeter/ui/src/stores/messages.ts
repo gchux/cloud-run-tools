@@ -4,7 +4,8 @@ import { omit } from 'lodash'
 
 const COLOR = [
   "error",
-  "success"
+  "success",
+  "primary",
 ] as const;
 
 export const ColorEnumSchema = z.enum(COLOR);
@@ -60,6 +61,14 @@ export const useMessagesStore = defineStore(ID, {
         ...message,
         multiLine: true,
         closeOnContentClick: true,
+      });
+    },
+
+    info(message: string) {
+      this.push({
+        text: message,
+        timeout: 6000,
+        color: ColorEnumSchema.Values.primary,
       });
     },
 

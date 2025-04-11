@@ -22,25 +22,26 @@ import type {
   Concurrency,
 } from '../types/catalogs.ts'
 
+const NonEmptyString = z.string().nonempty().trim();
+
 const KVSchema = z.object({
-  key: z.string(),
-  value: z.string(),
+  key: NonEmptyString,
+  value: NonEmptyString,
 });
 
 type KV = z.infer<typeof KVSchema>;
 
-const KeyValueSchema = z.map(
-  z.number(),
-  KVSchema,
-);
+const KEY = z.number().nonnegative().finite();
+
+const KeyValueSchema = z.map(KEY, KVSchema);
 
 type KeyValueType = z.infer<typeof KeyValueSchema>;
 
-export const QpsValueSchema = z.map(z.number(), QpsSchema);
+export const QpsValueSchema = z.map(KEY, QpsSchema);
 
 export type QpsValue = z.infer<typeof QpsValueSchema>;
 
-export const ConcurrencyValueSchema = z.map(z.number(), ConcurrencySchema);
+export const ConcurrencyValueSchema = z.map(KEY, ConcurrencySchema);
 
 export type ConcurrencyValue = z.infer<typeof ConcurrencyValueSchema>;
 
@@ -55,8 +56,6 @@ export type MinMaxLatencySchema = z.infer<typeof MinMaxLatencySchema>;
 const DurationSchema = z.number().positive().gte(10).lte(3600).finite();
 
 export type Duration = z.infer<typeof DurationSchema>;
-
-const NonEmptyString = z.string().nonempty();
 
 export const TestSchema = z.object({
   id: z.optional(NonEmptyString),
@@ -112,8 +111,9 @@ export const useTestStore = defineStore('test', {
     getMethod(): MethodEnumType {
       return this.method;
     },
-    getKeyValue(id: string): KeyValueType {
-      if ( isEqual(id, KeyValueParamsSchema.Enum.query) ) {
+    getKeyValue(id: ParamEnumType): KeyValueType {
+      const ID = KeyValueParamsSchema.parse(id);
+      if ( isEqual(ID, KeyValueParamsSchema.Enum.query) ) {
         return this.query;
       }
       return this.headers;
@@ -124,8 +124,9 @@ export const useTestStore = defineStore('test', {
     getConcurrency(): Concurrency[] {
       return Array.from(this.concurrency.values());
     },
-    getMultiValue(id: string): MultiValueParam {
-      if ( isEqual(id, MultiValueParamsSchema.Enum.qps) ) {
+    getMultiValue(id: ParamEnumType): MultiValueParam {
+      const ID = MultiValueParamsSchema.parse(id);
+      if ( isEqual(ID, MultiValueParamsSchema.Enum.qps) ) {
         return this.qps;
       }
       return this.concurrency;
@@ -134,10 +135,10 @@ export const useTestStore = defineStore('test', {
       return (this.qps.size > 0) || (this.concurrency.size > 0);
     },
     setScript(script: string): string {
-      return this.script = script;
+      return this.script = TestSchema.shape.script.parse(script);
     },
     setMode(mode: ModeEnumType): ModeEnumType {
-      return this.mode = mode;
+      return this.mode = TestSchema.shape.mode.parse(mode);
     },
     setHost(host: string): string {
       return this.host = TestSchema.shape.host.parse(host);
@@ -233,14 +234,22 @@ export const useTestStore = defineStore('test', {
       value: string,
     ) {
       const kv = this.getKeyValue(id);
-      kv.set(index, { key, value });
+      kv.set(
+        KeyValueSchema.keySchema.parse(index),
+        { 
+          key: KVSchema.shape.key.parse(key), 
+          value:  KVSchema.shape.value.parse(value),
+        }
+      );
     },
     unsetKeyValue(
       id: ParamEnumType,
       index: number,
     ) {
       const kv = this.getKeyValue(id);
-      kv.delete(index);
+      kv.delete(
+        KeyValueSchema.keySchema.parse(index)
+      );
     },
     setQPS(
       index: number,
@@ -267,26 +276,36 @@ export const useTestStore = defineStore('test', {
     ): MultiValueParam {
       switch(id) {
         case MultiValueParamsSchema.Enum.qps:
-          return this.setQPS(index, value as QPS);
+          return this.setQPS(
+            QpsValueSchema.keySchema.parse(index),
+            QpsSchema.parse(value)
+          );
         case MultiValueParamsSchema.Enum.concurrency:
-          return this.setConcurrency(index, value as Concurrency);
+          return this.setConcurrency(
+            ConcurrencyValueSchema.keySchema.parse(index),
+            ConcurrencySchema.parse(value)
+          );
       }
     },
     unsetQPS(
       index: number,
     ): boolean {
-      return this.qps.delete(index);
+      return this.qps.delete(
+        QpsValueSchema.keySchema.parse(index)
+      );
     },
     unsetConcurrency(
       index: number,
     ): boolean {
-      return this.concurrency.delete(index);
+      return this.concurrency.delete(
+        ConcurrencyValueSchema.keySchema.parse(index)
+      );
     },
     unsetMultiValue(
       id: MultiValueParamsType,
       index: number,
     ): boolean {
-      return this.getMultiValue(id).delete(index);
+      return this.getMultiValue(id).delete(toNumber(index));
     },
   },
 });

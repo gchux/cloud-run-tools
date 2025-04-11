@@ -63,6 +63,14 @@ export default {
     } as Partial<Data>;
   },
 
+  computed: {
+    testID() {
+      const strOrArr = this.$route.params.id || "";
+      const id = isArray(strOrArr) ? first(strOrArr) : strOrArr;
+      return toString(id);
+    },
+  },
+
   methods: {
     onData(
       test: Test,
@@ -87,19 +95,25 @@ export default {
     streamTest() {
       const MESSAGES = useMessagesStore();
       const TEST = useTestStore();
-      const testID = this.$route.params.id || "";
-      if (isEmpty(testID) && TEST.isComplete()) {
+      
+      if (isEmpty(this.testID) && TEST.isComplete()) {
         // handle redirect from `run-test`
         try {
           this.runTest(TEST.get());
         } catch(error) {
           MESSAGES.Error(error as Error);
+          this.$router.push('/run');
         }
-      } else if (isArray(testID)) {
-        this.id = toString(first(testID));
       } else {
-        this.id = toString(testID);
+        this.id = this.testID;
       }
+    },
+  },
+
+  watch: {
+    id(newTestID) {
+      const MESSAGES = useMessagesStore();
+      MESSAGES.info(`streaming test ID: ${newTestID}`);
     },
   },
 

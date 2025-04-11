@@ -15,7 +15,6 @@ import type {
   MultiValueParamType,
   QPS, Concurrency,
 } from '../types/catalogs.ts'
-import type { MultiValueParam } from '../stores/test.ts'
 import type { ModelValue } from './MultiValueInput.vue'
 
 const DataSchema = z.object({
@@ -33,6 +32,7 @@ const toTestParam = (
   data: ModelValue,
 ): MultiValueParamType => {
   const parts = split(data.value, ',');
+
   switch(param.id) {
     case MultiValueParamsSchema.Enum.qps:
       if ( parts.length == 3 ) {
@@ -102,9 +102,43 @@ export default {
       this.values[key] = "";
     },
 
+    setValue(
+      data: ModelValue,
+      param: MultiValueParamType,
+    ) {
+      const i = toNumber(data.index);
+
+      const MESSAGES = useMessagesStore();
+      const TEST = useTestStore();
+
+      // handle ALL possible multi-value params
+      try {
+        switch(this.id) {
+          case MultiValueParamsSchema.Enum.qps:
+            TEST.setQPS(i, param as QPS);
+            break;
+
+          case MultiValueParamsSchema.Enum.concurrency:
+            TEST.setConcurrency(i, param as Concurrency);
+            break;
+
+          default:
+            TEST.setMultiValue(this.id, i, param);
+            break;
+        }
+        this.values[data.index] = data.value;
+      } catch(error) {
+        MESSAGES.parameterError(
+          this.id,
+          data.value,
+          error as z.ZodError
+        );
+      }
+    },
+
     updateValue(
       data: ModelValue
-    ): MultiValueParam {
+    ) {
       const MESSAGES = useMessagesStore();
       
       let param: MultiValueParamType;
@@ -113,22 +147,10 @@ export default {
         param = toTestParam(this.testParam, data);
       } catch(error) {
         MESSAGES.Error(error as Error);
-        throw error;
+        return undefined;
       }
-
-      this.values[data.index] = data.value;
-
-      const TEST = useTestStore();
-
-      const i = toNumber(data.index);
-      switch(this.id) {
-        case MultiValueParamsSchema.Enum.qps:
-          return TEST.setQPS(i, param as QPS);
-        case MultiValueParamsSchema.Enum.concurrency:
-          return TEST.setConcurrency(i, param as Concurrency);
-        default:
-          return TEST.setMultiValue(this.id, i, param);
-      }
+      
+      return this.setValue(data, param);
     },
 
     deleteIndex(index: number) {
