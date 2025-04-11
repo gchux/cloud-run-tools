@@ -11,6 +11,8 @@ export type ModeEnumType = z.infer<typeof ModeEnumSchema>;
 
 const PARAM = [
   "id",
+  "script",
+  "mode",
   "async",
   "concurrency",
   "qps",

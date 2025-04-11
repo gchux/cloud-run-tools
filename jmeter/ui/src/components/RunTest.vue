@@ -1,6 +1,6 @@
 <script lang="ts">
-import { first, keyBy } from 'lodash';
-import jmaas from '../api/jmaas.ts';
+import { keyBy, startsWith } from 'lodash';
+import { default as jmaas } from '../api/jmaas.ts';
 import { useTestStore } from '../stores/test.ts'
 import { ParamEnumSchema } from '../types/catalogs.ts'
 import type {
@@ -10,11 +10,12 @@ import type {
 } from '../types/catalogs.ts'
 import { ModeEnumSchema, CatalogSchema } from '../types/catalogs.ts'
 import TestParams from './TestParams.vue'
+import CurlView from './CurlView.vue'
 
 type Data = {
   catalog: Catalog,
-  tests: CatalogTest[],
   params: CatalogTestParamsObject,
+  tests: CatalogTest[],
   test: CatalogTest,
 };
 
@@ -28,6 +29,8 @@ const defaultTest: CatalogTest = {
 
 export default {
   data: () => {
+    const TEST = useTestStore();
+
     return {
       test: defaultTest,
       tests: [],
@@ -36,6 +39,11 @@ export default {
   },
 
   methods: {
+    isCloudRun(test: CatalogTest): boolean {
+      const testID = test.id;
+      return startsWith(testID, "cloud_run_");
+    },
+
     async fetchCatalog() {
       const response = await jmaas.getCatalog();
       this.catalog = CatalogSchema.parse(response.data);
@@ -44,13 +52,23 @@ export default {
         ParamEnumSchema.Enum.id
       );
       this.tests = this.catalog.tests;
-      this.test = first(this.tests);
+      this.updateTest(
+        this.test = this.tests[0]
+      );
+    },
+
+    updatePort(test: CatalogTest) {
+      const TEST = useTestStore();
+      if ( this.isCloudRun(test) ) {
+        TEST.setPort(443);
+      }
     },
 
     updateTest(test: CatalogTest) {
       const TEST = useTestStore();
       TEST.setScript(test.id);
       TEST.setMode(test.mode);
+      this.updatePort(test);
       this.test = test;
     },
 
@@ -65,6 +83,7 @@ export default {
 
   components: {
     TestParams,
+    CurlView,
   }
 }
 </script>
@@ -72,7 +91,9 @@ export default {
 <template>
   <v-card variant="text" flat>
     <v-card-item>
-      <v-card-title>Configure test execution</v-card-title>
+      <v-card-title>
+        Configure test execution
+      </v-card-title>
     </v-card-item>
     <v-card-text>
       <v-divider color="info"></v-divider>
@@ -105,6 +126,7 @@ export default {
       >
         Run the Load Test!
       </v-btn>
-    </v-card-text>  
-  </v-card> 
+    </v-card-text>
+  </v-card>
+  <CurlView />
 </template>

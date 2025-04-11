@@ -38,7 +38,7 @@ const getMultiValueParam = (
     return [...values];
 };
 
-const getQPS = (
+export const getQPS = (
     test: Test,
 ): [string, number] => {
     let value = "";
@@ -53,7 +53,7 @@ const getQPS = (
     return [value, duration];
 };
 
-const getConcurrency = (
+export const getConcurrency = (
     test: Test,
 ): [string, number] => {
     let value = "";

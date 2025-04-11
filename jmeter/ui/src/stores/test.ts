@@ -89,7 +89,7 @@ export const useTestStore = defineStore('test', {
       script: "cloud_run_qps_full",
       mode: "qps",
       host: "localhost",
-      port: 8080,
+      port: 80,
       method: "GET",
       proto: "HTTPS",
       path: "/",
@@ -107,6 +107,9 @@ export const useTestStore = defineStore('test', {
   actions: {
     get(): Test {
       return this.$state;
+    },
+    getMode(): ModeEnumType {
+      return this.mode;
     },
     getMethod(): MethodEnumType {
       return this.method;
@@ -195,6 +198,8 @@ export const useTestStore = defineStore('test', {
           return this.setMinLatency(toNumber(value));
         case ParamEnumSchema.Enum['max-latency']:
           return this.setMaxLatency(toNumber(value));
+        case ParamEnumSchema.Enum.script:
+          this.setScript(value);
         default:
           throw new Error(`invalid test parameter: ${id}`);
       }
@@ -223,6 +228,10 @@ export const useTestStore = defineStore('test', {
           return this.minLatency;
         case ParamEnumSchema.Enum['max-latency']:
           return this.maxLatency;
+        case ParamEnumSchema.Enum.mode:
+            return this.mode;
+        case ParamEnumSchema.Enum.script:
+          return this.script;
         default:
           throw new Error(`invalid test parameter: ${id}`);
       }
