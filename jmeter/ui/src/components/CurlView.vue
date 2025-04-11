@@ -1,7 +1,7 @@
 <script lang="ts">
 import { headerName } from '../api/jmaas.ts';
 import { useTestStore } from '../stores/test.ts'
-import { getQPS, getConcurrency } from '../api/jmaas.ts';
+import { getHeaders, getQuery, getQPS, getConcurrency } from '../api/jmaas.ts';
 import { ModeEnumSchema } from '../types/catalogs.ts'
 import type { Test } from '../stores/test.ts'
 import type { ParamEnumType } from '../types/catalogs.ts'
@@ -22,23 +22,25 @@ export default {
     origin(): string {
       return window.location.origin;
     },
-  },
 
-  methods: {
-    param(id: ParamEnumType) {
+    query(): string {
       const TEST = useTestStore();
-      return TEST.getValue(id);
+      return `${headerName("query")}: ${getQuery(TEST.get())}`;
     },
 
-    header(id: ParamEnumType): string {
-      return `${headerName(id)}: ${this.param(id)}`;
+    headers(): string {
+      const TEST = useTestStore();
+      return `${headerName("headers")}: ${getHeaders(TEST.get())}`;
     },
 
     trafficShape(): string {
       const TEST = useTestStore();
+
+      const mode = TEST.getMode();
+
       let trafficShape: string;
       let testDuration: number;
-      const mode = TEST.getMode();
+      
       switch (mode) {
         case ModeEnumSchema.Enum.qps:
           [
@@ -57,18 +59,34 @@ export default {
       return `${headerName(mode)}: ${trafficShape}`;
     },
   },
+
+  methods: {
+    param(id: ParamEnumType) {
+      const TEST = useTestStore();
+      return TEST.getValue(id);
+    },
+
+    header(id: ParamEnumType): string {
+      return `${headerName(id)}: ${this.param(id)}`;
+    },
+  },
 }
 </script>
 
 <template>
-  <v-card variant="plain" flat>
-    <v-card-item>
-      <v-card-title>
-        Run this test using <code class="text-green">cURL</code>
-      </v-card-title>
-    </v-card-item>
-    <v-card-text>
-      <pre class="text-green">
+  <v-container class="bg-transparent">
+    <v-row
+      align="center"
+      justify="center"
+      align-content="center"
+      dense no-gutters
+    >
+      <v-col>
+        <v-sheet class="bg-transparent">
+          <h3 class="mb-3">
+            Run this test using <b><code class="text-green">cURL</code></b>
+          </h3>
+          <pre class="text-green">
 curl -iv --request {{ param("method") }} \
   --header '{{ header("async") }}' \
   --header '{{ header("script") }}' \
@@ -81,10 +99,14 @@ curl -iv --request {{ param("method") }} \
   --header '{{ header("duration") }}' \
   --header '{{ header("min-latency") }}' \
   --header '{{ header("max-latency") }}' \
-  --header '{{ trafficShape() }}' \
+  --header '{{ query }}' \
+  --header '{{ headers }}' \
+  --header '{{ trafficShape }}' \
   '{{ origin }}/jmeter/test/run' \
   -d '{{ param("payload") }}'
-      </pre>
-    </v-card-text>
-  </v-card>
+          </pre>
+        </v-sheet>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>

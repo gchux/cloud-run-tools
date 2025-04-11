@@ -29,6 +29,22 @@ const getKeyValueParam = (
     return value;
 };
 
+export const getHeaders = (
+    test: Test,
+) => {
+    return getKeyValueParam(
+        test, KeyValueParamsSchema.Values.headers
+    );
+};
+
+export const getQuery = (
+    test: Test,
+) => {
+    return getKeyValueParam(
+        test, KeyValueParamsSchema.Values.query
+    );
+};
+
 const getMultiValueParam = (
     test: Test,
     param: MultiValueParamsType,
@@ -175,8 +191,8 @@ export default {
         headers[JMAAS_HEADERS.DURATION] = toString(test.duration);
         headers[JMAAS_HEADERS.MIN_LATENCY] = toString(test.minLatency);
         headers[JMAAS_HEADERS.MAX_LATENCY] = toString(test.maxLatency);
-        headers[JMAAS_HEADERS.QUERY] = getKeyValueParam(test, KeyValueParamsSchema.Values.query);
-        headers[JMAAS_HEADERS.HEADERS] = getKeyValueParam(test, KeyValueParamsSchema.Values.headers);
+        headers[JMAAS_HEADERS.QUERY] = getQuery(test);
+        headers[JMAAS_HEADERS.HEADERS] = getHeaders(test);
 
         let trafficShape: string;
         let duration: number;

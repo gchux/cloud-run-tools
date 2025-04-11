@@ -232,6 +232,14 @@ export const useTestStore = defineStore('test', {
             return this.mode;
         case ParamEnumSchema.Enum.script:
           return this.script;
+        case ParamEnumSchema.Enum.query:
+          return Array.from(this.query.values());
+        case ParamEnumSchema.Enum.headers:
+          return Array.from(this.headers.values());
+        case ParamEnumSchema.Enum.qps:
+            return this.getQPS();
+        case ParamEnumSchema.Enum.concurrency:
+          return this.getConcurrency();
         default:
           throw new Error(`invalid test parameter: ${id}`);
       }

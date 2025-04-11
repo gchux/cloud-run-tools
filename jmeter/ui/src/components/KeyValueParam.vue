@@ -1,6 +1,6 @@
 <script lang="ts">
 import { z } from 'zod'
-import { toString } from 'lodash'
+import { toString, toNumber } from 'lodash'
 import { useTestStore } from '../stores/test.ts'
 import { useMessagesStore } from '../stores/messages.ts'
 import {
@@ -62,14 +62,16 @@ export default {
       const MESSAGES = useMessagesStore();
       const TEST = useTestStore();
 
+      const index = toNumber(data.index);
+
       try {
         TEST.setKeyValue(
           this.id,
-          data.index,
+          index,
           data.name,
           toString(data.value),
         );
-        this.values[data.index] = data;
+        this.values[index] = data;
       } catch(error) {
         MESSAGES.parameterError(
           this.id,
@@ -80,9 +82,10 @@ export default {
     },
 
     deleteIndex(index: number) {
+      const i = toNumber(index);
       const TEST = useTestStore();
-      TEST.unsetKeyValue(this.id, index);
-      delete this.values[index];
+      TEST.unsetKeyValue(this.id, i);
+      delete this.values[i];
     },
   },
 

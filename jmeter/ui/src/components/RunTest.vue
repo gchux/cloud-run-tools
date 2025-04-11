@@ -128,5 +128,6 @@ export default {
       </v-btn>
     </v-card-text>
   </v-card>
+  <v-divider></v-divider>
   <CurlView />
 </template>
