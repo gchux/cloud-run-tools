@@ -53,7 +53,7 @@ const MinMaxLatencySchema = z.number().positive().gte(1).lte(3600000).finite();
 
 export type MinMaxLatencySchema = z.infer<typeof MinMaxLatencySchema>;
 
-const DurationSchema = z.number().positive().gte(10).lte(3600).finite();
+export const DurationSchema = z.number().gte(10).finite();
 
 export type Duration = z.infer<typeof DurationSchema>;
 
@@ -108,11 +108,17 @@ export const useTestStore = defineStore('test', {
     get(): Test {
       return this.$state;
     },
+    isAsync(): boolean {
+      return this.async;
+    },
     getMode(): ModeEnumType {
       return this.mode;
     },
     getMethod(): MethodEnumType {
       return this.method;
+    },
+    getDuration(): number {
+      return this.duration;
     },
     getKeyValue(id: ParamEnumType): KeyValueType {
       const ID = KeyValueParamsSchema.parse(id);

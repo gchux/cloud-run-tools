@@ -1,9 +1,10 @@
 <script lang="ts">
 import { z } from 'zod'
-import { split, toNumber } from 'lodash'
+import { split, toNumber, isUndefined } from 'lodash'
 import { MultiValueParamsSchema } from '../types/catalogs.ts'
-import { useTestStore } from '../stores/test.ts'
+import { useTestStore, DurationSchema } from '../stores/test.ts'
 import { useMessagesStore } from '../stores/messages.ts'
+import { MultiValueParamSchema } from '../types/catalogs.ts'
 import {
   default as MultiValueInput,
 } from './MultiValueInput.vue'
@@ -20,9 +21,10 @@ import type { ModelValue } from './MultiValueInput.vue'
 const DataSchema = z.object({
   values: z.record(
     z.number().nonnegative(),
-    z.string(),
+    z.optional(MultiValueParamSchema),
   ),
   counter: z.number().nonnegative(),
+  duration: z.number().nonnegative(),
 });
 
 type Data = z.infer<typeof DataSchema>;
@@ -78,6 +80,7 @@ export default {
     return {
       counter: 0,
       values: {},
+      duration: 0,
     } as Data;
   },
 
@@ -94,12 +97,70 @@ export default {
     type(): ArrayParamType {
       return this.testParam.type as ArrayParamType;
     },
+
+    isTrafficShape(): boolean {
+      return this.id == MultiValueParamsSchema.Enum.qps 
+        || this.id == MultiValueParamsSchema.Enum.concurrency;
+    },
+
+    hasValidDuration(): boolean {
+      const TEST = useTestStore();
+      const duration = DurationSchema.safeParse(this.duration);
+      return !this.isTrafficShape || (
+              duration.success
+              &&
+              ( TEST.isAsync() || (duration.data <= 3600) ) 
+              && 
+              (duration.data == TEST.getDuration())
+            );
+    },
   },
 
   methods: {
     addValue() {
       const key = (this.counter += 1);
-      this.values[key] = "";
+      this.values[key] = undefined;
+    },
+
+    increaseTotalDuration(
+      index: number,
+      param: MultiValueParamType,
+    ) {
+      const current = this.values[index];
+      if ( !isUndefined(current) ) {
+        this.decreaseTotalDuration(current);
+      }
+
+      switch(this.id) {
+        case MultiValueParamsSchema.Enum.concurrency:
+          const p = param as Concurrency;
+          this.duration += p.rampupTime + p.shutdownTime;
+          /* falls through */
+        
+          case MultiValueParamsSchema.Enum.qps:
+          this.duration += param.duration;
+      }
+      return this.duration;
+    },
+
+    decreaseTotalDuration(
+      param: MultiValueParamType,
+    ) {
+
+      if ( isUndefined(param) ) {
+        return this.duration;
+      }
+
+      switch(this.id) {
+        case MultiValueParamsSchema.Enum.concurrency:
+          const p = param as Concurrency;
+          this.duration -= p.rampupTime + p.shutdownTime;
+          /* falls through */
+        
+        case MultiValueParamsSchema.Enum.qps:
+          this.duration -= param.duration;
+      }
+      return this.duration;
     },
 
     setValue(
@@ -126,7 +187,6 @@ export default {
             TEST.setMultiValue(this.id, i, param);
             break;
         }
-        this.values[data.index] = data.value;
       } catch(error) {
         MESSAGES.parameterError(
           this.id,
@@ -134,6 +194,9 @@ export default {
           error as z.ZodError
         );
       }
+
+      this.increaseTotalDuration(i, param);
+      this.values[data.index] = param;
     },
 
     updateValue(
@@ -156,9 +219,15 @@ export default {
     deleteIndex(index: number) {
       const TEST = useTestStore();
 
-      delete this.values[index];
-     
       const i = toNumber(index);
+
+      const param = this.values[i];
+
+      delete this.values[i];
+      if ( !isUndefined(param) ) {
+        this.decreaseTotalDuration(param);
+      }
+
       switch(this.id) {
         case MultiValueParamsSchema.Enum.qps:
           return TEST.unsetQPS(i);
@@ -180,6 +249,12 @@ export default {
   <v-card class="mb-3">
     <v-list-item>
       <template v-slot:title>{{ label }}</template>
+      <template
+        v-if="isTrafficShape"
+        v-slot:subtitle
+      >
+        total duration: <b :class="'text-' + [hasValidDuration ? 'green' : 'red']"><code>{{ duration }}</code></b>
+      </template>
       <template v-slot:append>
         <v-btn
           class="my-3"
@@ -193,10 +268,10 @@ export default {
     
     <v-container
       v-for="(value, index) in values"
-      :key="testParam.id + '-' + index"
+      :key="id + '-' + index"
     >
       <MultiValueInput
-        :key="testParam.id"
+        :key="id"
         :param-id="id"
         :index="index"
         :test-param="testParam"
@@ -204,5 +279,18 @@ export default {
         @delete:index="deleteIndex"
       ></MultiValueInput>
     </v-container>
+    <v-alert
+      v-if="isTrafficShape && !hasValidDuration"
+      title="Invalid Traffic Shape"
+      type="error"
+      variant="tonal"
+    >
+      Total test duration must be greater than <b><code>10 seconds</code></b>.<br>
+      Maximum duration for <b>Cloud Run <code>non-async</code></b> tests is <b><code>3600 seconds</code></b>.<br>
+      Total <b>traffic shape duration</b> must be equal to <b>test duration in seconds</b>.<br>
+      If yo need to run a load test for more than <b><code>1 hour</code></b>,
+      consider running an <b><code>async</code></b> test instead,
+      and make sure to use <b><code>instance-based</code> billing</b>.
+    </v-alert>
   </v-card>
 </template>

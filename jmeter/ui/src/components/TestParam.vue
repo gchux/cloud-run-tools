@@ -1,9 +1,9 @@
 <script lang="ts">
 import { z } from 'zod'
-import { useTestStore } from '../stores/test.ts'
+import { useTestStore, DurationSchema } from '../stores/test.ts'
 import { useMessagesStore } from '../stores/messages.ts'
 import { toString } from 'lodash'
-import { TypeEnumSchema } from '../types/catalogs.ts'
+import { TypeEnumSchema, ParamEnumSchema } from '../types/catalogs.ts'
 import MultiValueParam from './MultiValueParam.vue'
 import KeyValueParam from './KeyValueParam.vue'
 import type { PropType } from 'vue';
@@ -53,6 +53,10 @@ export default {
     
     type(): String | undefined {
       return this.testParam.type[0];
+    },
+
+    isDuration(): boolean {
+      return this.id == ParamEnumSchema.Enum.duration;
     },
     
     component() {
