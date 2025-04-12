@@ -169,7 +169,7 @@ export default {
       </v-card-subtitle>
     </v-card-item>
 
-    <v-card-text class="px-0 py-0">
+    <v-card-text class="px-0 py-0 mx-0 my-0">
       <pre
         v-if="ready"
         class="bg-black px-2 py-2"

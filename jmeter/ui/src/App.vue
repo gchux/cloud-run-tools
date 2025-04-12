@@ -40,7 +40,7 @@ export default {
       </v-navigation-drawer>
 
       <v-main>
-        <v-container class="px-0 py-0">
+        <v-container class="px-0 py-0 mx-0 my-0 w-100">
           <RouterView />
         </v-container>
       </v-main>
