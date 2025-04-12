@@ -125,7 +125,11 @@ export default {
     increaseTotalDuration(
       index: number,
       param: MultiValueParamType,
-    ) {
+    ): number {
+      if ( !this.isTrafficShape ) {
+        return this.duration;
+      }
+
       const current = this.values[index];
       if ( !isUndefined(current) ) {
         this.decreaseTotalDuration(current);
@@ -145,9 +149,8 @@ export default {
 
     decreaseTotalDuration(
       param: MultiValueParamType,
-    ) {
-
-      if ( isUndefined(param) ) {
+    ): number {
+      if ( !this.isTrafficShape || isUndefined(param) ) {
         return this.duration;
       }
 
@@ -195,7 +198,9 @@ export default {
         );
       }
 
-      this.increaseTotalDuration(i, param);
+      if ( this.isTrafficShape ) {
+        this.increaseTotalDuration(i, param);
+      }
       this.values[data.index] = param;
     },
 
@@ -224,7 +229,7 @@ export default {
       const param = this.values[i];
 
       delete this.values[i];
-      if ( !isUndefined(param) ) {
+      if ( this.isTrafficShape && !isUndefined(param) ) {
         this.decreaseTotalDuration(param);
       }
 
@@ -253,7 +258,7 @@ export default {
         v-if="isTrafficShape"
         v-slot:subtitle
       >
-        total duration: <b :class="'text-' + [hasValidDuration ? 'green' : 'red']"><code>{{ duration }}</code></b>
+        total test duration: <b :class="'text-' + [hasValidDuration ? 'green' : 'red']"><code>{{ duration }}</code></b>
       </template>
       <template v-slot:append>
         <v-btn
