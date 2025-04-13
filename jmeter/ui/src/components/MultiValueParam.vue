@@ -429,6 +429,7 @@ export default {
         @delete:index="deleteIndex"
       ></MultiValueInput>
     </v-container>
+    
     <v-alert
       v-if="isTrafficShape && !hasValidDuration"
       title="Invalid Traffic Shape"
