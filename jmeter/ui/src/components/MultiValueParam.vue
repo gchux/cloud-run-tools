@@ -1,7 +1,7 @@
 <script lang="ts">
 import { z } from 'zod'
-import { split, toNumber, isUndefined } from 'lodash'
-import { MultiValueParamsSchema } from '../types/catalogs.ts'
+import { split, toNumber, isUndefined, isEmpty, isEqual, lte, chain, get, range, constant, multiply, partial, add, overArgs } from 'lodash'
+import { MultiValueParamsSchema, QpsSchema } from '../types/catalogs.ts'
 import { useTestStore, DurationSchema } from '../stores/test.ts'
 import { useMessagesStore } from '../stores/messages.ts'
 import { MultiValueParamSchema } from '../types/catalogs.ts'
@@ -18,13 +18,29 @@ import type {
 } from '../types/catalogs.ts'
 import type { ModelValue } from './MultiValueInput.vue'
 
+const ValuesSchema = z.record(
+  z.number().nonnegative(),
+  z.optional(MultiValueParamSchema),
+);
+
+type ValuesType = z.infer<typeof ValuesSchema>;
+
+const QpsMapperSchema = z.function()
+  .args(
+    z.number(),
+    z.number(),
+  )
+  .returns(
+    z.number()
+  );
+
+type QpsMapper = z.infer<typeof QpsMapperSchema>;
+
 const DataSchema = z.object({
-  values: z.record(
-    z.number().nonnegative(),
-    z.optional(MultiValueParamSchema),
-  ),
+  values: ValuesSchema,
   counter: z.number().nonnegative(),
   duration: z.number().nonnegative(),
+  trafficShape: z.array(z.number().nonnegative()),
 });
 
 type Data = z.infer<typeof DataSchema>;
@@ -64,6 +80,27 @@ const toTestParam = (
   throw new Error(`invalid shape for '${param.id}': '[${data.value}]'`);
 };
 
+const newQpsMapper = (
+  qps: QPS,
+): QpsMapper => {
+  const startQPS = qps.startQPS;
+  const delta = (qps.endQPS - startQPS) / qps.duration;
+
+  // functional way of applying:
+  //   - `startQPS + (step * delta)`
+  //   - see: https://lodash.com/docs/4.17.15#overArgs
+  return overArgs(
+    add, [
+    constant(
+      startQPS
+    ),
+    partial(
+      multiply, delta
+    )
+  ],
+  ) as QpsMapper;
+}
+
 export default {
   props: {
     testParam: {
@@ -81,6 +118,7 @@ export default {
       counter: 0,
       values: {},
       duration: 0,
+      trafficShape: []
     } as Data;
   },
 
@@ -98,9 +136,20 @@ export default {
       return this.testParam.type as ArrayParamType;
     },
 
+    isQPS(): boolean {
+      return isEqual(this.id, MultiValueParamsSchema.Enum.qps);
+    },
+
+    isConcurrency(): boolean {
+      return isEqual(this.id, MultiValueParamsSchema.Enum.concurrency);
+    },
+    
     isTrafficShape(): boolean {
-      return this.id == MultiValueParamsSchema.Enum.qps 
-        || this.id == MultiValueParamsSchema.Enum.concurrency;
+      return this.isQPS || this.isConcurrency;
+    },
+
+    hasTrafficShape(): boolean {
+      return this.isTrafficShape && !isEmpty(this.trafficShape);
     },
 
     hasValidDuration(): boolean {
@@ -109,9 +158,9 @@ export default {
       return !this.isTrafficShape || (
               duration.success
               &&
-              ( TEST.isAsync() || (duration.data <= 3600) ) 
+              ( TEST.isAsync() || lte(duration.data, 3600) ) 
               && 
-              (duration.data == TEST.getDuration())
+              isEqual(duration.data, TEST.getDuration())
             );
     },
   },
@@ -122,6 +171,99 @@ export default {
       this.values[key] = undefined;
     },
 
+    toShapeOfQPS(index: number): number[] {
+      const qps = get(this.values, index) as QPS;
+      const mapper = newQpsMapper(qps);
+
+      return chain(
+        range(
+          qps.duration
+        )
+      )
+        .map(mapper)
+        .flatten()
+        .value();
+    },
+
+    toShapeOfConcurrency(index: number): number[] {
+      const concurrency = get(this.values, index) as Concurrency;
+
+      const duration = toNumber(concurrency.duration);
+      const threadCount = toNumber(concurrency.threadCount);
+      const rampupTime = toNumber(concurrency.shutdownTime);
+      const shutdownTime = toNumber(concurrency.shutdownTime);
+
+      const rampUpDelta = rampupTime / threadCount;
+      const shutDownDelta = shutdownTime / threadCount;
+
+      const rampUpSteps = chain(
+        range(rampupTime)
+      )
+        .map(
+          partial(
+            multiply,
+            rampUpDelta,
+          )
+        )
+        .value();
+
+      const shutDownSteps = chain(
+        range(shutdownTime)
+      )
+        .map((step: number): number => {
+          return threadCount - multiply(step, shutDownDelta);
+        })
+        .value();
+
+      const steps = chain(
+        range(duration)
+      )
+        .map(
+          constant(threadCount)
+        )
+        .value();
+
+      return [
+        ...rampUpSteps,
+        ...steps,
+        ...shutDownSteps,
+      ];
+    },
+
+    updateTrafficShape(
+      index: number,
+    ) {
+      const trafficShape = chain(this.values)
+        .keys()
+        .map(toNumber)
+        .sort()
+        .map((index) => {
+          return this.isQPS ?
+            this.toShapeOfQPS(index) :
+            this.toShapeOfConcurrency(index);
+        })
+        .value() || [];
+
+      if (isEmpty(trafficShape)) {
+        return this.trafficShape = [];
+      }
+
+      if ( this.isQPS ) {
+        return this.trafficShape = [
+          0,
+          ...chain(
+            trafficShape
+          ).flatten()
+            .compact()
+            .value(),
+          0,
+        ];
+      }
+
+      // [WIP]: generate shape of `concurrency`
+      return this.trafficShape = [];
+    },
+
     increaseTotalDuration(
       index: number,
       param: MultiValueParamType,
@@ -130,10 +272,7 @@ export default {
         return this.duration;
       }
 
-      const current = this.values[index];
-      if ( !isUndefined(current) ) {
-        this.decreaseTotalDuration(current);
-      }
+      this.decreaseTotalDuration(index);
 
       switch(this.id) {
         case MultiValueParamsSchema.Enum.concurrency:
@@ -148,9 +287,15 @@ export default {
     },
 
     decreaseTotalDuration(
-      param: MultiValueParamType,
+      index: number,
     ): number {
-      if ( !this.isTrafficShape || isUndefined(param) ) {
+      if ( !this.isTrafficShape ) {
+        return this.duration;
+      }
+
+      const param = this.values[index];
+
+      if ( isUndefined(param) ) {
         return this.duration;
       }
 
@@ -201,7 +346,8 @@ export default {
       if ( this.isTrafficShape ) {
         this.increaseTotalDuration(i, param);
       }
-      this.values[data.index] = param;
+      this.values[i] = param;
+      this.updateTrafficShape(i);
     },
 
     updateValue(
@@ -228,10 +374,9 @@ export default {
 
       const param = this.values[i];
 
+      this.decreaseTotalDuration(i);
       delete this.values[i];
-      if ( this.isTrafficShape && !isUndefined(param) ) {
-        this.decreaseTotalDuration(param);
-      }
+      this.updateTrafficShape(i);
 
       switch(this.id) {
         case MultiValueParamsSchema.Enum.qps:
@@ -297,5 +442,19 @@ export default {
       consider running an <b><code>async</code></b> test instead,
       and make sure to use <b><code>instance-based</code> billing</b>.
     </v-alert>
+
+    <v-sheet
+      v-if="hasTrafficShape"
+      class="px-3 pt-3 bg-black text-green"
+    >
+      <v-sparkline
+        :model-value="trafficShape"
+        :fill="false"
+        :line-width="0.5"
+        :padding="0.0"
+        :smooth="true"
+        :auto-draw="true"
+      ></v-sparkline>
+    </v-sheet>
   </v-card>
 </template>
