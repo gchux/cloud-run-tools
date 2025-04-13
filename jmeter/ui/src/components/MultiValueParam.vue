@@ -1,7 +1,22 @@
 <script lang="ts">
 import { z } from 'zod'
-import { split, toNumber, isUndefined, isEmpty, isEqual, lte, chain, get, range, constant, multiply, partial, add, overArgs } from 'lodash'
-import { MultiValueParamsSchema, QpsSchema } from '../types/catalogs.ts'
+import {
+  split,
+  toNumber,
+  isUndefined,
+  isEmpty,
+  isEqual,
+  lte,
+  chain,
+  get,
+  range,
+  constant,
+  add,
+  multiply,
+  partial,
+  overArgs
+} from 'lodash'
+import { MultiValueParamsSchema } from '../types/catalogs.ts'
 import { useTestStore, DurationSchema } from '../stores/test.ts'
 import { useMessagesStore } from '../stores/messages.ts'
 import { MultiValueParamSchema } from '../types/catalogs.ts'
@@ -429,7 +444,7 @@ export default {
         @delete:index="deleteIndex"
       ></MultiValueInput>
     </v-container>
-    
+
     <v-alert
       v-if="isTrafficShape && !hasValidDuration"
       title="Invalid Traffic Shape"
