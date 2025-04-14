@@ -9,12 +9,18 @@ import {
   lte,
   chain,
   get,
+  slice,
+  defaultTo,
   range,
   constant,
   add,
+  subtract,
+  divide,
   multiply,
   partial,
-  overArgs
+  overArgs,
+  first,
+  nth,
 } from 'lodash'
 import { MultiValueParamsSchema } from '../types/catalogs.ts'
 import { useTestStore, DurationSchema } from '../stores/test.ts'
@@ -98,8 +104,10 @@ const toTestParam = (
 const newQpsMapper = (
   qps: QPS,
 ): QpsMapper => {
-  const startQPS = qps.startQPS;
-  const delta = (qps.endQPS - startQPS) / qps.duration;
+  const duration = toNumber(qps.duration);
+  const startQPS = toNumber(qps.startQPS);
+  const endQPS = toNumber(qps.endQPS);
+  const delta = divide(subtract(endQPS, startQPS), duration);
 
   // functional way of applying:
   //   - `startQPS + (step * delta)`
@@ -114,7 +122,150 @@ const newQpsMapper = (
     )
   ],
   ) as QpsMapper;
-}
+};
+
+const toShapeOfQPS = (
+  qps: QPS,
+): number[] => {
+  const mapper = newQpsMapper(qps);
+  const duration = toNumber(qps.duration);
+
+  return chain(
+    range(duration)
+  )
+    .map(mapper)
+    .flatten()
+    .value();
+};
+
+const trafficShapeOfQPS = (
+  trafficShape: number[][],
+): number[] => {
+  const shape = chain(
+    trafficShape
+  ).flatten()
+    .compact()
+    .value();
+
+  return [
+    0,
+    ...shape,
+    0,
+  ];
+};
+
+const toShapeOfConcurrency = (
+  concurrency: Concurrency,
+): number[] => {
+  const initialDelay = toNumber(concurrency.initialDelay);
+  const threadCount = toNumber(concurrency.threadCount);
+  const rampupTime = toNumber(concurrency.rampupTime);
+  const shutdownTime = toNumber(concurrency.shutdownTime);
+  const duration = toNumber(concurrency.duration);
+
+  const rampUpDelta = divide(threadCount, rampupTime);
+  const shutDownDelta = divide(threadCount, shutdownTime);
+
+  const rampUpSteps = chain(
+    range(rampupTime)
+  )
+    .map(
+      partial(
+        multiply,
+        rampUpDelta,
+      )
+    )
+    .value();
+
+  const shutDownSteps = chain(
+    range(shutdownTime)
+  )
+    .map((step: number): number => {
+      return subtract(
+        threadCount,
+        multiply(
+          step,
+          shutDownDelta,
+        ),
+      );
+    })
+    .value();
+
+  const steps = chain(
+    range(duration)
+  )
+    .map(
+      constant(threadCount)
+    )
+    .value();
+
+  return [
+    // pack initial delay
+    initialDelay,
+    ...rampUpSteps,
+    ...steps,
+    ...shutDownSteps,
+  ];
+};
+
+const trafficShapeOfConcurrency = (
+  trafficShape: number[][],
+): number[] => {
+  const firstStep = defaultTo(
+    first(trafficShape), [],
+  );
+
+  const traffic = chain(trafficShape)
+    .slice(1) // skip 1st step
+    .reduce((state, step) => {
+      const { offset, shape } = state;
+
+      const currentOffset = add(
+        offset, defaultTo(
+          // unpack initial delay
+          first(step), 0,
+        ),
+      );
+
+      // fixed section of `shape` so far
+      const prefix = slice(shape, 0, currentOffset);
+
+      // tail of `shape` so far
+      const suffix = slice(shape, currentOffset);
+
+      // handle overlap
+      const values = chain(
+        slice(step, 1)
+      )
+        .map((value, index) => {
+          const delta = defaultTo(
+            nth(suffix, index), 0,
+          );
+          return add(value, delta);
+        })
+        .value();
+      return {
+        offset: currentOffset,
+        shape: [
+          ...prefix,
+          ...values,
+        ],
+      };
+    }, {
+      offset: defaultTo(
+        // unpack initial delay
+        first(firstStep), 0,
+      ),
+      shape: slice(firstStep, 1),
+    })
+    .value();
+
+  return [
+    0,
+    ...(traffic.shape),
+    0,
+  ];
+};
 
 export default {
   props: {
@@ -186,97 +337,35 @@ export default {
       this.values[key] = undefined;
     },
 
-    toShapeOfQPS(index: number): number[] {
-      const qps = get(this.values, index) as QPS;
-      const mapper = newQpsMapper(qps);
-
-      return chain(
-        range(
-          qps.duration
-        )
-      )
-        .map(mapper)
-        .flatten()
-        .value();
-    },
-
-    toShapeOfConcurrency(index: number): number[] {
-      const concurrency = get(this.values, index) as Concurrency;
-
-      const duration = toNumber(concurrency.duration);
-      const threadCount = toNumber(concurrency.threadCount);
-      const rampupTime = toNumber(concurrency.shutdownTime);
-      const shutdownTime = toNumber(concurrency.shutdownTime);
-
-      const rampUpDelta = rampupTime / threadCount;
-      const shutDownDelta = shutdownTime / threadCount;
-
-      const rampUpSteps = chain(
-        range(rampupTime)
-      )
-        .map(
-          partial(
-            multiply,
-            rampUpDelta,
-          )
-        )
-        .value();
-
-      const shutDownSteps = chain(
-        range(shutdownTime)
-      )
-        .map((step: number): number => {
-          return threadCount - multiply(step, shutDownDelta);
+    getTrafficShape(): number[][] {
+      return chain(this.values)
+        .keys()
+        .map(toNumber)
+        .sort()
+        .map((key: number) => {
+          return this.isQPS ?
+            toShapeOfQPS(
+              get(this.values, key) as QPS
+            ) :
+            toShapeOfConcurrency(
+              get(this.values, key) as Concurrency
+            );
         })
-        .value();
-
-      const steps = chain(
-        range(duration)
-      )
-        .map(
-          constant(threadCount)
-        )
-        .value();
-
-      return [
-        ...rampUpSteps,
-        ...steps,
-        ...shutDownSteps,
-      ];
+        .value() || [];
     },
 
     updateTrafficShape(
       index: number,
-    ) {
-      const trafficShape = chain(this.values)
-        .keys()
-        .map(toNumber)
-        .sort()
-        .map((index) => {
-          return this.isQPS ?
-            this.toShapeOfQPS(index) :
-            this.toShapeOfConcurrency(index);
-        })
-        .value() || [];
-
-      if (isEmpty(trafficShape)) {
-        return this.trafficShape = [];
+    ): number[] {
+      const trafficShape = this.getTrafficShape();
+      if (isEmpty(trafficShape) || isEmpty(trafficShape)) {
+        return (this.trafficShape = []);
+      } else if (this.isQPS) {
+        return this.trafficShape = trafficShapeOfQPS(trafficShape);
+      } else if(this.isConcurrency) {
+        return this.trafficShape = trafficShapeOfConcurrency(trafficShape);
       }
-
-      if ( this.isQPS ) {
-        return this.trafficShape = [
-          0,
-          ...chain(
-            trafficShape
-          ).flatten()
-            .compact()
-            .value(),
-          0,
-        ];
-      }
-
-      // [WIP]: generate shape of `concurrency`
-      return this.trafficShape = [];
+      return (this.trafficShape = []);
     },
 
     increaseTotalDuration(

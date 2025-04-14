@@ -233,6 +233,39 @@
           "qps"
         ]
       ]
+    },
+    {
+      "id": "cloud_run_dynamic_full",
+      "name": "Cloud Run concurrency (full)",
+      "desc": "run a fully parametrizable concurrency based load test against a Cloud Run service",
+      "mode": "concurrency",
+      "params": [
+        [
+          "async"
+        ],
+        [
+          "method",
+          "host",
+          "path"
+        ],
+        [
+          "query"
+        ],
+        [
+          "headers"
+        ],
+        [
+          "payload"
+        ],
+        [
+          "min-latency",
+          "max-latency",
+          "duration"
+        ],
+        [
+          "concurrency"
+        ]
+      ]
     }
   ]
 }
