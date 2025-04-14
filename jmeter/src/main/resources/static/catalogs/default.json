@@ -167,7 +167,7 @@
     {
       "id": "cloud_run_qps_full",
       "name": "Cloud Run QPS (full)",
-      "desc": "run a fully parametrizable load test against a Cloud Run service",
+      "desc": "fully parametrizable requests-per-second driven load test against a Cloud Run service",
       "mode": "qps",
       "params": [
         [
@@ -198,9 +198,42 @@
       ]
     },
     {
+      "id": "cloud_run_dynamic_full",
+      "name": "Cloud Run concurrency (full)",
+      "desc": "fully parametrizable concurrency driven load test against a Cloud Run service",
+      "mode": "concurrency",
+      "params": [
+        [
+          "async"
+        ],
+        [
+          "method",
+          "host",
+          "path"
+        ],
+        [
+          "query"
+        ],
+        [
+          "headers"
+        ],
+        [
+          "payload"
+        ],
+        [
+          "min-latency",
+          "max-latency",
+          "duration"
+        ],
+        [
+          "concurrency"
+        ]
+      ]
+    },
+    {
       "id": "generic_qps_full",
       "name": "Generic QPS (full)",
-      "desc": "run a fully parametrizable load test against any remote host",
+      "desc": "fully parametrizable requests-per-second driven load test against any remote host",
       "mode": "qps",
       "params": [
         [
@@ -235,17 +268,21 @@
       ]
     },
     {
-      "id": "cloud_run_dynamic_full",
-      "name": "Cloud Run concurrency (full)",
-      "desc": "run a fully parametrizable concurrency based load test against a Cloud Run service",
+      "id": "generic_concurrency_full",
+      "name": "Generic concurrency (full)",
+      "desc": "fully parametrizable concurrency driven load test against any remote host",
       "mode": "concurrency",
       "params": [
         [
           "async"
         ],
         [
-          "method",
+          "proto",
+          "method"
+        ],
+        [
           "host",
+          "port",
           "path"
         ],
         [
