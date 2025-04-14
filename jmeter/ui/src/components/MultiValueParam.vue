@@ -294,20 +294,23 @@ export default {
 
       const i = toNumber(index);
 
-      const param = this.values[i];
+      switch(this.id) {
+        case MultiValueParamsSchema.Enum.qps:
+          TEST.unsetQPS(i);
+          break;
+
+        case MultiValueParamsSchema.Enum.concurrency:
+          TEST.unsetConcurrency(i);
+          break;
+
+        default:
+          TEST.unsetMultiValue(this.id, i);
+          break;
+      }
 
       this.decreaseTotalDuration(i);
       delete this.values[i];
       this.updateTrafficShape();
-
-      switch(this.id) {
-        case MultiValueParamsSchema.Enum.qps:
-          return TEST.unsetQPS(i);
-        case MultiValueParamsSchema.Enum.concurrency:
-          return TEST.unsetConcurrency(i);
-        default:
-          return TEST.unsetMultiValue(this.id, i);
-      }
     },
   },
 
