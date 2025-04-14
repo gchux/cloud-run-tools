@@ -114,11 +114,9 @@ const newQpsMapper = (
   //   - see: https://lodash.com/docs/4.17.15#overArgs
   return overArgs(
     add, [
-    constant(
-      startQPS
-    ),
+    constant(startQPS),
     partial(
-      multiply, delta
+      multiply, delta,
     )
   ],
   ) as QpsMapper;
@@ -127,13 +125,14 @@ const newQpsMapper = (
 const toShapeOfQPS = (
   qps: QPS,
 ): number[] => {
-  const mapper = newQpsMapper(qps);
   const duration = toNumber(qps.duration);
 
   return chain(
     range(duration)
   )
-    .map(mapper)
+    .map(
+      newQpsMapper(qps)
+    )
     .flatten()
     .value();
 };
@@ -233,7 +232,7 @@ const trafficShapeOfConcurrency = (
       // tail of `shape` so far
       const suffix = slice(shape, currentOffset);
 
-      // handle overlap
+      // handle overlap between suffix and current step
       const values = chain(
         slice(step, 1)
       )
@@ -248,8 +247,8 @@ const trafficShapeOfConcurrency = (
       return {
         offset: add(offset, currentOffset),
         shape: [
-          ...prefix,
-          ...values,
+          ...prefix, // prepend prefix as-is
+          ...values, // append everything new
         ],
       };
     }, {
@@ -257,7 +256,7 @@ const trafficShapeOfConcurrency = (
         // unpack initial delay
         first(firstStep), 0,
       ),
-      shape: slice(firstStep, 1),
+      shape: slice(firstStep, 1), // skip 1st step
     })
     .value();
 
