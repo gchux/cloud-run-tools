@@ -149,9 +149,10 @@ export default {
   },
 
   methods: {
-    addValue() {
+    addValue(): number {
       const key = (this.counter += 1);
       this.values[key] = undefined;
+      return key;
     },
 
     getTrafficShape(): number[][] {
