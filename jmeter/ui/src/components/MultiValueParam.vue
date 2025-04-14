@@ -145,6 +145,7 @@ const trafficShapeOfQPS = (
     trafficShape
   ).flatten()
     .compact()
+    .concat(0)
     .value();
 
   return [
@@ -205,6 +206,7 @@ const toShapeOfConcurrency = (
     ...rampUpSteps,
     ...steps,
     ...shutDownSteps,
+    0,
   ];
 };
 
@@ -218,13 +220,11 @@ const trafficShapeOfConcurrency = (
   const traffic = chain(trafficShape)
     .slice(1) // skip 1st step
     .reduce((state, step) => {
-      const { offset, shape } = state;
+      const { offset , shape } = state;
 
-      const currentOffset = add(
-        offset, defaultTo(
-          // unpack initial delay
-          first(step), 0,
-        ),
+      const currentOffset = defaultTo(
+        // unpack initial delay
+        first(step), 0,
       );
 
       // fixed section of `shape` so far
@@ -244,8 +244,9 @@ const trafficShapeOfConcurrency = (
           return add(value, delta);
         })
         .value();
+
       return {
-        offset: currentOffset,
+        offset: add(offset, currentOffset),
         shape: [
           ...prefix,
           ...values,
@@ -342,7 +343,9 @@ export default {
         .keys()
         .map(toNumber)
         .sort()
-        .map((key: number) => {
+        .map((
+          key: number,
+        ): number[] => {
           return this.isQPS ?
             toShapeOfQPS(
               get(this.values, key) as QPS
