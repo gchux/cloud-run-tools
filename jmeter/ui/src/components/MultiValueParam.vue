@@ -10,10 +10,12 @@ import {
   chain,
   get,
 } from 'lodash'
-import { MultiValueParamsSchema } from '../types/catalogs.ts'
+import {
+  MultiValueParamsSchema,
+  MultiValueParamSchema,
+} from '../types/catalogs.ts'
 import { useTestStore, DurationSchema } from '../stores/test.ts'
 import { useMessagesStore } from '../stores/messages.ts'
-import { MultiValueParamSchema } from '../types/catalogs.ts'
 import {
   toShapeOfQPS,
   trafficShapeOfQPS,

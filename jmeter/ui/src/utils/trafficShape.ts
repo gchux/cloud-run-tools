@@ -16,8 +16,10 @@ import {
   first,
   nth,
 } from 'lodash'
-import { MultiValueParamsSchema } from '../types/catalogs.ts'
-import { MultiValueParamSchema } from '../types/catalogs.ts'
+import {
+  MultiValueParamSchema,
+  MultiValueParamsSchema,
+} from '../types/catalogs.ts'
 import type {
   MultiValueParamType,
   MultiValueParamsType,
