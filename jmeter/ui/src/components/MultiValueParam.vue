@@ -38,19 +38,6 @@ const ValuesSchema = z.record(
   z.optional(MultiValueParamSchema),
 );
 
-type ValuesType = z.infer<typeof ValuesSchema>;
-
-const MapperSchema = z.function()
-  .args(
-    z.number(),
-    z.number(),
-  )
-  .returns(
-    z.number()
-  );
-
-type Mapper = z.infer<typeof MapperSchema>;
-
 const DataSchema = z.object({
   values: ValuesSchema,
   counter: z.number().nonnegative(),
@@ -189,9 +176,9 @@ export default {
       if (isEmpty(trafficShape) || isEmpty(trafficShape)) {
         return (this.trafficShape = []);
       } else if (this.isQPS) {
-        return this.trafficShape = trafficShapeOfQPS(trafficShape);
+        return (this.trafficShape = trafficShapeOfQPS(trafficShape));
       } else if(this.isConcurrency) {
-        return this.trafficShape = trafficShapeOfConcurrency(trafficShape);
+        return (this.trafficShape = trafficShapeOfConcurrency(trafficShape));
       }
       return (this.trafficShape = []);
     },
