@@ -46,7 +46,7 @@ const ValuesSchema = z.record(
 
 type ValuesType = z.infer<typeof ValuesSchema>;
 
-const QpsMapperSchema = z.function()
+const MapperSchema = z.function()
   .args(
     z.number(),
     z.number(),
@@ -55,7 +55,7 @@ const QpsMapperSchema = z.function()
     z.number()
   );
 
-type QpsMapper = z.infer<typeof QpsMapperSchema>;
+type Mapper = z.infer<typeof MapperSchema>;
 
 const DataSchema = z.object({
   values: ValuesSchema,
@@ -103,7 +103,7 @@ const toTestParam = (
 
 const newQpsMapper = (
   qps: QPS,
-): QpsMapper => {
+): Mapper => {
   const duration = toNumber(qps.duration);
   const startQPS = toNumber(qps.startQPS);
   const endQPS = toNumber(qps.endQPS);
@@ -119,8 +119,29 @@ const newQpsMapper = (
       multiply, delta,
     )
   ],
-  ) as QpsMapper;
+  ) as Mapper;
 };
+
+const newConcurrencyMapper = (
+  concurrency: Concurrency,
+): Mapper => {
+  const threadCount = toNumber(concurrency.threadCount);
+  const shutdownTime = toNumber(concurrency.shutdownTime);
+  const shutDownDelta = divide(threadCount, shutdownTime);
+
+  // functional way of applying:
+  //   - `threadCount - (step * shutDownDelta)`
+  //   - see: https://lodash.com/docs/4.17.15#overArgs
+  return overArgs(
+    subtract, [
+      constant(threadCount),
+      partial(
+        multiply,
+        shutDownDelta,
+      ),
+    ]
+  ) as Mapper;
+}
 
 const toShapeOfQPS = (
   qps: QPS,
@@ -162,33 +183,22 @@ const toShapeOfConcurrency = (
   const rampupTime = toNumber(concurrency.rampupTime);
   const shutdownTime = toNumber(concurrency.shutdownTime);
   const duration = toNumber(concurrency.duration);
-
   const rampUpDelta = divide(threadCount, rampupTime);
-  const shutDownDelta = divide(threadCount, shutdownTime);
 
   const rampUpSteps = chain(
     range(rampupTime)
   )
     .map(
-      partial(
-        multiply,
-        rampUpDelta,
-      )
+      partial(multiply, rampUpDelta)
     )
     .value();
 
   const shutDownSteps = chain(
     range(shutdownTime)
   )
-    .map((step: number): number => {
-      return subtract(
-        threadCount,
-        multiply(
-          step,
-          shutDownDelta,
-        ),
-      );
-    })
+    .map(
+      newConcurrencyMapper(concurrency)
+    )
     .value();
 
   const steps = chain(
