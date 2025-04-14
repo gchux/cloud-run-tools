@@ -353,7 +353,7 @@ export default {
     </v-container>
 
     <v-alert
-      v-if="isTrafficShape && !hasValidDuration"
+      v-if="!hasValidDuration"
       title="Invalid Traffic Shape"
       type="error"
       variant="tonal"
