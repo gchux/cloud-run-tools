@@ -158,12 +158,11 @@ export const toShapeOfConcurrency = (
     .map(shutDownMapper)
     .value();
 
+  const stepsMapper = constant(threadCount);
   const steps = chain(
     range(duration)
   )
-    .map(
-      constant(threadCount)
-    )
+    .map(stepsMapper)
     .value();
 
   return [
