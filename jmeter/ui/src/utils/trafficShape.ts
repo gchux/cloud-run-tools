@@ -197,7 +197,13 @@ export const trafficShapeOfConcurrency = (
       );
 
       if ( currentOffset > sizeOfShape ) {
-        const sizeOfGap = currentOffset - sizeOfShape;
+        const sizeOfGap = add(
+          subtract(
+            currentOffset,
+            sizeOfShape
+          ),
+          size(step),
+        );
         const gap = fill(new Array(sizeOfGap), 0);
         shape = concat(shape, gap);
       }
