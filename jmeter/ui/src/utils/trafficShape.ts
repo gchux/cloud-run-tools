@@ -190,6 +190,7 @@ export const trafficShapeOfConcurrency = (
       let { shape } = state;
 
       const sizeOfShape = size(shape);
+      const sizeOfStep = size(step);
 
       const currentOffset = defaultTo(
         // unpack initial delay
@@ -202,10 +203,10 @@ export const trafficShapeOfConcurrency = (
             currentOffset,
             sizeOfShape
           ),
-          size(step),
+          sizeOfStep,
         );
-        const gap = fill(new Array(sizeOfGap), 0);
-        shape = concat(shape, gap);
+        const gap = new Array(sizeOfGap);
+        shape = concat(shape, fill(gap, 0));
       }
 
       // fixed section of `shape` so far
