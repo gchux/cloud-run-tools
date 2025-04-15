@@ -197,6 +197,8 @@ export const trafficShapeOfConcurrency = (
         first(step), 0,
       );
 
+      const end = add(currentOffset, sizeOfStep);
+
       let sizeOfGap: number;
       if ( currentOffset > sizeOfShape ) {
         sizeOfGap = add(
@@ -206,9 +208,12 @@ export const trafficShapeOfConcurrency = (
           ),
           sizeOfStep,
         );
+      } if ( end > sizeOfShape ) {
+        sizeOfGap = subtract(end, sizeOfShape);
       } else {
         sizeOfGap = 0;
       }
+      
       const gap = new Array(sizeOfGap);
       shape = concat(shape, fill(gap, 0));
 
