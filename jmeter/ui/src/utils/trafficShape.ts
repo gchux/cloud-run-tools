@@ -213,9 +213,11 @@ export const trafficShapeOfConcurrency = (
       } else {
         sizeOfGap = 0;
       }
-      
-      const gap = new Array(sizeOfGap);
-      shape = concat(shape, fill(gap, 0));
+
+      if ( sizeOfGap > 0 ) {
+        const gap = new Array(sizeOfGap);
+        shape = concat(shape, fill(gap, 0));
+      }
 
       // fixed section of `shape` so far
       const prefix = slice(shape, 0, currentOffset);
