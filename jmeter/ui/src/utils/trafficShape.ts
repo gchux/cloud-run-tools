@@ -80,7 +80,9 @@ const newConcurrencyMapper = (
   //   - see: https://lodash.com/docs/4.17.15#overArgs
   return overArgs(
     subtract, [
-      constant(threadCount),
+      constant(
+        threadCount
+      ),
       partial(
         multiply,
         shutDownDelta,
@@ -142,20 +144,18 @@ export const toShapeOfConcurrency = (
   const shutdownTime = toNumber(concurrency.shutdownTime);
 
   const rampUpDelta = divide(threadCount, rampupTime);
+  const rampUpMapper = partial(multiply, rampUpDelta);
   const rampUpSteps = chain(
     range(rampupTime)
   )
-    .map(
-      partial(multiply, rampUpDelta)
-    )
+    .map(rampUpMapper)
     .value();
 
+  const shutDownMapper = newConcurrencyMapper(concurrency);
   const shutDownSteps = chain(
     range(shutdownTime)
   )
-    .map(
-      newConcurrencyMapper(concurrency)
-    )
+    .map(shutDownMapper)
     .value();
 
   const steps = chain(
@@ -179,12 +179,7 @@ export const toShapeOfConcurrency = (
 export const trafficShapeOfConcurrency = (
   trafficShape: number[][],
 ): number[] => {
-  const firstStep = defaultTo(
-    first(trafficShape), [],
-  );
-
   const traffic = chain(trafficShape)
-    .slice(1) // skip 1st step
     .reduce((state, step) => {
       const { offset } = state;
       let { shape } = state;
@@ -192,62 +187,68 @@ export const trafficShapeOfConcurrency = (
       const sizeOfShape = size(shape);
       const sizeOfStep = size(step);
 
-      const currentOffset = defaultTo(
+      const initialDelay = defaultTo(
         // unpack initial delay
         first(step), 0,
       );
 
-      const end = add(currentOffset, sizeOfStep);
+      const end = add(initialDelay, sizeOfStep);
 
       let sizeOfGap: number = 0;
-      if ( currentOffset > sizeOfShape ) {
+      if ( initialDelay > sizeOfShape ) {
+        // offset is beyond current shape:
+        // ( current shape )< ... [ current step ]>
         sizeOfGap = add(
           subtract(
-            currentOffset,
+            initialDelay,
             sizeOfShape
           ),
           sizeOfStep,
         );
       } else if ( end > sizeOfShape ) {
+        // offset is within current shape:
+        // ( current shape [ ... )< current step ]>
         sizeOfGap = subtract(end, sizeOfShape);
       }
 
       if ( sizeOfGap > 0 ) {
+        // if there is a gap between the current end of the shape
+        // and the end of the step ( which starts after the offset ),
+        // then append the gap to the current shape and fill it with 0's.
         const gap = new Array(sizeOfGap);
         shape = concat(shape, fill(gap, 0));
       }
 
       // fixed section of `shape` so far
-      const prefix = slice(shape, 0, currentOffset);
+      const prefix = slice(shape, 0, initialDelay);
 
       // tail of `shape` so far
-      const suffix = slice(shape, currentOffset);
+      const suffix = slice(shape, initialDelay);
 
       // handle overlap between suffix and current step
       const values = chain(
+        // skip initial delay
         slice(step, 1)
       )
         .map((value, index) => {
           const delta = defaultTo(
             nth(suffix, index), 0,
           );
+          // overlay current onto suffix
           return add(value, delta);
         })
         .value();
 
       return {
-        offset: add(offset, currentOffset),
+        offset: add(offset, initialDelay),
         shape: [
           ...prefix, // prepend prefix as-is
           ...values, // append everything new
         ],
       };
     }, {
-      offset: defaultTo(
-        // unpack initial delay
-        first(firstStep), 0,
-      ),
-      shape: slice(firstStep, 1), // skip 1st step
+      offset: 0,
+      shape: new Array<number>(),
     })
     .value();
 
