@@ -15,6 +15,9 @@ import {
   overArgs,
   first,
   nth,
+  size,
+  fill,
+  concat,
 } from 'lodash'
 import {
   MultiValueParamSchema,
@@ -135,10 +138,10 @@ export const toShapeOfConcurrency = (
   const initialDelay = toNumber(concurrency.initialDelay);
   const threadCount = toNumber(concurrency.threadCount);
   const rampupTime = toNumber(concurrency.rampupTime);
-  const shutdownTime = toNumber(concurrency.shutdownTime);
   const duration = toNumber(concurrency.duration);
-  const rampUpDelta = divide(threadCount, rampupTime);
+  const shutdownTime = toNumber(concurrency.shutdownTime);
 
+  const rampUpDelta = divide(threadCount, rampupTime);
   const rampUpSteps = chain(
     range(rampupTime)
   )
@@ -183,12 +186,21 @@ export const trafficShapeOfConcurrency = (
   const traffic = chain(trafficShape)
     .slice(1) // skip 1st step
     .reduce((state, step) => {
-      const { offset , shape } = state;
+      const { offset } = state;
+      let { shape } = state;
+
+      const sizeOfShape = size(shape);
 
       const currentOffset = defaultTo(
         // unpack initial delay
         first(step), 0,
       );
+
+      if ( currentOffset > sizeOfShape ) {
+        const sizeOfGap = currentOffset - sizeOfShape;
+        const gap = fill(new Array(sizeOfGap), 0);
+        shape = concat(shape, gap);
+      }
 
       // fixed section of `shape` so far
       const prefix = slice(shape, 0, currentOffset);

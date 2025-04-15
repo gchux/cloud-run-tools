@@ -179,6 +179,8 @@ export default {
     ) => {
         const mode = test.mode;
         const method = test.method;
+        const testDuration = toNumber(test.duration);
+        const isAsync = (test.async == true) || false;
         const headers: Headers = {};
 
         headers[JMAAS_HEADERS.MODE] = test.mode;
@@ -187,8 +189,8 @@ export default {
         headers[JMAAS_HEADERS.HOST] = test.host;
         headers[JMAAS_HEADERS.PORT] = toString(test.port);
         headers[JMAAS_HEADERS.PATH] = test.path;
-        headers[JMAAS_HEADERS.ASYNC] = toString(test.async || false);
-        headers[JMAAS_HEADERS.DURATION] = toString(test.duration);
+        headers[JMAAS_HEADERS.ASYNC] = toString(isAsync);
+        headers[JMAAS_HEADERS.DURATION] = toString(testDuration);
         headers[JMAAS_HEADERS.MIN_LATENCY] = toString(test.minLatency);
         headers[JMAAS_HEADERS.MAX_LATENCY] = toString(test.maxLatency);
         headers[JMAAS_HEADERS.QUERY] = getQuery(test);
@@ -204,8 +206,12 @@ export default {
             headers[JMAAS_HEADERS.CONCURRENCY] = trafficShape;
         }
 
-        if ( toNumber(test.duration) != duration ) {
+        if ( testDuration != duration ) {
             throw new Error(`invalid duration: ${test.duration} != ${duration}`);
+        }
+
+        if ( ( testDuration > 3600 ) && !isAsync ) {
+            // [WIP]: enforce max request timeout for Cloud Run
         }
 
         return axios.request({
