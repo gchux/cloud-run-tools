@@ -93,7 +93,6 @@ export default {
 </script>
 
 <template>
-  <!-- [WIP]: add details of the test being executed -->
   <v-progress-linear
     v-if="!isComplete"
     indeterminate
@@ -156,6 +155,8 @@ export default {
           </code>
         </v-list-item-title>
       </v-list-item>
+
+      <!-- [ToDo]: add details of the test being executed -->
 
       <v-divider class="my-2"></v-divider>
   
