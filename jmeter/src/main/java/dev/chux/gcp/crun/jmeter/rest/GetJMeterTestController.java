@@ -129,7 +129,7 @@ public class GetJMeterTestController extends JMeterTestController {
 
     setHeader(response, "id", t.id());
     setHeader(response, "name", t.name());
-    setHeader(response, "trace-id", t.name());
+    setHeader(response, "trace-id", t.traceID());
     setHeader(response, "instance-id", t.instanceID());
     setHeader(response, "script", t.script());
 
