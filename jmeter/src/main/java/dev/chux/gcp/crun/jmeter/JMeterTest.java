@@ -11,6 +11,8 @@ public interface JMeterTest extends ProcessProvider, Supplier<JMeterTestConfig> 
 
   public String instanceID();
 
+  public String traceID();
+
   public String id();
 
   public String name();

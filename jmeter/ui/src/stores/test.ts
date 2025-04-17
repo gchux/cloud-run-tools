@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { NIL as defaultUUID } from 'uuid';
 import { defineStore } from 'pinia'
 import { isEqual, toNumber } from 'lodash'
 import {
@@ -58,7 +59,7 @@ export const DurationSchema = z.number().gte(10).finite();
 export type Duration = z.infer<typeof DurationSchema>;
 
 export const TestSchema = z.object({
-  id: z.optional(NonEmptyString),
+  id: z.string().uuid(),
   script: NonEmptyString,
   mode: ModeEnumSchema,
   host: NonEmptyString,
@@ -86,6 +87,8 @@ export type MultiValueParam = z.infer<typeof MultiValueParamSchema>;
 export const useTestStore = defineStore('test', {
   state: () => {
     return {
+      id: defaultUUID,
+      async: false,
       script: "cloud_run_qps_full",
       mode: "qps",
       host: "localhost",
@@ -143,6 +146,9 @@ export const useTestStore = defineStore('test', {
     isComplete() {
       return (this.qps.size > 0) || (this.concurrency.size > 0);
     },
+    setID(id: string) {
+      return this.id = TestSchema.shape.id.parse(id);
+    },
     setScript(script: string): string {
       return this.script = TestSchema.shape.script.parse(script);
     },
@@ -189,7 +195,9 @@ export const useTestStore = defineStore('test', {
         case ParamEnumSchema.Enum.port:
           return this.setPort(toNumber(value));
         case ParamEnumSchema.Enum.async:
-          return this.setAsync((/true/i).test(value));
+          return this.setAsync(
+            (/true/i).test(value)
+          );
         case ParamEnumSchema.Enum.proto:
           return this.setProto(value);
         case ParamEnumSchema.Enum.method:

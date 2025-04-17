@@ -141,6 +141,11 @@ public class JMeterTestImpl implements JMeterTest {
   }
 
   @Override
+  public final String traceID() {
+    return this.jMeterTestConfig.traceID().or(DEFAULT_TRACE_ID);
+  }
+
+  @Override
   public final String id() {
     return this.jMeterTestConfig.id();
   }
@@ -378,10 +383,6 @@ public class JMeterTestImpl implements JMeterTest {
 
   private final String jmx() {
     return this.jmeterTestDirProvider.get() + "/" + this.script() + ".jmx";
-  }
-
-  private final String traceID() {
-    return this.jMeterTestConfig.traceID().or(DEFAULT_TRACE_ID);
   }
 
   private final int requestTimeout() {

@@ -121,8 +121,12 @@ export const trafficShapeOfQPS = (
   trafficShape: number[][],
 ): number[] => {
   const shape = chain(
-    trafficShape
-  ).flatten()
+    [
+      [0],
+      ...trafficShape
+    ]
+  )
+    .flatten()
     .compact()
     .concat(0)
     .value();

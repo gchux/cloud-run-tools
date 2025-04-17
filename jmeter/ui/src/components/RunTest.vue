@@ -1,133 +1,186 @@
 <script lang="ts">
-import { keyBy, startsWith } from 'lodash';
+import { 
+  NIL as defaultUUID,
+  v4 as uuidv4,
+} from 'uuid';
+import { bind } from 'lodash';
 import { default as jmaas } from '../api/jmaas.ts';
-import { useTestStore } from '../stores/test.ts'
-import { ParamEnumSchema } from '../types/catalogs.ts'
+import { useTestStore } from '../stores/test.ts';
+import { useMessagesStore } from '../stores/messages.ts'
+import {
+  getTestID,
+  onTestData,
+} from '../utils/test.ts';
+import type { Test } from '../stores/test.ts';
+import type { TestStreamEvent } from '../api/jmaas.ts';
 import type {
-  Catalog,
-  CatalogTest,
-  CatalogTestParamsObject,
-} from '../types/catalogs.ts'
-import { ModeEnumSchema, CatalogSchema } from '../types/catalogs.ts'
-import TestParams from './TestParams.vue'
+  TestData
+} from '../types/test.ts';
+import {
+  default as TestStream,
+} from './TestStream.vue'
 import CurlView from './CurlView.vue'
-
-type Data = {
-  catalog: Catalog,
-  params: CatalogTestParamsObject,
-  tests: CatalogTest[],
-  test: CatalogTest,
-};
-
-const defaultTest: CatalogTest = {
-  id: "",
-  name: "loading...",
-  desc: "loading...",
-  mode: ModeEnumSchema.Values.qps,
-  params: [],
-};
 
 export default {
   data: () => {
-    const TEST = useTestStore();
-
     return {
-      test: defaultTest,
-      tests: [],
-      params: [],
-    } as Partial<Data>;
+      id: defaultUUID,
+      traceID: "",
+      instanceID: "",
+      output: "",
+      isComplete: false,
+    } as TestData;
+  },
+
+  computed: {
+    isAsync(): boolean {
+      const TEST = useTestStore();
+      return TEST.isAsync();
+    }
   },
 
   methods: {
-    isCloudRun(test: CatalogTest): boolean {
-      const testID = test.id;
-      return startsWith(testID, "cloud_run_");
+    onData(
+      test: Test,
+      data: TestStreamEvent,
+    ) {
+      this.id = getTestID(data);
+      onTestData(this, data);
     },
 
-    async fetchCatalog() {
-      const response = await jmaas.getCatalog();
-      this.catalog = CatalogSchema.parse(response.data);
-      this.params = keyBy(
-        this.catalog.params,
-        ParamEnumSchema.Enum.id
-      );
-      this.tests = this.catalog.tests;
-      this.updateTest(
-        this.test = this.tests[0]
-      );
+    runTest(test: Test) {
+      const that = this;
+      
+      const handler = bind(this.onData, this, test);
+
+      jmaas
+        .runTest(test, handler)
+        .finally(() => {
+          that.isComplete = true;
+        });
     },
 
-    updatePort(test: CatalogTest) {
+    startTest(id: string) {
+      const MESSAGES = useMessagesStore();
       const TEST = useTestStore();
-      if ( this.isCloudRun(test) ) {
-        TEST.setPort(443);
+
+      try {
+        TEST.setID(id);
+        this.runTest(TEST.get());
+      } catch (error) {
+        MESSAGES.Error(error as Error);
+        this.$router.push('/');
       }
     },
 
-    updateTest(test: CatalogTest) {
-      const TEST = useTestStore();
-      TEST.setScript(test.id);
-      TEST.setMode(test.mode);
-      this.updatePort(test);
-      this.test = test;
-    },
-
-    runTest() {
-      this.$router.push('/stream');
+    streamTest(id: string) {
+      this.$router.push(`/stream/${id}`);
     },
   },
 
-  mounted() {
-    this.fetchCatalog();
+  created() {
+    const id = (
+      this.id = uuidv4()
+    );
+    this.startTest(id);
   },
 
   components: {
-    TestParams,
     CurlView,
-  }
+    TestStream,
+  },
 }
 </script>
 
 <template>
-  <v-card variant="text" flat>
-    <v-card-item>
-      <v-card-title>
-        Configure test execution
-      </v-card-title>
-    </v-card-item>
-    <v-card-text>
-      <v-divider color="info"></v-divider>
-      <v-select
-        :model-value="test"
-        :items="tests"
-        item-title="name"
-        item-value="id"
-        return-object
-        single-line
-        @update:model-value="updateTest"
-      >
-        <template v-slot:item="{ props: itemProps, item }">
-          <v-list-item v-bind="itemProps" :subtitle="item.raw.desc"></v-list-item>
+  <!-- [WIP]: add details of the test being executed -->
+  <v-progress-linear
+    v-if="!isComplete"
+    indeterminate
+  ></v-progress-linear>
+
+  <v-card flat
+     v-if="isAsync"
+     variant="text"
+  >
+    <v-card-title>
+      Running Async Load Test
+    </v-card-title>
+
+    <v-card-subtitle v-if="id">
+      <v-list-item>
+        <template v-slot:prepend>
+          <v-icon
+            icon="mdi-identifier" 
+            size="x-large"
+            color="warning"
+          ></v-icon>
         </template>
-      </v-select>
-      <v-divider color="info"></v-divider>
-      <TestParams
-        v-if="catalog"
-        :catalog="params"
-        :params="test?.params"
-      ></TestParams>
-      <v-divider color="info"></v-divider>
-      <v-btn block
-        class="text-none mt-2"
-        color="success"
-        size="x-large"
-        variant="flat"
-        @click="runTest"
-      >
-        Run the Load Test!
-      </v-btn>
+        <v-list-item-title>
+          <code>{{ id }}</code>
+        </v-list-item-title>
+      </v-list-item>
+    </v-card-subtitle>
+
+    <v-card-text>
+      <v-list-item v-if="traceID">
+        <template v-slot:prepend>
+          <v-icon
+            icon="mdi-label"
+            size="x-large"
+            color="primary"
+          ></v-icon>
+        </template>
+        <v-list-item-title
+          class="text-primary"
+        >
+        <code>
+          <b>Trace ID</b>: {{ traceID }}
+        </code>
+        </v-list-item-title>
+      </v-list-item>
+
+      <v-list-item v-if="instanceID">
+        <template v-slot:prepend>
+          <v-icon
+            icon="mdi-server"
+            size="x-large"
+            color="teal"
+          ></v-icon>
+        </template>
+        <v-list-item-title
+          class="text-teal"
+        >
+          <code>
+            <b>Instance ID</b>: {{ instanceID }}
+          </code>
+        </v-list-item-title>
+      </v-list-item>
+
+      <v-divider class="my-2"></v-divider>
+  
+      <v-list-item>
+        <CurlView />
+      </v-list-item>
     </v-card-text>
+
+    <v-card-actions>
+      <v-btn
+         v-if="id"
+        color="orange"
+        text="Stream"
+        @click="streamTest(id)"
+      ></v-btn>
+      <v-btn color="orange" text="Status"></v-btn>
+    </v-card-actions>
   </v-card>
-  <v-divider></v-divider>
-  <CurlView />
+
+  <TestStream
+    v-else
+    :id="id"
+    :instance-id="instanceID"
+    :trace-id="traceID"
+    :data="output"
+    :is-streaming="!isComplete"
+  ></TestStream>
 </template>

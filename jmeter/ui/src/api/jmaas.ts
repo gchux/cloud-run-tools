@@ -1,12 +1,11 @@
 import { z } from 'zod'
 import axios from 'axios';
-import { toString, split, isEqual, toNumber } from 'lodash'
-import { TestSchema } from '../stores/test.ts'
+import { toString, split, isEqual, toNumber, isUndefined, isNull, partial, set } from 'lodash'
 import {
     KeyValueParamsSchema,
     MultiValueParamsSchema,
 } from '../types/catalogs.ts'
-import type { AxiosProgressEvent } from 'axios'
+import type { Axios, AxiosHeaders, AxiosProgressEvent, AxiosRequestConfig, AxiosResponse } from 'axios'
 import type {
     KeyValueParamsType,
     MultiValueParamType,
@@ -102,8 +101,7 @@ export type TestStreamEvent = z.infer<typeof TestStreamEventSchema>;
 const TestStreamHandlerSchema =
     z.function()
         .args(
-            TestSchema,
-            TestStreamEventSchema
+            TestStreamEventSchema,
         )
         .returns(z.void());
 
@@ -116,27 +114,50 @@ const parseHeaders = (request: XMLHttpRequest): Headers => {
 
     headersList.forEach((line) => {
         const parts = split(line, /:\s?/, 2);
-        const header = parts[0];
-        const value = parts[1];
-        headers[header] = value;
+        set(headers, parts[0], parts[1]);
     });
 
     return headers;
 };
 
+const setHaeders = (
+    event: TestStreamEvent,
+    headers: AxiosHeaders,
+): TestStreamEvent => {
+    for (const [headerName, value] of headers) {
+        if (!isUndefined(value) && !isNull(value)) {
+            set(event.headers, headerName, value.toString());
+        }
+    }
+    return event;
+};
+
 const onDownloadProgress = (
-    test: Test,
-    progressEvent: AxiosProgressEvent,
     handler: TestStreamHandler,
+    progressEvent: AxiosProgressEvent,
 ) => {
     const event = progressEvent.event as ProgressEvent;
     const request = event.currentTarget as XMLHttpRequest;
-    handler(test, {
+    handler({
         status: request.status,
         statusText: request.statusText,
         headers: parseHeaders(request),
         response: request.response,
     });
+}
+
+const onResponse = (
+    handler: TestStreamHandler,
+    response: AxiosResponse,
+) => {
+    const event: TestStreamEvent = {
+        status: response.status,
+        statusText: response.statusText,
+        headers: {},
+        response: "",
+    };
+    const headers = response.headers as AxiosHeaders;
+    handler(setHaeders(event, headers));
 }
 
 export const headerName = (
@@ -173,58 +194,81 @@ export default {
         return axios.get(`${BASE}/catalog/${catalog}`);
     },
 
+    streamTest: (
+        testID: string,
+        handler: TestStreamHandler
+    ) => {
+        return axios.request({
+            url: `${BASE}/stream/${testID}`,
+            method: "GET",
+            headers: {
+                [JMAAS_HEADERS.TEST_ID]: testID,
+            },
+            onDownloadProgress: partial(
+                onDownloadProgress, handler
+            ),
+        });
+    },
+
     runTest: (
         test: Test,
         handler: TestStreamHandler,
-    ) => {
+    ): Promise<AxiosResponse> => {
         const mode = test.mode;
         const method = test.method;
         const testDuration = toNumber(test.duration);
-        const isAsync = (test.async == true) || false;
+        const isAsync = test.async;
         const headers: Headers = {};
 
-        headers[JMAAS_HEADERS.MODE] = test.mode;
-        headers[JMAAS_HEADERS.SCRIPT] = test.script;
-        headers[JMAAS_HEADERS.METHOD] = test.method;
-        headers[JMAAS_HEADERS.HOST] = test.host;
-        headers[JMAAS_HEADERS.PORT] = toString(test.port);
-        headers[JMAAS_HEADERS.PATH] = test.path;
-        headers[JMAAS_HEADERS.ASYNC] = toString(isAsync);
-        headers[JMAAS_HEADERS.DURATION] = toString(testDuration);
-        headers[JMAAS_HEADERS.MIN_LATENCY] = toString(test.minLatency);
-        headers[JMAAS_HEADERS.MAX_LATENCY] = toString(test.maxLatency);
-        headers[JMAAS_HEADERS.QUERY] = getQuery(test);
-        headers[JMAAS_HEADERS.HEADERS] = getHeaders(test);
+        set(headers, JMAAS_HEADERS.TEST_ID, test.id);
+        set(headers, JMAAS_HEADERS.MODE, test.mode);
+        set(headers, JMAAS_HEADERS.SCRIPT, test.script);
+        set(headers, JMAAS_HEADERS.METHOD, test.method);
+        set(headers, JMAAS_HEADERS.HOST, test.host);
+        set(headers, JMAAS_HEADERS.PORT, toString(test.port));
+        set(headers, JMAAS_HEADERS.PATH, test.path);
+        set(headers, JMAAS_HEADERS.ASYNC, toString(isAsync));
+        set(headers, JMAAS_HEADERS.DURATION, toString(testDuration));
+        set(headers, JMAAS_HEADERS.MIN_LATENCY, toString(test.minLatency));
+        set(headers, JMAAS_HEADERS.MAX_LATENCY, toString(test.maxLatency));
+        set(headers, JMAAS_HEADERS.QUERY, getQuery(test));
+        set(headers, JMAAS_HEADERS.HEADERS, getHeaders(test));
 
         let trafficShape: string;
         let duration: number;
         if (isEqual(mode, MultiValueParamsSchema.Enum.qps)) {
             [trafficShape, duration] = getQPS(test);
-            headers[JMAAS_HEADERS.QPS] = trafficShape;
+            set(headers, JMAAS_HEADERS.QPS, trafficShape);
         } else {
             [trafficShape, duration] = getConcurrency(test);
-            headers[JMAAS_HEADERS.CONCURRENCY] = trafficShape;
+            set(headers, JMAAS_HEADERS.CONCURRENCY, trafficShape);
         }
 
-        if ( testDuration != duration ) {
+        if (testDuration != duration) {
             throw new Error(`invalid duration: ${test.duration} != ${duration}`);
         }
 
-        if ( ( testDuration > 3600 ) && !isAsync ) {
-            // [WIP]: enforce max request timeout for Cloud Run
+        if ((testDuration > 3600) && !isAsync) {
+            throw new Error(`invalid duration: ${testDuration} is greater than 1 hour; consider using 'async'`);
         }
 
-        return axios.request({
-            url: `${BASE}/run`,
+        const request: AxiosRequestConfig = {
+            url: `${BASE}/run/${test.id}`,
             method,
             headers,
-            onDownloadProgress(
-                progressEvent: AxiosProgressEvent,
-            ) {
-                onDownloadProgress(
-                    test, progressEvent, handler
-                );
-            },
-        });
+        }
+
+        if (isAsync) {
+            const response = axios.request(request);
+            response.then(
+                partial(onResponse, handler)
+            );
+            return response;
+        }
+
+        request.onDownloadProgress = partial(
+            onDownloadProgress, handler
+        );
+        return axios.request(request);
     },
 };
