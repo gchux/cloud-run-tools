@@ -30,11 +30,8 @@ export default {
           <RouterLink to="/">
             <v-list-item>Run a Load Test</v-list-item>
           </RouterLink>
-          <RouterLink to="/stream">
+          <RouterLink :to="{ path: '/stream', force: true }">
             <v-list-item>Stream a Load Test</v-list-item>
-          </RouterLink>
-          <RouterLink to="/status">
-            <v-list-item>Status of a Load Test</v-list-item>
           </RouterLink>
         </v-list>
       </v-navigation-drawer>

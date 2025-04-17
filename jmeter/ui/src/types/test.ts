@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-const TestDataSchema = z.object({
+export const TestDataSchema = z.object({
     id: z.string().uuid(),
     traceID: z.string().nonempty(),
     instanceID: z.string().nonempty(),

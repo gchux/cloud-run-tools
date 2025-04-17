@@ -81,7 +81,7 @@ export default {
             size="20"
             width="2"
             indeterminate
-          ></v-progress-circular>
+          />
         </v-list-item>
 
         <v-list-item v-if="traceId">
@@ -108,16 +108,16 @@ export default {
 
     <v-card-text
       v-if="cleanData"
-      class="px-0 py-0 mx-0 my-0"
+      class="px-0 py-0 mx-0 my-0 h-100"
     >
       <pre
-        class="bg-black px-2 py-2"
+        class="bg-black px-2 py-2 h-100"
       >{{ cleanData }}</pre>
 
       <v-progress-linear
         v-if="isStreaming"
         indeterminate
-      ></v-progress-linear>
+      />
     </v-card-text>
   
   </v-card>
