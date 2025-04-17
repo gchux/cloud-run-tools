@@ -1,4 +1,4 @@
-import { startsWith } from 'lodash';
+import { startsWith, replace, toString } from 'lodash';
 import { JMAAS_HEADERS } from '../api/jmaas.ts';
 import type { TestStreamEvent } from '../api/jmaas.ts';
 import type {
@@ -44,4 +44,15 @@ export const onTestData = (
     data.traceID = getTraceID(event);
     data.instanceID = getInstanceID(event);
     data.output = event.response;
+};
+
+export const cleanTestOutput = (
+    data: string,
+) => {
+    // reduce noise from non-relevant output entries
+    return replace(
+        toString(data),
+        /^.*?\sINFO\s.*?\.(?:JMeterThread|VariableThroughputTimer|ClassFinder):\s.*[\r\n]+/gm,
+        "",
+    );
 };

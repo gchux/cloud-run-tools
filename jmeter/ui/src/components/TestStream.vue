@@ -1,18 +1,10 @@
 <script lang="ts">
-import { toString, isEmpty, isUndefined, replace } from 'lodash';
+import { isEmpty, isUndefined } from 'lodash';
 import { useMessagesStore } from '../stores/messages.ts'
 import type { PropType } from 'vue';
-
-const cleanData = (
-  data: string,
-) => {
-  // reduce noise from non-relevant output entries
-  return replace(
-    toString(data),
-    /^.*?\sINFO\s.*?\.(?:JMeterThread|VariableThroughputTimer|ClassFinder):\s.*[\r\n]+/gm,
-    "",
-  );
-};
+import {
+  cleanTestOutput,
+} from '../utils/test.ts';
 
 export default {
   data: () => {
@@ -51,7 +43,7 @@ export default {
       if( isUndefined(this.data) || isEmpty(this.data) ) {
         return "";
       }
-      return cleanData(this.data);
+      return cleanTestOutput(this.data);
     },
   },
 
