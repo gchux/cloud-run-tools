@@ -125,6 +125,7 @@ export default {
         case MultiValueParamsSchema.Enum.qps:
           this.duration += param.duration;
       }
+
       return this.duration;
     },
 
@@ -150,6 +151,7 @@ export default {
         case MultiValueParamsSchema.Enum.qps:
           this.duration -= param.duration;
       }
+      
       return this.duration;
     },
 
@@ -261,7 +263,7 @@ export default {
           icon="mdi-plus"
           color="success"
           @click="addValue"
-        ></v-btn>
+        />
       </template>
     </v-list-item>
     
@@ -276,7 +278,7 @@ export default {
         :test-param="testParam"
         @update:model-value="updateValue"
         @delete:index="deleteIndex"
-      ></MultiValueInput>
+      />
     </v-container>
 
     <v-alert

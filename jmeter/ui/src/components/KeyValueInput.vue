@@ -101,25 +101,27 @@ export default component;
 <template>
   <v-row>
     <v-btn
-        class="ms-2 mt-3"
-        density="compact"
-        icon="mdi-minus"
-        color="error"
-        @click="deleteIndex"
-    ></v-btn>
+      class="ms-2 mt-3"
+      density="compact"
+      icon="mdi-minus"
+      color="error"
+      @click="deleteIndex"
+    />
+
     <v-col class="py-0">
       <v-text-field
         label="Name"
         :model-value="name"
         @update:model-value="updateName"
-      ></v-text-field>
+      />
     </v-col>
+
     <v-col class="py-0">
       <v-text-field
         label="Value"
         :model-value="value"
         @update:model-value="updateValue"
-      ></v-text-field>
+      />
     </v-col>
   </v-row>
 </template>

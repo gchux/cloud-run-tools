@@ -95,7 +95,7 @@ export default {
     </v-card-item>
 
     <v-card-text>
-      <v-divider color="info"></v-divider>
+      <v-divider color="info" />
       
       <v-select
         :model-value="test"
@@ -107,19 +107,19 @@ export default {
         @update:model-value="updateTest"
       >
         <template v-slot:item="{ props: itemProps, item }">
-          <v-list-item v-bind="itemProps" :subtitle="item.raw.desc"></v-list-item>
+          <v-list-item v-bind="itemProps" :subtitle="item.raw.desc" />
         </template>
       </v-select>
 
-      <v-divider color="info"></v-divider>
+      <v-divider color="info" />
 
       <TestParams
         v-if="catalog"
         :catalog="params"
         :params="test?.params"
-      ></TestParams>
+      />
       
-      <v-divider color="info"></v-divider>
+      <v-divider color="info" />
       
       <v-btn block
         class="text-none mt-2"
@@ -133,7 +133,7 @@ export default {
     </v-card-text>
   </v-card>
 
-  <v-divider></v-divider>
+  <v-divider />
   
   <CurlView />
 </template>

@@ -99,6 +99,7 @@ export default {
   <v-card class="mb-3">
     <v-list-item>
       <template v-slot:title>{{ label }}</template>
+      
       <template v-slot:append>
         <v-btn
           class="my-3"
@@ -106,7 +107,7 @@ export default {
           icon="mdi-plus"
           color="success"
           @click="addKeyValue"
-        ></v-btn>
+        />
       </template>
     </v-list-item>
     
@@ -118,7 +119,7 @@ export default {
         :index="index"
         @update:model-value="updateValue"
         @delete:index="deleteIndex"
-      ></KeyValueInput>
+      />
     </v-container>
   </v-card>
 </template>

@@ -181,12 +181,13 @@ export default defineComponent({
 <template>
   <v-row>
     <v-btn
-        class="ms-2 mt-3"
-        density="compact"
-        icon="mdi-minus"
-        color="error"
-        @click="deleteValue"
-    ></v-btn>
+      class="ms-2 mt-3"
+      density="compact"
+      icon="mdi-minus"
+      color="error"
+      @click="deleteValue"
+    />
+
     <template v-if="isTuple">
       <v-col
         v-for="(item, i) in items"
@@ -196,15 +197,16 @@ export default defineComponent({
         <v-text-field
           :label="label(i)"
           @update:model-value="updateTupleValue($event, i, item)"
-        ></v-text-field>
+        />
       </v-col>
     </template>
+
     <v-col v-else class="py-0">
       <v-text-field
         label="Value"
         :model-value="value"
         @update:model-value="updateValue"
-      ></v-text-field>
+      />
     </v-col>
   </v-row>
 </template>

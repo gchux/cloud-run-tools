@@ -191,6 +191,7 @@ export default {
             color="warning"
           ></v-icon>
         </template>
+        
         <v-list-item-title>
           <code>{{ id }}</code>
         </v-list-item-title>
@@ -206,12 +207,13 @@ export default {
             color="primary"
           ></v-icon>
         </template>
+
         <v-list-item-title
           class="text-primary"
         >
-        <code>
-          <b>Trace ID</b>: {{ traceID }}
-        </code>
+          <code>
+            <b>Trace ID</b>: {{ traceID }}
+          </code>
         </v-list-item-title>
       </v-list-item>
 
@@ -232,13 +234,13 @@ export default {
         </v-list-item-title>
       </v-list-item>
 
-      <v-divider class="my-2"></v-divider>
+      <v-divider class="my-2" />
   
       <v-list-item>
         <CurlView />
       </v-list-item>
 
-      <v-divider class="my-2"></v-divider>
+      <v-divider class="my-2" />
 
     </v-card-text>
 

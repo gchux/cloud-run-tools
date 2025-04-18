@@ -18,7 +18,6 @@ import {
   type QPS,
   type Concurrency,
   MultiValueParamSchema,
-  type MultiValueParamType,
 } from '../types/catalogs.ts'
 
 export const ValuesSchema = z.record(

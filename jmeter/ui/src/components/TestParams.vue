@@ -38,7 +38,7 @@ export default {
         v-if="catalog[param]"
         :key="catalog[param].id"
         :test-param="catalog[param]"
-      ></TestParam>
+      />
     </v-col>
   </v-row>
 </template>

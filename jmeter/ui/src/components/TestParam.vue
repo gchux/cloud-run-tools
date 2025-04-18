@@ -136,6 +136,6 @@ export default {
       :items="items"
       :test-param="testParam"
       @update:model-value="updateValue"
-    ></component>
+    />
   </v-responsive>
 </template>
