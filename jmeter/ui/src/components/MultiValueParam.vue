@@ -1,30 +1,26 @@
 <script lang="ts">
 import { z } from 'zod'
 import {
-  split,
+  lte,
+  set,
+  omit,
   toNumber,
   isUndefined,
-  isEmpty,
   isEqual,
-  lte,
-  chain,
-  get,
 } from 'lodash'
 import {
   MultiValueParamsSchema,
-  MultiValueParamSchema,
 } from '../types/catalogs.ts'
 import { useTestStore, DurationSchema } from '../stores/test.ts'
 import { useMessagesStore } from '../stores/messages.ts'
-import {
-  toShapeOfQPS,
-  trafficShapeOfQPS,
-  toShapeOfConcurrency,
-  trafficShapeOfConcurrency
-} from '../utils/trafficShape.ts'
+import { toTestParam } from '../utils/test.ts'
 import {
   default as MultiValueInput,
 } from './MultiValueInput.vue'
+import {
+  ValuesSchema,
+  default as TrafficShape,
+} from './TrafficShape.vue'
 import type { PropType } from 'vue';
 import type {
   ArrayParamType,
@@ -35,54 +31,13 @@ import type {
 } from '../types/catalogs.ts'
 import type { ModelValue } from './MultiValueInput.vue'
 
-const ValuesSchema = z.record(
-  z.number().nonnegative(),
-  z.optional(MultiValueParamSchema),
-);
-
-const DataSchema = z.object({
+const ComponentDataSchema = z.object({
   values: ValuesSchema,
   counter: z.number().nonnegative(),
   duration: z.number().nonnegative(),
-  trafficShape: z.array(z.number().nonnegative()),
 });
 
-type Data = z.infer<typeof DataSchema>;
-
-const toTestParam = (
-  param: CatalogTestParam,
-  data: ModelValue,
-): MultiValueParamType => {
-  const parts = split(data.value, ',');
-
-  switch(param.id) {
-    case MultiValueParamsSchema.Enum.qps:
-      if ( parts.length == 3 ) {
-        return {
-          startQPS: toNumber(parts[0]),
-          endQPS: toNumber(parts[1]),
-          duration: toNumber(parts[2]),
-        }; 
-      }
-      break;
-
-    case MultiValueParamsSchema.Enum.concurrency:
-      if ( parts.length == 5 ) {
-        return {
-          threadCount: toNumber(parts[0]),
-          initialDelay: toNumber(parts[1]),
-          rampupTime: toNumber(parts[2]),
-          duration: toNumber(parts[3]),
-          shutdownTime: toNumber(parts[4]),
-        }; 
-      }
-      break;
-
-    default:
-      throw new Error(`invalid multi value parameter: '${param.id}'`);
-  }
-  throw new Error(`invalid shape for '${param.id}': '[${data.value}]'`);
-};
+type ComponentData = z.infer<typeof ComponentDataSchema>;
 
 export default {
   props: {
@@ -90,6 +45,7 @@ export default {
       type: Object as PropType<CatalogTestParam>,
       required: true,
     },
+
     label: {
       type: String,
       required: true,
@@ -101,8 +57,7 @@ export default {
       counter: 0,
       values: {},
       duration: 0,
-      trafficShape: []
-    } as Data;
+    } as ComponentData;
   },
 
   computed: {
@@ -131,10 +86,6 @@ export default {
       return this.isQPS || this.isConcurrency;
     },
 
-    hasTrafficShape(): boolean {
-      return this.isTrafficShape && !isEmpty(this.trafficShape);
-    },
-
     hasValidDuration(): boolean {
       const TEST = useTestStore();
       const duration = DurationSchema.safeParse(this.duration);
@@ -151,39 +102,8 @@ export default {
   methods: {
     addValue(): number {
       const key = (this.counter += 1);
-      this.values[key] = undefined;
+      this.values = set(this.values, key, undefined);
       return key;
-    },
-
-    getTrafficShape(): number[][] {
-      return chain(this.values)
-        .keys()
-        .map(toNumber)
-        .sort()
-        .map((
-          key: number,
-        ): number[] => {
-          return this.isQPS ?
-            toShapeOfQPS(
-              get(this.values, key) as QPS
-            ) :
-            toShapeOfConcurrency(
-              get(this.values, key) as Concurrency
-            );
-        })
-        .value() || [];
-    },
-
-    updateTrafficShape(): number[] {
-      const trafficShape = this.getTrafficShape();
-      if (isEmpty(trafficShape) || isEmpty(trafficShape)) {
-        return (this.trafficShape = []);
-      } else if (this.isQPS) {
-        return (this.trafficShape = trafficShapeOfQPS(trafficShape));
-      } else if(this.isConcurrency) {
-        return (this.trafficShape = trafficShapeOfConcurrency(trafficShape));
-      }
-      return (this.trafficShape = []);
     },
 
     increaseTotalDuration(
@@ -202,7 +122,7 @@ export default {
           this.duration += p.rampupTime + p.shutdownTime;
           /* falls through */
         
-          case MultiValueParamsSchema.Enum.qps:
+        case MultiValueParamsSchema.Enum.qps:
           this.duration += param.duration;
       }
       return this.duration;
@@ -265,11 +185,9 @@ export default {
         );
       }
 
-      if ( this.isTrafficShape ) {
-        this.increaseTotalDuration(i, param);
-      }
-      this.values[i] = param;
-      this.updateTrafficShape();
+      this.increaseTotalDuration(i, param);
+
+      this.values = set(this.values, i, param);
     },
 
     updateValue(
@@ -309,12 +227,13 @@ export default {
       }
 
       this.decreaseTotalDuration(i);
-      delete this.values[i];
-      this.updateTrafficShape();
+
+      this.values = omit(this.values, [i]);
     },
   },
 
   components: {
+    TrafficShape,
     MultiValueInput,
   },
 }
@@ -324,12 +243,17 @@ export default {
   <v-card class="mb-3">
     <v-list-item>
       <template v-slot:title>{{ label }}</template>
+      
       <template
         v-if="isTrafficShape"
         v-slot:subtitle
       >
-        total test duration: <b :class="'text-' + [hasValidDuration ? 'green' : 'red']"><code>{{ duration }}</code></b>
+        total test duration:
+        <b :class="'text-' + [hasValidDuration ? 'green' : 'red']">
+          <code>{{ duration }}</code>
+        </b>
       </template>
+
       <template v-slot:append>
         <v-btn
           class="my-3"
@@ -369,18 +293,12 @@ export default {
       and make sure to use <b><code>instance-based</code> billing</b>.
     </v-alert>
 
-    <v-sheet
-      v-if="hasTrafficShape"
-      class="px-3 pt-3 bg-black text-green"
-    >
-      <v-sparkline
-        :model-value="trafficShape"
-        :fill="false"
-        :line-width="0.5"
-        :padding="0.0"
-        :smooth="true"
-        :auto-draw="true"
-      ></v-sparkline>
-    </v-sheet>
+    <TrafficShape
+      v-if="isTrafficShape"
+      :shape="id"
+      :is-qps="isQPS"
+      :is-concurrency="isConcurrency"
+      :model-values="values"
+    />
   </v-card>
 </template>
