@@ -117,10 +117,6 @@ export default {
       deep: true,
     },
   },
-
-  created() {
-    console.log(this.modelValues);
-  },
 };
 </script>
 
