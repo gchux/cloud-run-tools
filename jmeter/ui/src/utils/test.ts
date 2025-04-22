@@ -56,7 +56,7 @@ export const cleanTestOutput = (
     // reduce noise from non-relevant output entries
     return replace(
         toString(data),
-        /^.*?\sINFO\s.*?\.(?:JMeterThread|VariableThroughputTimer|ClassFinder):\s.*[\r\n]+/gm,
+        /^.*?\s(?:(?:StatusConsoleListener)|(?:INFO?\s.*?\.(?:JMeterThread|VariableThroughputTimer|ClassFinder):))\s.*[\r\n]+/gm,
         "",
     );
 };

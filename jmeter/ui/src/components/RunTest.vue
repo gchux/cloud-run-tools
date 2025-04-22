@@ -121,7 +121,6 @@ export default {
     },
 
     initClipboardJS(target: string, buttonID: string) {
-      console.log(arguments);
       this.destroyClipboardJS(buttonID);
       set(
         this.clipboardJS,
@@ -157,7 +156,7 @@ export default {
   unmounted() {
     each(
       keys(this.clipboardJS),
-      bind(() => console.log, this)
+      bind(this.destroyClipboardJS, this)
     );
   },
 
@@ -278,7 +277,7 @@ export default {
 
   <TestStream
     v-else-if="id"
-    :id="id"
+    :test-id="id"
     :instance-id="instanceID"
     :trace-id="traceID"
     :data="output"

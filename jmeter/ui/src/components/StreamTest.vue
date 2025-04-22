@@ -90,7 +90,7 @@ export default {
 <template>
   <TestStream
     v-if="hasTestID()"
-    :id="id"
+    :test-id="id"
     :instance-id="instanceID"
     :trace-id="traceID"
     :data="output"

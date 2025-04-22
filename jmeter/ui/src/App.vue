@@ -14,6 +14,7 @@ export default {
       queue: useMessagesStore(),
     } as Data;
   },
+  
   mounted() {
     this.$router.push('/');
   },
@@ -27,9 +28,10 @@ export default {
 
       <v-navigation-drawer>
         <v-list>
-          <RouterLink to="/">
+          <RouterLink :to="{ path: '/', force: true }">
             <v-list-item>Run a Load Test</v-list-item>
           </RouterLink>
+
           <RouterLink :to="{ path: '/stream', force: true }">
             <v-list-item>Stream a Load Test</v-list-item>
           </RouterLink>

@@ -1,10 +1,13 @@
 <script lang="ts">
 import { isEmpty, isUndefined } from 'lodash';
 import { useMessagesStore } from '../stores/messages.ts'
-import type { PropType } from 'vue';
 import {
   cleanTestOutput,
 } from '../utils/test.ts';
+import type { PropType } from 'vue';
+import {
+  default as TestDetails,
+} from './TestDetails.vue'
 
 export default {
   data: () => {
@@ -12,7 +15,7 @@ export default {
   },
 
   props: {
-    id: {
+    testId: {
       type: Object as PropType<string>,
       required: true,
     },
@@ -45,6 +48,10 @@ export default {
       }
       return cleanTestOutput(this.data);
     },
+
+    hasData() {
+      return !isEmpty(this.data);
+    },
   },
 
   watch: {
@@ -53,12 +60,16 @@ export default {
       MESSAGES.info(`streaming test ID: ${newTestID}`);
     },
   },
+
+  components: {
+    TestDetails,
+  },
 }
 </script>
 
 <template>
   <v-card flat
-    v-if="id"
+    v-if="testId"
     variant="text"
   >
 
@@ -74,7 +85,7 @@ export default {
             size="x-large"
             color="warning"
           />
-          <b><code>{{ id }}</code></b>
+          <b><code>{{ testId }}</code></b>
           <v-progress-circular
             v-if="isStreaming"
             class="ms-4"
@@ -102,6 +113,15 @@ export default {
             <v-icon start icon="mdi-server" color="teal" />
             <code>{{ instanceId }}</code>
           </v-chip>
+        </v-list-item>
+
+        <v-divider class="my-2" />
+        
+        <v-list-item class="pt-1">
+          <TestDetails
+            v-if="hasData"
+            :test-id="testId"
+          />
         </v-list-item>
       </v-card-subtitle>
     </v-card-item>

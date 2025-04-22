@@ -46,13 +46,13 @@ export const ConcurrencyValueSchema = z.map(KEY, ConcurrencySchema);
 
 export type ConcurrencyValue = z.infer<typeof ConcurrencyValueSchema>;
 
-const PortSchema = z.number().min(1).max(65535).finite();
+export const PortSchema = z.number().min(1).max(65535).finite();
 
 export type Port = z.infer<typeof PortSchema>;
 
-const MinMaxLatencySchema = z.number().positive().gte(1).lte(3600000).finite();
+export const MinMaxLatencySchema = z.number().positive().gte(1).lte(3600000).finite();
 
-export type MinMaxLatencySchema = z.infer<typeof MinMaxLatencySchema>;
+export type MinMaxLatency = z.infer<typeof MinMaxLatencySchema>;
 
 export const DurationSchema = z.number().gte(10).finite();
 
@@ -179,10 +179,10 @@ export const useTestStore = defineStore('test', {
     setDuration(duration: number): Duration {
       return this.duration = DurationSchema.parse(duration);
     },
-    setMinLatency(minLatency: number): MinMaxLatencySchema {
+    setMinLatency(minLatency: number): MinMaxLatency {
       return this.minLatency = MinMaxLatencySchema.parse(minLatency);
     },
-    setMaxLatency(maxLatency: number): MinMaxLatencySchema {
+    setMaxLatency(maxLatency: number): MinMaxLatency {
       return this.maxLatency = MinMaxLatencySchema.parse(maxLatency);
     },
     setValue(

@@ -43,7 +43,7 @@ public class JMeterTestConfig {
 
   @Since(1.0)
   @Expose(deserialize=true, serialize=true)
-  @SerializedName(value="test")
+  @SerializedName(value="script")
   private final Optional<String> jmx;
 
   @Since(1.0)
@@ -68,7 +68,7 @@ public class JMeterTestConfig {
 
   @Since(1.0)
   @Expose(deserialize=true, serialize=true)
-  @SerializedName(value="post")
+  @SerializedName(value="port")
   private final Optional<Integer> port;
 
   @Since(1.0)
@@ -88,7 +88,7 @@ public class JMeterTestConfig {
 
   @Since(1.0)
   @Expose(deserialize=true, serialize=true)
-  @SerializedName(value="body")
+  @SerializedName(value="payload")
   private final Optional<String> body;
 
   @Since(1.0)

@@ -101,8 +101,8 @@ public class JMeterTestService {
     final String name = this.name(instanceID, id, JMX);
 
     final JMeterTestConfig config = new JMeterTestConfig(
-      name, instanceID, id, JMX, mode, proto.orNull(),
-      method.orNull(), host, port.orNull(), path.orNull(),
+      name, instanceID, id, JMX, mode, proto.or("HTTPS"),
+      method.or("GET"), host, port.or(443), path.or("/"),
       query, headers, body.orNull(), minLatency, maxLatency
     )
     .traceID(traceID.orNull())

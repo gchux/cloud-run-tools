@@ -43,6 +43,8 @@ import static spark.Spark.*;
 
 abstract class JMeterTestController extends RestController {
 
+  private static final Logger logger = LoggerFactory.getLogger(JMeterTestController.class);
+
   public static final String PROPERTY_JMETER_MODES = "jmeter.modes";
 
   public static final String DEFAULT_TRACE_ID = "00000000000000000000000000000000";
@@ -190,7 +192,15 @@ abstract class JMeterTestController extends RestController {
   ) {
     final Optional<String> metadata = this.optionalParam(request, param);
     if ( metadata.isPresent() ) {
-      return METADATA_MAP_SPLITTER.split(metadata.get());
+      final String value = metadata.get();
+      final String headerName = toHeaderName(param);
+      logger.info("header[{}]: {}", param, request.headers(headerName));
+      try {
+        return METADATA_MAP_SPLITTER.split(value);
+      } catch(final Exception e) {
+        logger.error("metadata[{}]: {}", param, value);
+        logger.error(getStackTraceAsString(e));
+      }
     }
     return ImmutableMap.of();
   }

@@ -86,8 +86,8 @@ export default {
             return undefined;
           }
           return this.isQps ?
-            toShapeOfQPS(value as QPS)
-            : toShapeOfConcurrency(value as Concurrency);
+            toShapeOfQPS(value as QPS) :
+            toShapeOfConcurrency(value as Concurrency);
         })
         .compact()
         .value() || [];
