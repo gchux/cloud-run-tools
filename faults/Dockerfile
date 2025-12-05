@@ -9,6 +9,7 @@ COPY api api
 COPY annotations annotations
 COPY model model
 COPY core core
+COPY io io
 COPY exec exec
 COPY rest rest
 COPY http http
@@ -74,7 +75,7 @@ VOLUME /tmp
 
 COPY --from=build ${DEPENDENCY} /x/rest_app
 
-RUN apk add --update --no-cache bash curl jq nodejs python3=3.12.9-r0
+RUN apk add --update --no-cache bash curl jq nodejs "python3~3.12"
 
 # cRUL linux
 COPY faults/src/curl/linux/curl /x/curl_linux

@@ -7,6 +7,7 @@ fi
 set -x
 
 exec java \
+  -cp /x/rest_app \
   -Dfaults.log.level=${FAULTS_LOG_LEVEL:-INFO} \
   dev.chux.gcp.crun.faults.FaultsApp \
   --config=${FAULTS_CONFIG}
