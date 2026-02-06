@@ -115,14 +115,14 @@ func (c *curl) printBody(body io.ReadCloser) {
 
 func (c *curl) printRequest(url *string, request *http.Request, payload *string) {
 	fmt.Fprintf(os.Stdout, "* Request: %s %s\n", request.Method, *url)
-	fmt.Fprint(os.Stdout, "\n* Request Hedaers:\n")
+	fmt.Fprint(os.Stdout, "\n* Request Headers:\n")
 	c.printHeaders(request.Header)
 	fmt.Fprintf(os.Stdout, "\n* Request Body:\n\t%s\n", *payload)
 }
 
 func (c *curl) printResponse(response *http.Response) {
 	fmt.Fprintf(os.Stdout, "\n* Response: %d\n", response.StatusCode)
-	fmt.Fprint(os.Stdout, "\n* Response Hedaers:\n")
+	fmt.Fprint(os.Stdout, "\n* Response Headers:\n")
 	c.printHeaders(response.Header)
 	fmt.Fprint(os.Stdout, "\n* Response Body:\n\t")
 	c.printBody(response.Body)
